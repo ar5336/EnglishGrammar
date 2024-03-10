@@ -1,6 +1,31 @@
 Notes:
 
 [ ] display and operate on nicknames
+
+[ ] implement actual polymorphism for Frames
+    Frame
+        name
+        nickname
+    WordFrame : Frame
+        type heirarchy
+        word
+    SyntaxFrame : Frame
+        vector<PatternElement> pattern_elements
+    ParsedSyntaxFrame : SyntaxFrame
+        vector<pair<index, Frame>> matched_frames_by_index
+    BinaryFrame : Frame
+        PatternElement left
+        PatternElement right
+        +SyntaxFrame original_syntax_frame
+    
+    also
+    PatternElement
+        match_string
+    CompletePatternElement : PatternElement
+        true_match_type
+        Necessity necessity
+        vector<FeatureTag> feature_tags
+
 [ ] match patterns on type heirarchy components. like 
     VP > AuxiliaryVerb Verb
        > have taken "i <have taken> to hunting"
@@ -14,16 +39,19 @@ Notes:
     NP > Pronoun Noun
         > the king rode upon <his horse>
 
+[ ] actually use pattern necessity type (this will require extra nuances in binarize_grammar - reference to 'higher' production rules, and modification thereof. With maintenence of reference to the original CNF)
+
 [ ] clicking on a cell to highligh all the terms that correspond to it in yellow
 
+[ ] post-parse grammar de-binarization
 
-In order to have a pattern tagSet system such as this
+    In order to have a pattern tagSet system such as this
 
-    VP > Noun[plural] Verb[3PPresent]
+        VP > Noun[plural] Verb[3PPresent]
 
-not only will CFG > CNF be necessary, but also the reverse
+    not only will CFG > CNF be necessary, but also the reverse
 
-We must be able to reconstruct a tree of complete CFG frames from a CNF grid
+    We must be able to reconstruct a tree of complete CFG frames from a CNF grid
 
 
 
