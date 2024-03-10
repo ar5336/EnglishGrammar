@@ -23,7 +23,7 @@ bool equals(string a, string b)
 	return a.compare(b) == 0;
 }
 
-enum PatternType
+enum PatternNecessity
 {
 	Required = 1,
 	Optional = 2,
@@ -47,15 +47,40 @@ public:
 	}
 };
 
+class PatternElement
+{
+public:
+	string match_string;
+	string pattern_true_match_type;
+	PatternNecessity pattern;
+	vector<FeatureTag> feature_tags;
+
+	// constructor for intermediate frame
+	PatternElement(string match_string)
+	: match_string(match_string)
+	{}
+
+	// complete constructor
+	PatternElement(
+		string match_string,
+		string pattern_true_match_type,
+		PatternNecessity pattern,
+		vector<FeatureTag> feature_tags)
+	: match_string(match_string),
+	  pattern_true_match_type(pattern_true_match_type),
+	  pattern(pattern),
+	  feature_tags(feature_tags)
+	{}
+};
+
 class Frame
 {
 public:
 	string frame_name;
 	string frame_nickname;
 	vector<string> type_heirarchy;
-
 	vector<string> pattern;			   // a list of parts of speech or Frame names
-	vector<PatternType> pattern_types; // whether those parts are optional or not.
+	vector<PatternNecessity> pattern_types; // whether those parts are optional or not. - not implemented during binarization yet
 	vector<FeatureTag> pattern_feature_tags;
 
 	set<string> feature_set; // form of Word
@@ -96,7 +121,7 @@ public:
 		string frame_nickname,
 		// set<string> type_set,
 		vector<string> pattern,
-		vector<PatternType> pattern_types)
+		vector<PatternNecessity> pattern_types)
 		: frame_name(frame_name),
 		  frame_nickname(frame_nickname),
 		//   type_set(type_set),
@@ -115,7 +140,7 @@ public:
 		: frame_name(frame_name),
 		//   type_set(type_set),
 		  pattern(pattern),
-		  pattern_types(vector<PatternType>())
+		  pattern_types(vector<PatternNecessity>())
 	{
 		pattern.push_back(left);
 		pattern.push_back(right);
@@ -500,7 +525,7 @@ void read_grammar(string fileName)
 
 		int previous_indentation = 0;
 
-		vector<PatternType> term_forms;
+		vector<PatternNecessity> term_forms;
 		vector<string> term_form_names;
 
 		vector<string> type_heirarchy;
@@ -567,11 +592,11 @@ void read_grammar(string fileName)
 						if (term_form_string.at(0) == '(' && term_form_string.back() == ')')
 						{
 							// is optional
-							term_forms.push_back(PatternType::Optional);
+							term_forms.push_back(PatternNecessity::Optional);
 							term_form_names.push_back(term_form_string.substr(1, term_form_string.size() - 1));
 						}
 						// is required
-						term_forms.push_back(PatternType::Required);
+						term_forms.push_back(PatternNecessity::Required);
 						term_form_names.push_back(term_form_string);
 					}
 			}
@@ -594,7 +619,7 @@ void read_grammar(string fileName)
 					else
 					{
 						vector<string> pattern;
-						vector<PatternType> pattern_types;
+						vector<PatternNecessity> pattern_types;
 						for (int pattern_element_index = 0; pattern_element_index < split_tokens.size(); pattern_element_index++)
 						{
 							string pattern_element = split_tokens[pattern_element_index];
@@ -605,13 +630,13 @@ void read_grammar(string fileName)
 								string no_parens = pattern_element.substr(1, pattern_element.size() - 2);
 								// printf("item %d: (%s\n", pattern_element_index, no_parens.c_str());
 								pattern.push_back(no_parens);
-								pattern_types.push_back(PatternType::Optional);
+								pattern_types.push_back(PatternNecessity::Optional);
 							}
 							else
 							{
 								// printf("item %d: %s\n", pattern_element_index, pattern_element.c_str());
 								pattern.push_back(pattern_element);
-								pattern_element.push_back(PatternType::Required);
+								pattern_element.push_back(PatternNecessity::Required);
 							}
 						}
 
