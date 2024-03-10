@@ -1,0 +1,159 @@
+Words:
+    Noun: # singular (plural)
+        dog dogs
+        fox foxes
+        cat cats
+        mouse mice
+        home homes
+        house houses
+        horse horses
+        moose
+        color colors
+        food foods
+        fish fishes
+        bridge bridges
+        castle castles
+        village villages
+        peasant peasants
+        knight knights
+        king kings
+        battle battles
+        war wars
+        gun guns
+        axe axes
+        road roads
+        trail trails
+        mountain mountains
+        meat meats
+        side sides
+        grass grasses
+        MeasureNoun:
+            water
+            food
+            grain
+            air
+            meat
+            grass
+        Pronoun:
+            i -1stPerson -singular -objective
+            me -1stPerson -singular -subjective
+            mine -1stPerson -singular -possessive
+
+            we -1stPerson -plural -objective
+            us -1stPerson -plural -subjective
+            ours -1stPerson -plural -possessive
+
+            you -2ndPerson -singular -objective -subjective
+            yours -2ndPerson -singular -possessive
+
+            y'all -2ndPerson -plural -objective -subjective
+            y'alls -2ndPerson -plural -objective -possessive
+
+            they -3rdPerson -plural -neuter -objective
+            them -3rdPerson -plural -neuter -subjective
+            theirs -3rdPerson -plural -neuter -possessive
+
+            he -3rdPerson -singular -masculine -objective
+            him -3rdPerson -singular -masculine -subjective
+            his -3rdPerson -singular -masculine -possessive
+
+            she -3rdPerson -singular -feminine -objective
+            her -3rdPerson -singular -feminine -subjective
+            hers -3rdPerson -singular -feminine -possessive
+
+    Verb: # simple continuous perfect 3PPresent (pastPart)
+        take taking took takes taken
+        ride riding rode rides ridden
+        jump jumping jumped jumps
+        play playing played plays
+        eat eating ate eats eaten
+        rise rising rose rises risen
+        shake shaking shook shakes shaken
+        stand standing stood stands
+        gift gifting gifted gifts
+        point pointing pointed points
+        AuxiliaryVerb: # simple continuous perfect 3PPresent (pastPart)
+            be being was is 
+            have having had has
+            do doing did does
+    Adjective:
+        Comparable: # absolute comparative superlative
+            funny funnier funniest
+            fast faster fastest
+            quick quicker quickest
+            lazy lazier laziest
+            brown browner brownest
+            fat fatter fattest
+            ugly uglier ugliest
+        PossessiveAdjective:
+            my -1stPerson -singular -possessive
+            our -1stPerson -plural -possessive
+            your -2stPerson -plural -possessive
+            their -3rdPerson -plural -neuter -possessive
+            his -3rdPerson -singular -masculine -possessive
+            hers -3rdPerson -singular -masculine -possessive
+        over
+    Adverb:
+        over
+        not
+    Determiner:
+        Article:
+            a
+            an
+            the
+        Demonstrative: # singular plural
+            this these
+            that those
+        Quantifiers:
+            much
+            some
+            any
+            all
+            most
+            enough
+            several
+    Preposition:
+        for
+        of
+        Place:
+            in
+            on
+            at
+            by
+            over
+            below
+            into
+            through
+            atop
+            upon
+        Time:
+            before
+            after
+            during
+            since
+            until
+
+Frames:
+    NounPhrase "NP"
+        Determiner Noun
+        Determiner Adjective Noun
+        NounPhrase PrepPhrase
+    VerbPhrase "VP"
+        NounPhrase Verb (Adjective)
+        NounPhrase Verb
+        Verb NounPhrase
+        Verb Adverb
+        Adverb Verb
+        Verb Noun
+    PrepPhrase "PP"
+        Preposition Noun
+        Preposition NounPhrase
+    Sentence "S"
+        VerbPhrase PrepPhrase
+        VerbPhrase AdjectivePhrase
+        NounPhrase VerbPhrase
+        Sentence PrepPhrase
+    Adjective "Adj"
+        Adjective Adjective
+    AdjectivePhrase "AP"
+        Adjective NounPhrase

@@ -1,0 +1,31 @@
+Notes:
+
+[ ] display and operate on nicknames
+[ ] match patterns on type heirarchy components. like 
+    VP > AuxiliaryVerb Verb
+       > have taken "i <have taken> to hunting"
+    
+    VP > Verb MeasureNoun
+        >  the horse <drank water>
+    
+    VP > Pronoun Verb
+        > <i eat> food for the taste
+    
+    NP > Pronoun Noun
+        > the king rode upon <his horse>
+
+[ ] clicking on a cell to highligh all the terms that correspond to it in yellow
+
+
+In order to have a pattern tagSet system such as this
+
+    VP > Noun[plural] Verb[3PPresent]
+
+not only will CFG > CNF be necessary, but also the reverse
+
+We must be able to reconstruct a tree of complete CFG frames from a CNF grid
+
+
+
+
+ 

@@ -1,0 +1,19 @@
+Words:
+    A:
+        ayy
+        ei
+    B:
+        bee
+    C:
+        cee
+        see
+    D:
+        dee
+    E:
+        ee
+    F:
+        eff
+
+Frames:
+    Alphabet "AL"
+        A (B) C (D) E
