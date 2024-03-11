@@ -1,4 +1,4 @@
-// #include <iostream>
+#include <iostream>
 // #include <iomanip>
 #include </usr/local/include/opencv4/opencv2/highgui.hpp>
 #include </usr/local/include/opencv4/opencv2/tracking.hpp>
@@ -16,7 +16,7 @@
 using namespace std;
 using namespace cv;
 
-string current_utterance = "";
+string current_utterance = "the dog ate the grass on the trail";
 
 bool equals(string a, string b)
 {
@@ -195,34 +195,31 @@ map<string, vector<Frame>> cnf_map; // frame A > B C becomes map entry {"B C", "
 //  A   N    V
 // the dog barked
 vector<vector<vector<Frame>>> parse_grid;
+pair<int, int> highlighted_cell_position;
+bool is_highlighted = false;
 
-// vector<Frame> get_matched_frames(Frame left, Frame right){ // update to vector<Frame>
-// 	string left_string;
-// 	if (left.is_word_frame()){
-// 		// is a word
-// 		left_string = left.get_part_of_speech();
-// 	} else {
-// 		left_string = left.frame_name;
-// 	}
+Point start_grid_corner;
 
-// 	string right_string;
-// 	if (right.is_word_frame()){
-// 		// is a word
-// 		right_string = right.get_part_of_speech();
-// 	} else {
-// 		right_string = right.frame_name;
-// 	}
+pair<Point, Point> get_cell_bounds(int row, int col)
+{
+	int cell_width = 80;
+	int cell_height = 20;
 
-// 	string match_string = left_string + " " + right_string;
-// 	vector<Frame> return_vec;
-// 	return_vec.push_back(Frame());
-// 	// printf("match string: %s\n", match_string.c_str());
-// 	if (!(cnf_map.find(match_string) == cnf_map.end())){
-// 		return cnf_map.at(match_string);
-// 		// printf("\tthe frame's name: %s\n", found_frame.frame_name.c_str());
-// 	}
-// 	return return_vec;
-// }
+	Point top_left = start_grid_corner + Point(col * cell_width + (row * cell_width / 2), -(row * cell_height));
+	Point bottom_right = top_left + Point(cell_width, cell_height);
+
+	return pair<Point, Point>(top_left, bottom_right);
+}
+
+bool is_in_bounds(Point point, pair<Point, Point> bounds)
+{
+	Point top_left = bounds.first;
+	Point bottom_right = bounds.second;
+	// printf("top left: %d, %d\n", top_left.x, top_left.y);
+	// printf("bottom right: %d, %d\n", bottom_right.x, bottom_right.y);
+
+	return point.x >= top_left.x && point.x <= bottom_right.x && point.y >= top_left.y && point.y <= bottom_right.y;
+}
 
 bool get_matched_frames(Frame left, Frame right, vector<Frame>& matched_frames){ // update to vector<Frame>
 	string left_string;
@@ -334,8 +331,6 @@ void update_parse_grid()
 			// X__
 			// L  R
 
-			
-
 			for (int pair_index = 0; pair_index < row; pair_index++){
 				int left_row = row - (pair_index + 1);
 				vector<Frame> left_frames = parse_grid.at(left_row).at(col);
@@ -356,6 +351,44 @@ void update_parse_grid()
 			}
 
 		}
+	}
+}
+
+void mouse_callback_function(int event, int x, int y, int flags, void* userdata)
+{
+	if  ( event == EVENT_LBUTTONDOWN )
+	{
+		// cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+		bool highlight_found = false;
+		for(int row = 0; row < parse_grid.size() && !highlight_found; row++){
+			for(int col = 0; col < parse_grid.at(row).size() && !highlight_found; col++){
+				pair<Point, Point> cell_bounds = get_cell_bounds(row, col);
+				if (is_in_bounds(Point(x, y), cell_bounds)){
+					printf("is in bounds row: %d, col: %d\n", row, col);
+					highlighted_cell_position = pair<int, int>(row, col);
+					highlight_found = true;
+					is_highlighted = true;
+					break;
+				}
+			}
+		}
+
+		if (!highlight_found){
+			is_highlighted = false;
+		}
+	}
+	else if  ( event == EVENT_RBUTTONDOWN )
+	{
+		// cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+	}
+	else if  ( event == EVENT_MBUTTONDOWN )
+	{
+		// cout << "Middle button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+	}
+	else if ( event == EVENT_MOUSEMOVE )
+	{
+		// cout << "Mouse move over the window - position (" << x << ", " << y << ")" << endl;
+
 	}
 }
 
@@ -747,6 +780,12 @@ Size measure_text(string text)
 
 int main(int argc, char **argv)
 {
+	namedWindow("reader", 1);
+
+	//set the callback function for any mouse event
+	setMouseCallback("reader", mouse_callback_function, NULL);
+	resizeWindow("reader", 1024, 512);
+
 	// Mat image;
 	// read the grammar
 	read_grammar("grammar.txt");
@@ -757,6 +796,8 @@ int main(int argc, char **argv)
 	Mat img(512, 1024, CV_8UC3, cv::Scalar(0));
 
 	Point start_text_corner = cv::Point(10, img.rows * 3 / 4); // top-left position
+
+	start_grid_corner = start_text_corner + Point(0, -60);
 
 	while (1)
 	{
@@ -785,7 +826,6 @@ int main(int argc, char **argv)
 
 			bool does_match = !(word_map.find(token) == word_map.end());
 
-			Point above_token_start = ticker_text_corner + Point(0, -30);
 			if (does_match)
 			{
 				Frame word_frame_identified = word_map.at(token);
@@ -834,14 +874,37 @@ int main(int argc, char **argv)
 			int cell_width = 80;
 			int cell_height = 20;
 
-			Point start_grid_corner = start_text_corner + Point(0, -60);
-
 			for (int row = 0; row < parse_grid.size(); row++)
 			{
 				for (int col = 0; col < parse_grid.at(row).size(); col++){
-					// printf("x ");
-					Point top_left = start_grid_corner + Point(col * cell_width + (row * cell_width / 2), -(row * cell_height));
-					Point bottom_right = top_left + Point(cell_width, cell_height);
+
+					pair<Point, Point> cell_bounds = get_cell_bounds(row, col);
+
+					Point top_left = cell_bounds.first;
+					Point bottom_right = cell_bounds.second;
+
+					
+					bool is_covered_by_highlight;
+					if (is_highlighted){
+						int highlight_row = highlighted_cell_position.first;
+						int highlight_col = highlighted_cell_position.second;
+						int d_row = highlight_row - row;
+						int d_col = col - highlight_col;
+						
+						is_covered_by_highlight = (
+							row <= highlight_row 
+							&& col >= highlight_col
+							&& d_col <= d_row);
+					} else {
+						is_covered_by_highlight = false;
+					}
+					// check if this cell is highlighted
+					if (is_covered_by_highlight)
+					{
+						rectangle(img, top_left, bottom_right, CV_RGB(50, 25, 0), cv::FILLED);
+					}
+
+					// draw rectangle
 					rectangle(img, top_left, bottom_right, CV_RGB(255, 255, 255));
 
 					vector<Frame> frames_in_cell = parse_grid.at(row).at(col);
@@ -863,7 +926,6 @@ int main(int argc, char **argv)
 
 					}
 				}
-				// printf("\n");
 			}
 		}
 		
