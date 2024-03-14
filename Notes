@@ -41,15 +41,21 @@ Notes:
 
 [ ] actually use pattern necessity type (this will require extra nuances in binarize_grammar - reference to 'higher' production rules, and modification thereof. With maintenence of reference to the original CNF)
 
-[ ] clicking on a cell to highligh all the terms that correspond to it in yellow
+[X] clicking on a cell to highligh all the terms that correspond to it in yellow
+
+[ ] a frame inherits the features of the wordFrames it matches to
+
+[X] Pattern tag system
+
+        // VP > Noun[singular] Verb[3PPresent]
+        //    <horse takes>
+        
+        VP > Noun[plural] Verb[simple]
+            <horses take>
 
 [ ] post-parse grammar de-binarization
 
-    In order to have a pattern tagSet system such as this
-
-        VP > Noun[plural] Verb[3PPresent]
-
-    not only will CFG > CNF be necessary, but also the reverse
+    not only CFG > CNF, but also the reverse
 
     We must be able to reconstruct a tree of complete CFG frames from a CNF grid
 

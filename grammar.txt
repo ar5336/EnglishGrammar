@@ -73,11 +73,14 @@ Words:
         stand standing stood stands
         gift gifting gifted gifts
         point pointing pointed points
+        run running ran runs
         AuxiliaryVerb: # simple continuous perfect 3PPresent (pastPart)
             be being was is 
             have having had has
             do doing did does
     Adjective:
+        NonComparable:
+            beautiful
         Comparable: # absolute comparative superlative
             funny funnier funniest
             fast faster fastest
@@ -147,6 +150,7 @@ Frames:
         Verb Adverb
         Adverb Verb
         Verb Noun
+        Noun[plural] Verb[simple]
     PrepPhrase "PP"
         Preposition Noun
         Preposition NounPhrase

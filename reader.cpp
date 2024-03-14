@@ -52,23 +52,28 @@ class PatternElement
 public:
 	string match_string;
 	string pattern_true_match_type;
-	PatternNecessity pattern;
+	PatternNecessity necessity;
 	vector<FeatureTag> feature_tags;
+
+	// default constructor
+	PatternElement()
+	: necessity(PatternNecessity::Required) {}
 
 	// constructor for intermediate frame
 	PatternElement(string match_string)
-	: match_string(match_string)
+	: match_string(match_string),
+	  necessity(PatternNecessity::Required)
 	{}
 
 	// complete constructor
 	PatternElement(
 		string match_string,
 		string pattern_true_match_type,
-		PatternNecessity pattern,
+		PatternNecessity necessity,
 		vector<FeatureTag> feature_tags)
 	: match_string(match_string),
 	  pattern_true_match_type(pattern_true_match_type),
-	  pattern(pattern),
+	  necessity(necessity),
 	  feature_tags(feature_tags)
 	{}
 };
@@ -79,9 +84,10 @@ public:
 	string frame_name;
 	string frame_nickname;
 	vector<string> type_heirarchy;
-	vector<string> pattern;			   // a list of parts of speech or Frame names
-	vector<PatternNecessity> pattern_types; // whether those parts are optional or not. - not implemented during binarization yet
-	vector<FeatureTag> pattern_feature_tags;
+	// vector<string> pattern;			   // a list of parts of speech or Frame names
+	// vector<PatternNecessity> pattern_types; // whether those parts are optional or not. - not implemented during binarization yet
+	// vector<FeatureTag> pattern_feature_tags;
+	vector<PatternElement> pattern_elements;
 
 	set<string> feature_set; // form of Word
 
@@ -119,14 +125,12 @@ public:
 	Frame(
 		string frame_name,
 		string frame_nickname,
-		// set<string> type_set,
-		vector<string> pattern,
-		vector<PatternNecessity> pattern_types)
+		// vector<string> pattern,
+		// vector<PatternNecessity> pattern_types
+		vector<PatternElement> pattern_elements)
 		: frame_name(frame_name),
 		  frame_nickname(frame_nickname),
-		//   type_set(type_set),
-		  pattern(pattern),
-		  pattern_types(pattern_types)
+		  pattern_elements(pattern_elements)
 	{
 		// features not implemented for syntax frames yet
 	}
@@ -135,15 +139,13 @@ public:
 	Frame(
 		string frame_name,
 		// set<string> type_set,
-		string left,
-		string right)
-		: frame_name(frame_name),
+		PatternElement left,
+		PatternElement right)
+		: frame_name(frame_name)
 		//   type_set(type_set),
-		  pattern(pattern),
-		  pattern_types(vector<PatternNecessity>())
 	{
-		pattern.push_back(left);
-		pattern.push_back(right);
+		pattern_elements.push_back(left);
+		pattern_elements.push_back(right);
 		// features not implemented for syntax frames yet
 	}
 
@@ -221,33 +223,75 @@ bool is_in_bounds(Point point, pair<Point, Point> bounds)
 	return point.x >= top_left.x && point.x <= bottom_right.x && point.y >= top_left.y && point.y <= bottom_right.y;
 }
 
-bool get_matched_frames(Frame left, Frame right, vector<Frame>& matched_frames){ // update to vector<Frame>
+bool is_frame_accepted(Frame candidate_frame, vector<FeatureTag> feature_tags)
+{
+	for (int feature_tag_index = 0; feature_tag_index < feature_tags.size(); feature_tag_index++)
+	{
+		FeatureTag test_feature_tag = feature_tags[feature_tag_index];
+
+		set<string> tag_set = candidate_frame.feature_set;
+		if (test_feature_tag.tag_type == FeatureTagType::Necessary){
+			// look for feature in frame
+			printf("looking for feature \"%s\"in frame\n", test_feature_tag.feature_name.c_str());
+			for (string s : tag_set){
+				printf(" %s,", s.c_str());
+			}
+			printf("\n");
+			if (tag_set.count(test_feature_tag.feature_name) == 0)
+				return false;
+		} else {
+			// look for absence of feature in frame
+			if (tag_set.count(test_feature_tag.feature_name) != 0)
+				return false;
+		}
+	}
+	return true;
+}
+
+bool get_matched_frames(Frame left_frame, Frame right_frame, vector<Frame>& matched_frames){ // update to vector<Frame>
 	string left_string;
-	if (left.is_word_frame()){
+	if (left_frame.is_word_frame()){
 		// is a word
-		left_string = left.get_part_of_speech();
+		left_string = left_frame.get_part_of_speech();
 	} else {
-		left_string = left.frame_name;
+		left_string = left_frame.frame_name;
 	}
 
 	string right_string;
-	if (right.is_word_frame()){
+	if (right_frame.is_word_frame()){
 		// is a word
-		right_string = right.get_part_of_speech();
+		right_string = right_frame.get_part_of_speech();
 	} else {
-		right_string = right.frame_name;
+		right_string = right_frame.frame_name;
 	}
 
 	string match_string = left_string + " " + right_string;
 	// printf("match string: %s\n", match_string.c_str());
-	if (!(cnf_map.find(match_string) == cnf_map.end())){
+	if (cnf_map.count(match_string) != 0){
 		vector<Frame> frames_to_doublecheck = cnf_map.at(match_string);
 
-		// perform checks on PoS type and features
+		// vector<Frame> accepted_frames;
+		for (int frame_index = 0; frame_index< frames_to_doublecheck.size(); frame_index++)
+		{
+			Frame candidate_frame = frames_to_doublecheck[frame_index];
 
-		for (int i = 0; i < frames_to_doublecheck.size(); i++){
-			matched_frames.push_back(frames_to_doublecheck.at(i));
+			// perform checks on PoS type and features
+
+			// feature tag check
+			PatternElement left_pattern_element = candidate_frame.pattern_elements[0];
+			PatternElement right_pattern_element = candidate_frame.pattern_elements[1];
+
+			vector<FeatureTag> left_feature_tags = left_pattern_element.feature_tags;
+			vector<FeatureTag> right_feature_tags = right_pattern_element.feature_tags;
+
+			if (is_frame_accepted(left_frame, left_feature_tags)
+				&& is_frame_accepted(right_frame, right_feature_tags))
+				matched_frames.push_back(candidate_frame);
 		}
+
+		// for (int i = 0; i < accepted_frames.size(); i++){
+		// 	matched_frames.push_back(accepted_frames.at(i));
+		// }
 		return true;
 		// printf("\tthe frame's name: %s\n", found_frame.frame_name.c_str());
 	}
@@ -267,7 +311,7 @@ vector<Frame> find_matching_frames(vector<Frame> left_frames, vector<Frame> righ
 				for(int match_index = 0; match_index < matched_frames.size(); match_index++){
 					matching_frames.push_back(matched_frames.at(match_index));
 				}
-				printf("found %ld matchs\n", matched_frames.size());
+				// printf("found %ld matchs\n", matched_frames.size());
 			}
 		}
 	}
@@ -344,7 +388,7 @@ void update_parse_grid()
 					vector<Frame> matching_frames = find_matching_frames(left_frames, right_frames);
 					for (int matched_index = 0; matched_index < matching_frames.size(); matched_index++){
 						Frame matched_frame = matching_frames.at(matched_index);
-						printf("adding matched frame named %s. to row %d, col %d\n", matched_frame.frame_name.c_str(), row, col);
+						// printf("adding matched frame named %s. to row %d, col %d\n", matched_frame.frame_name.c_str(), row, col);
 						parse_grid.at(row).at(col).push_back(matched_frame);
 					}
 				// }
@@ -434,6 +478,20 @@ inline void rtrim(string &s)
 			s.end());
 }
 
+inline bool starts_and_ends_with(string l, string r)
+{
+	// TODO - refactor
+	return false;
+}
+
+inline string trim_front_and_back(string s)
+{
+	if (s.size() <= 2)
+		throw invalid_argument("string too small in trim_front_and_back");
+
+	return s.substr(1, s.size() - 2);
+}
+
 inline void trim(string &s)
 {
 	rtrim(s);
@@ -474,10 +532,10 @@ void binarize_grammar()
 
 		Frame frame = syntax_frames.at(frame_index);
 
-		int pattern_length = frame.pattern.size();
+		int pattern_length = frame.pattern_elements.size();
 		int num_subframes = pattern_length - 1;
 
-		vector<string> base_pattern = frame.pattern;
+		vector<PatternElement> base_pattern = frame.pattern_elements;
 		string base_frame_name = frame.frame_name;
 		// set<string> base_typeset = frame.type_set;
 		// string base_frame_name = frame.frame_nickname;
@@ -508,25 +566,26 @@ void binarize_grammar()
 			}
 			else
 			{
-				frame_name = base_frame_name+to_string(subframe_index);
+				frame_name = base_frame_name + to_string(subframe_index);
 			}
-			string pattern_right = base_pattern.at(base_pattern.size() - 1 - subframe_index);
-			string pattern_left;
+
+			PatternElement pattern_right = base_pattern.at(base_pattern.size() - 1 - subframe_index);
+			PatternElement pattern_left;
 			if (subframe_index == num_subframes - 1)
 			{
 				pattern_left = base_pattern.at(0);
 			}
 			else
 			{
-				pattern_left = base_frame_name+to_string(subframe_index + 1);
+				pattern_left.match_string = base_frame_name+to_string(subframe_index + 1);
 			}
-			printf("CNF: %s > %s %s\n", frame_name.c_str(), pattern_left.c_str(), pattern_right.c_str());
+			// printf("CNF: %s > %s %s\n", frame_name.c_str(), pattern_left.match_string.c_str(), pattern_right.match_string.c_str());
 
 			Frame new_cnf_frame = Frame(frame_name, pattern_left, pattern_right);
 			cnf_frames.push_back(new_cnf_frame);
 
 			// add elements to cnf_map
-			string match_pattern = pattern_left + " " + pattern_right;
+			string match_pattern = pattern_left.match_string + " " + pattern_right.match_string;
 			if (!(cnf_map.find(match_pattern) == cnf_map.end())){
 				cnf_map.at(match_pattern).push_back(new_cnf_frame);
 
@@ -626,7 +685,7 @@ void read_grammar(string fileName)
 						{
 							// is optional
 							term_forms.push_back(PatternNecessity::Optional);
-							term_form_names.push_back(term_form_string.substr(1, term_form_string.size() - 1));
+							term_form_names.push_back(term_form_string.substr(1, term_form_string.size() - 2));
 						}
 						// is required
 						term_forms.push_back(PatternNecessity::Required);
@@ -645,32 +704,65 @@ void read_grammar(string fileName)
 
 					if (is_pattern_name_line)
 					{
-						// printf("is name line\n");
 						pattern_name = first_token;
-						pattern_nickname = second_token.substr(1, second_token.size() - 1);
+						pattern_nickname = trim_front_and_back(second_token);
+						// printf("pattern nickname: %s\n" ,pattern_nickname.c_str());
 					}
 					else
 					{
-						vector<string> pattern;
-						vector<PatternNecessity> pattern_types;
+						// is a pattern frame
+
+						vector<PatternElement> pattern_elements;
+						// vector<PatternNecessity> pattern_necessities;
 						for (int pattern_element_index = 0; pattern_element_index < split_tokens.size(); pattern_element_index++)
 						{
-							string pattern_element = split_tokens[pattern_element_index];
-							bool is_optional = (pattern_element.at(0) == '(' && pattern_element.back() == ')');
-							
+							PatternNecessity necessity;
+							string match_string = split_tokens[pattern_element_index];
+
+							// check for parens
+							bool is_optional = (match_string.at(0) == '(' && match_string.back() == ')');
 							if (is_optional)
 							{
-								string no_parens = pattern_element.substr(1, pattern_element.size() - 2);
+								string no_parens = trim_front_and_back(match_string);
+
 								// printf("item %d: (%s\n", pattern_element_index, no_parens.c_str());
-								pattern.push_back(no_parens);
-								pattern_types.push_back(PatternNecessity::Optional);
+								match_string = no_parens;
+								necessity = PatternNecessity::Optional;
 							}
 							else
 							{
 								// printf("item %d: %s\n", pattern_element_index, pattern_element.c_str());
-								pattern.push_back(pattern_element);
-								pattern_element.push_back(PatternNecessity::Required);
+								necessity = PatternNecessity::Required;
 							}
+
+							// check for features
+							// in this format:
+							// <word>[<feature1>,<feature2>]
+
+							vector<FeatureTag> feature_tags;
+							int feature_open_pos = match_string.find('[');
+							if (feature_open_pos != -1)
+							{
+								string feature_string = match_string.substr(feature_open_pos, match_string.size());
+								match_string = match_string.substr(0, feature_open_pos);
+
+								feature_string = trim_front_and_back(feature_string);
+								vector<string> feature_names;
+								boost::split(feature_names, feature_string, boost::is_any_of(","), boost::token_compress_off);
+
+								for(int feature_tag_index = 0; feature_tag_index < feature_names.size(); feature_tag_index++){
+									string feature_name = feature_names[feature_tag_index];
+									feature_tags.push_back(FeatureTag(feature_name, FeatureTagType::Necessary));
+								}
+							}
+
+							pattern_elements.push_back(PatternElement(
+								match_string,
+								"",
+								necessity,
+								feature_tags
+							));
+
 						}
 
 						// set<string> type_set,
@@ -682,8 +774,7 @@ void read_grammar(string fileName)
 						Frame new_pattern_frame = Frame(
 							pattern_name,
 							pattern_nickname,
-							pattern,
-							pattern_types);
+							pattern_elements);
 
 						// printf("flag8\n");
 						syntax_frames.push_back(new_pattern_frame);
@@ -696,19 +787,21 @@ void read_grammar(string fileName)
 				{
 					// reading word
 
-					// printf("flag11\n");
 
 					// printf("type_heirarchy size: %ld\n", type_heirarchy.size());
 					// have a copy type_heirarchy for inserting
 					vector<string> type_pruned = vector<string>(type_heirarchy.begin() + 1, type_heirarchy.end());
 					// vector<string> type_heirarchy = type_pruned.begin(), type_pruned.end();
 
-					// printf("flag12\n");
+					// for (int i = 0; i < type_pruned.size(); i++){
+					// 	printf("%s ", type_pruned[i].c_str());
+					// }
+					// printf("\n");
 
 					// otherwise it is a list of word forms that corresponds to the current term
 					// therefore, populate the hash set of words with the newly created word object
 					string base_word = "";
-					if (term_forms.size() == 0)
+					if (term_forms.size() == 0) // TODO - fix this from overwriting the 'word -feature1 -feature2 format
 					{
 						word_map.emplace(split_tokens[0], Frame(type_pruned));
 					}
@@ -890,7 +983,7 @@ int main(int argc, char **argv)
 						int highlight_col = highlighted_cell_position.second;
 						int d_row = highlight_row - row;
 						int d_col = col - highlight_col;
-						
+
 						is_covered_by_highlight = (
 							row <= highlight_row 
 							&& col >= highlight_col
