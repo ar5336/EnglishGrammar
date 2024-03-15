@@ -61,7 +61,6 @@ Words:
             she -3rdPerson -singular -feminine -objective
             her -3rdPerson -singular -feminine -subjective
             hers -3rdPerson -singular -feminine -possessive
-
     Verb: # simple continuous perfect 3PPresent (pastPart)
         take taking took takes taken
         ride riding rode rides ridden
@@ -78,6 +77,32 @@ Words:
             be being was is 
             have having had has
             do doing did does
+        ModalVerb:
+            should
+            must
+            would
+            will
+            can
+            may
+            shall
+        LinkingVerb:
+            am -singular -1stPerson
+            is -3rdPerson -singular
+            are -plural -3rdPerson
+            are -singular -2ndPerson
+            are -plural -1stPerson
+            be 
+            been
+            being
+            did
+            do
+            does
+            had
+            has
+            have
+            was
+            were
+
     Adjective:
         NonComparable:
             beautiful
@@ -151,6 +176,7 @@ Frames:
         Adverb Verb
         Verb Noun
         Noun[plural] Verb[simple]
+        Noun[singular] Verb[singular]
     PrepPhrase "PP"
         Preposition Noun
         Preposition NounPhrase

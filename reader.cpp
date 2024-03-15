@@ -200,9 +200,7 @@ vector<vector<vector<Frame>>> parse_grid;
 pair<int, int> highlighted_cell_position;
 bool is_highlighted = false;
 
-Point start_grid_corner;
-
-pair<Point, Point> get_cell_bounds(int row, int col)
+pair<Point, Point> get_cell_bounds(Point start_grid_corner, int row, int col)
 {
 	int cell_width = 80;
 	int cell_height = 20;
@@ -398,44 +396,6 @@ void update_parse_grid()
 	}
 }
 
-void mouse_callback_function(int event, int x, int y, int flags, void* userdata)
-{
-	if  ( event == EVENT_LBUTTONDOWN )
-	{
-		// cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
-		bool highlight_found = false;
-		for(int row = 0; row < parse_grid.size() && !highlight_found; row++){
-			for(int col = 0; col < parse_grid.at(row).size() && !highlight_found; col++){
-				pair<Point, Point> cell_bounds = get_cell_bounds(row, col);
-				if (is_in_bounds(Point(x, y), cell_bounds)){
-					printf("is in bounds row: %d, col: %d\n", row, col);
-					highlighted_cell_position = pair<int, int>(row, col);
-					highlight_found = true;
-					is_highlighted = true;
-					break;
-				}
-			}
-		}
-
-		if (!highlight_found){
-			is_highlighted = false;
-		}
-	}
-	else if  ( event == EVENT_RBUTTONDOWN )
-	{
-		// cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
-	}
-	else if  ( event == EVENT_MBUTTONDOWN )
-	{
-		// cout << "Middle button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
-	}
-	else if ( event == EVENT_MOUSEMOVE )
-	{
-		// cout << "Mouse move over the window - position (" << x << ", " << y << ")" << endl;
-
-	}
-}
-
 bool check_keypress(char cr)
 {
 	if (cr == 27)
@@ -537,8 +497,6 @@ void binarize_grammar()
 
 		vector<PatternElement> base_pattern = frame.pattern_elements;
 		string base_frame_name = frame.frame_name;
-		// set<string> base_typeset = frame.type_set;
-		// string base_frame_name = frame.frame_nickname;
 
 		// create subframe 0 for pattern elements 0 and 1
 
@@ -595,11 +553,6 @@ void binarize_grammar()
 				new_frame_vec.push_back(new_cnf_frame);
 				cnf_map.emplace(match_pattern, new_frame_vec);
 			}
-
-			// while (subframe_index > 0)
-			// Frame new_cnf_frame = Frame(frame.frame_nickname + to_string(subframe_index),
-			// 	frame.type_set,
-			// 	base_pattern.)
 		}
 	}
 }
@@ -628,19 +581,13 @@ void read_grammar(string fileName)
 		while (getline(newfile, current_line))
 		{ // read data from file object and put it into string.
 
-			// bool subcategory = false;
 			if (current_line.size() == 0)
 				continue;
-
-			// printf("flag9\n");
 
 			// measure indentation by counting initial spaces
 			int initial_spaces = count_initial_spaces(current_line);
 			int current_indentation = initial_spaces / tab_spaces;
 
-			// if (current_indentation > previous_indentation){
-			// 	subcategory = true;
-			// } else
 			if (current_indentation < previous_indentation)
 			{
 				for (int i = 0; i < previous_indentation - current_indentation; i++)
@@ -655,7 +602,6 @@ void read_grammar(string fileName)
 			}
 			previous_indentation = current_indentation;
 
-			// printf("flag10\n");
 
 			trim(current_line);
 
@@ -677,7 +623,7 @@ void read_grammar(string fileName)
 				// check for formlist formatted like this:
 				// 		PoSType: #form1 form2 (form3)
 				if (split_tokens.size() > 1 && split_tokens[1].at(0) == '#')
-
+				{
 					for (int i = 2; i < split_tokens.size(); i++)
 					{
 						string term_form_string = split_tokens[i];
@@ -686,11 +632,17 @@ void read_grammar(string fileName)
 							// is optional
 							term_forms.push_back(PatternNecessity::Optional);
 							term_form_names.push_back(term_form_string.substr(1, term_form_string.size() - 2));
+						} else {
+							// is required
+							term_forms.push_back(PatternNecessity::Required);
+							term_form_names.push_back(term_form_string);
 						}
-						// is required
-						term_forms.push_back(PatternNecessity::Required);
-						term_form_names.push_back(term_form_string);
 					}
+				} else {
+					term_form_names.clear();
+				}
+
+				
 			}
 			else
 			{
@@ -706,14 +658,12 @@ void read_grammar(string fileName)
 					{
 						pattern_name = first_token;
 						pattern_nickname = trim_front_and_back(second_token);
-						// printf("pattern nickname: %s\n" ,pattern_nickname.c_str());
 					}
 					else
 					{
 						// is a pattern frame
 
 						vector<PatternElement> pattern_elements;
-						// vector<PatternNecessity> pattern_necessities;
 						for (int pattern_element_index = 0; pattern_element_index < split_tokens.size(); pattern_element_index++)
 						{
 							PatternNecessity necessity;
@@ -725,13 +675,11 @@ void read_grammar(string fileName)
 							{
 								string no_parens = trim_front_and_back(match_string);
 
-								// printf("item %d: (%s\n", pattern_element_index, no_parens.c_str());
 								match_string = no_parens;
 								necessity = PatternNecessity::Optional;
 							}
 							else
 							{
-								// printf("item %d: %s\n", pattern_element_index, pattern_element.c_str());
 								necessity = PatternNecessity::Required;
 							}
 
@@ -765,86 +713,59 @@ void read_grammar(string fileName)
 
 						}
 
-						// set<string> type_set,
-						//  vector<string> pattern,
-						//  vector<PatternType> pattern_types)
-
-						// printf("flag7.5\n");
-
 						Frame new_pattern_frame = Frame(
 							pattern_name,
 							pattern_nickname,
 							pattern_elements);
 
-						// printf("flag8\n");
 						syntax_frames.push_back(new_pattern_frame);
-						// printf("flag9\n");
-
-						// syntax_name_map.emplace(pattern_name, new_pattern_frame);
 					}
 				}
 				else
 				{
 					// reading word
 
-
-					// printf("type_heirarchy size: %ld\n", type_heirarchy.size());
 					// have a copy type_heirarchy for inserting
 					vector<string> type_pruned = vector<string>(type_heirarchy.begin() + 1, type_heirarchy.end());
-					// vector<string> type_heirarchy = type_pruned.begin(), type_pruned.end();
-
-					// for (int i = 0; i < type_pruned.size(); i++){
-					// 	printf("%s ", type_pruned[i].c_str());
-					// }
-					// printf("\n");
 
 					// otherwise it is a list of word forms that corresponds to the current term
 					// therefore, populate the hash set of words with the newly created word object
-					string base_word = "";
-					if (term_forms.size() == 0) // TODO - fix this from overwriting the 'word -feature1 -feature2 format
-					{
-						word_map.emplace(split_tokens[0], Frame(type_pruned));
-					}
-					else
-					{
-						if (split_tokens.size() > 1 && split_tokens.at(1).at(0) == '-'){
-							// reading a word with feature markers (should not have had word for indicated by #list)
-							string word_string = split_tokens[0];
-							vector<string> features;
-							for (int i = 1; i < split_tokens.size(); i++){
-								string feature_name = split_tokens[i];
-								features.push_back(feature_name.substr(1, feature_name.size()));
-							}
-							Frame new_word_frame = Frame(type_pruned, features);
+					if (split_tokens.size() >= 2 && split_tokens.at(1).at(0) == '-'){
+						// reading a word with feature markers (should not have had word for indicated by #list)
+						string word_string = split_tokens[0];
+						vector<string> features;
 
-							word_map.emplace(word_string, new_word_frame);
+						for (int i = 1; i < split_tokens.size(); i++){
+							string feature_name = split_tokens[i];
+							features.push_back(feature_name.substr(1, feature_name.size()));
 						}
-						else {
-							for (int word_form_index = 0; word_form_index < split_tokens.size(); word_form_index++)
-							{
-								// if the first char of this 'word' is '-' then it and subsequent tokens are feature markers
-								string wordString = split_tokens[word_form_index];
+						Frame new_word_frame = Frame(type_pruned, features);
 
-								if (word_form_index == 0)
-								{
-									// is base form
-									base_word = wordString;
-								}
+						word_map.emplace(word_string, new_word_frame);
+					}
+					else {
+						for (int word_form_index = 0; word_form_index < split_tokens.size(); word_form_index++)
+						{
+							string wordString = split_tokens[word_form_index];
+							// TODO - add mapping to base form of word for conceptual association
+							if (term_form_names.size() < word_form_index + 1)
+							{
+								// no form list
+								Frame new_word_frame = Frame(type_pruned, wordString);
+								word_map.emplace(wordString, new_word_frame);
+							}
+							else
+							{
 								string word_form = term_form_names.at(word_form_index);
 								Frame new_word_frame = Frame(type_pruned, word_form);
 
 								word_map.emplace(wordString, new_word_frame);
 							}
+							
 						}
 					}
 				}
 			}
-
-			// for (auto i : split_tokens)
-			// 	cout << i << '_';
-			// cout << "\n";
-
-			// // cout << tp << "\n"; //print the data of the string
 		}
 		newfile.close(); // close the file object.
 	}
@@ -871,13 +792,172 @@ Size measure_text(string text)
 					   &was_found);
 }
 
+string screen_name = "reader";
+Mat img(512, 1024, CV_8UC3, cv::Scalar(0));
+Point start_text_corner = cv::Point(10, img.rows * 3 / 4); // top-left position
+Point start_grid_corner = start_text_corner + Point(0, -60);
+
+void display ()
+{
+	vector<string> split_tokens;
+	vector<Frame> word_frames;
+	boost::split(split_tokens, current_utterance, boost::is_any_of(" "), boost::token_compress_on);
+
+	img.setTo(Scalar(0)); // clear screen
+
+	int token_count = split_tokens.size();
+	
+	// display the text
+	Point ticker_text_corner = start_text_corner;
+	for (int token_index = 0; token_index < split_tokens.size(); token_index++)
+	{
+		string token = split_tokens[token_index];
+		if (token.size() == 0)
+			continue;
+
+		bool does_match = !(word_map.find(token) == word_map.end());
+
+		if (does_match)
+		{
+			Frame word_frame_identified = word_map.at(token);
+			word_frames.push_back(word_frame_identified);
+		}
+
+		if (token_index != split_tokens.size() - 1)
+			token += ' '; // if not last token, add a space
+
+		if (!does_match)
+		{
+			// not present
+			display_text(img, ticker_text_corner, token, CV_RGB(255, 10, 10));
+		}
+		else
+		{
+			display_text(img, ticker_text_corner, token, CV_RGB(118, 185, 0)); // draw token in green
+		}
+
+		// update text_corner position
+		ticker_text_corner += Point(measure_text(token).width, 0);
+	}
+
+	if (!parse_grid.empty() && token_count != 0) {
+		// diplay and initialize parse grid
+
+		//  r3  X
+		//  r2  X  X
+		//  r1  X  X  X
+		//  r0  X  X  X  X
+		//      c0 c1 c2 c3
+
+		int cell_width = 80;
+		int cell_height = 20;
+
+		for (int row = 0; row < parse_grid.size(); row++)
+		{
+			for (int col = 0; col < parse_grid.at(row).size(); col++){
+
+				pair<Point, Point> cell_bounds = get_cell_bounds(start_grid_corner, row, col);
+
+				Point top_left = cell_bounds.first;
+				Point bottom_right = cell_bounds.second;
+
+				
+				bool is_covered_by_highlight;
+				if (is_highlighted){
+					int highlight_row = highlighted_cell_position.first;
+					int highlight_col = highlighted_cell_position.second;
+					int d_row = highlight_row - row;
+					int d_col = col - highlight_col;
+
+					is_covered_by_highlight = (
+						row <= highlight_row 
+						&& col >= highlight_col
+						&& d_col <= d_row);
+				} else {
+					is_covered_by_highlight = false;
+				}
+				// check if this cell is highlighted
+				if (is_covered_by_highlight)
+				{
+					rectangle(img, top_left, bottom_right, CV_RGB(50, 25, 0), cv::FILLED);
+				}
+
+				// draw rectangle
+				rectangle(img, top_left, bottom_right, CV_RGB(255, 255, 255));
+
+				vector<Frame> frames_in_cell = parse_grid.at(row).at(col);
+
+				Point bottom_left = top_left + Point(10, cell_height - 10);
+				for(int frame_index = 0; frame_index < frames_in_cell.size(); frame_index++)
+				{
+					Frame frame = frames_in_cell.at(frame_index);
+					// display word
+					if (row == 0)
+					{
+						display_text(img, bottom_left, frame.get_part_of_speech(), CV_RGB(100, 100, 200), 0.65f);
+					} else {
+						// display frame
+						// string frame_name =  
+						display_text(img, bottom_left, frame.frame_name, CV_RGB(100, 200, 100), 0.65f);
+
+					}
+
+				}
+			}
+		}
+	}	
+
+	int total_tokenized_width = ticker_text_corner.x - start_text_corner.x;
+
+	// display the text cursor
+	Size text_size = measure_text(current_utterance);
+
+	Point cursor_top = start_text_corner + Point(total_tokenized_width, 0);
+	Point cursor_bottom = cursor_top + Point(0, -text_size.height);
+
+	cv::line(img, cursor_top, cursor_bottom, CV_RGB(200, 20, 20), 2, cv::LINE_4, 0);
+
+	cv::imshow("reader", img);
+}
+
+void mouse_callback_function(int event, int x, int y, int flags, void* userdata)
+{
+	if  ( event == EVENT_LBUTTONDOWN )
+	{
+		// cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+		bool highlight_found = false;
+		for(int row = 0; row < parse_grid.size() && !highlight_found; row++){
+			for(int col = 0; col < parse_grid.at(row).size() && !highlight_found; col++){
+				pair<Point, Point> cell_bounds = get_cell_bounds(start_grid_corner, row, col);
+				if (is_in_bounds(Point(x, y), cell_bounds)){
+					printf("is in bounds row: %d, col: %d\n", row, col);
+					highlighted_cell_position = pair<int, int>(row, col);
+					highlight_found = true;
+					is_highlighted = true;
+					break;
+				}
+			}
+		}
+
+		if (!highlight_found){
+			is_highlighted = false;
+		}
+	}
+	else if  ( event == EVENT_RBUTTONDOWN )
+	{ }
+	else if  ( event == EVENT_MBUTTONDOWN )
+	{ }
+	else if ( event == EVENT_MOUSEMOVE )
+	{ }
+}
+
 int main(int argc, char **argv)
 {
-	namedWindow("reader", 1);
+	namedWindow(screen_name, 1);
 
 	//set the callback function for any mouse event
-	setMouseCallback("reader", mouse_callback_function, NULL);
-	resizeWindow("reader", 1024, 512);
+	setMouseCallback(screen_name, mouse_callback_function, NULL);
+	resizeWindow(screen_name, 1024, 512);
 
 	// Mat image;
 	// read the grammar
@@ -886,11 +966,8 @@ int main(int argc, char **argv)
 	// translate the read frames into cnf frames
 	binarize_grammar();
 
-	Mat img(512, 1024, CV_8UC3, cv::Scalar(0));
-
-	Point start_text_corner = cv::Point(10, img.rows * 3 / 4); // top-left position
-
-	start_grid_corner = start_text_corner + Point(0, -60);
+	update_parse_grid();
+	display();
 
 	while (1)
 	{
@@ -900,145 +977,9 @@ int main(int argc, char **argv)
 		}
 
 		// match word frames against the text
+		display();
 
-		img.setTo(Scalar(0)); // clear screen
-
-		vector<string> split_tokens;
-		vector<Frame> word_frames;
-		boost::split(split_tokens, current_utterance, boost::is_any_of(" "), boost::token_compress_on);
-
-		int token_count = split_tokens.size();
-
-		// display the text
-		Point ticker_text_corner = start_text_corner;
-		for (int token_index = 0; token_index < split_tokens.size(); token_index++)
-		{
-			string token = split_tokens[token_index];
-			if (token.size() == 0)
-				continue;
-
-			bool does_match = !(word_map.find(token) == word_map.end());
-
-			if (does_match)
-			{
-				Frame word_frame_identified = word_map.at(token);
-				word_frames.push_back(word_frame_identified);
-				// set<string> PoS_set = word_frame_identified.type_set;
-
-				// vector<string> PoS_list = vector<string>(PoS_set.begin(), PoS_set.end());
-
-				// int PoS_type_number = PoS_list.size();
-				// // diplay the part of speech
-				// for (int i = 0; i < PoS_type_number; i++)
-				// {
-				// 	string PoS = PoS_list.at(i);
-
-				// 	Point above_token = above_token_start + Point(0, -20 * i);
-				// 	display_text(img, above_token, PoS, CV_RGB(100, 100, 200), 0.4f);
-				// }
-			}
-
-			if (token_index != split_tokens.size() - 1)
-				token += ' '; // if not last token, add a space
-
-			if (!does_match)
-			{
-				// not present
-				display_text(img, ticker_text_corner, token, CV_RGB(255, 10, 10));
-			}
-			else
-			{
-				display_text(img, ticker_text_corner, token, CV_RGB(118, 185, 0)); // draw token in green
-			}
-
-			// update text_corner position
-			ticker_text_corner += Point(measure_text(token).width, 0);
-		}
-
-		if (!parse_grid.empty() && token_count != 0) {
-			// diplay and initialize parse grid
-
-			//  r3  X
-			//  r2  X  X
-			//  r1  X  X  X
-			//  r0  X  X  X  X
-			//      c0 c1 c2 c3
-
-			int cell_width = 80;
-			int cell_height = 20;
-
-			for (int row = 0; row < parse_grid.size(); row++)
-			{
-				for (int col = 0; col < parse_grid.at(row).size(); col++){
-
-					pair<Point, Point> cell_bounds = get_cell_bounds(row, col);
-
-					Point top_left = cell_bounds.first;
-					Point bottom_right = cell_bounds.second;
-
-					
-					bool is_covered_by_highlight;
-					if (is_highlighted){
-						int highlight_row = highlighted_cell_position.first;
-						int highlight_col = highlighted_cell_position.second;
-						int d_row = highlight_row - row;
-						int d_col = col - highlight_col;
-
-						is_covered_by_highlight = (
-							row <= highlight_row 
-							&& col >= highlight_col
-							&& d_col <= d_row);
-					} else {
-						is_covered_by_highlight = false;
-					}
-					// check if this cell is highlighted
-					if (is_covered_by_highlight)
-					{
-						rectangle(img, top_left, bottom_right, CV_RGB(50, 25, 0), cv::FILLED);
-					}
-
-					// draw rectangle
-					rectangle(img, top_left, bottom_right, CV_RGB(255, 255, 255));
-
-					vector<Frame> frames_in_cell = parse_grid.at(row).at(col);
-
-					Point bottom_left = top_left + Point(10, cell_height - 10);
-					for(int frame_index = 0; frame_index < frames_in_cell.size(); frame_index++)
-					{
-						Frame frame = frames_in_cell.at(frame_index);
-						// display word
-						if (row == 0)
-						{
-							display_text(img, bottom_left, frame.get_part_of_speech(), CV_RGB(100, 100, 200), 0.65f);
-						} else {
-							// display frame
-							// string frame_name =  
-							display_text(img, bottom_left, frame.frame_name, CV_RGB(100, 200, 100), 0.65f);
-
-						}
-
-					}
-				}
-			}
-		}
-		
-
-		int total_tokenized_width = ticker_text_corner.x - start_text_corner.x;
-
-		// display the text cursor
-		Size text_size = measure_text(current_utterance);
-
-		Point cursor_top = start_text_corner + Point(total_tokenized_width, 0);
-		Point cursor_bottom = cursor_top + Point(0, -text_size.height);
-
-		cv::line(img, cursor_top, cursor_bottom, CV_RGB(200, 20, 20), 2, cv::LINE_4, 0);
-
-		cv::imshow("reader", img);
 	}
-	// When everything done, release the video capture object
-	// cap.release();
-
-	// Closes all the frames
 	destroyAllWindows();
 
 	return 0;
