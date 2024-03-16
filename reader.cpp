@@ -255,6 +255,17 @@ bool does_frame_have_features(Frame candidate_frame, vector<FeatureTag> feature_
 		set<string> tag_set = candidate_frame.feature_set;
 		if (test_feature_tag.tag_type == FeatureTagType::Necessary){
 			// look for feature in frame
+<<<<<<< HEAD
+=======
+			printf("looking for feature \"%s\"\n",
+				test_feature_tag.feature_name.c_str());
+
+			for (string s : tag_set){
+				printf(" %s,", s.c_str());
+			}
+			printf("\n");
+
+>>>>>>> bb4f4c74258d84a8c84ec805d5fe2112e8f6292f
 			if (tag_set.count(test_feature_tag.feature_name) == 0)
 				return false;
 		} else {
@@ -661,6 +672,11 @@ void read_grammar(string fileName)
 				reading_feature_groups = false;
 			}
 
+			if (equals(current_line, "FeatureGroups:"))
+			{
+				reading_feature_groups = true;
+			}
+
 			vector<string> split_tokens;
 			boost::split(split_tokens, current_line, boost::is_any_of(" "), boost::token_compress_on);
 
@@ -670,7 +686,15 @@ void read_grammar(string fileName)
 			{
 				term_forms.clear();
 				term_form_names.clear();
+<<<<<<< HEAD
 
+=======
+				// if (first_token.compare("MeasureNoun:") == 0){
+				// 	printf(
+				// 		"eureka!\n"
+				// 	);
+				// }
+>>>>>>> bb4f4c74258d84a8c84ec805d5fe2112e8f6292f
 				// reading a type, to be followed by indent
 				type_heirarchy.push_back(first_token.substr(0, first_token.size() - 1));
 
@@ -743,6 +767,8 @@ void read_grammar(string fileName)
 								necessity = PatternNecessity::Required;
 							}
 
+							printf("'%s'", match_string.c_str());
+
 							// check for features
 							// in this format:
 							// <word>[<feature1>,<feature2>]
@@ -778,6 +804,10 @@ void read_grammar(string fileName)
 							));
 
 						}
+<<<<<<< HEAD
+=======
+						printf("|\n");
+>>>>>>> bb4f4c74258d84a8c84ec805d5fe2112e8f6292f
 						Frame new_pattern_frame = Frame(
 							pattern_name,
 							pattern_nickname,
@@ -792,6 +822,7 @@ void read_grammar(string fileName)
 					string feature_group_name = split_tokens[0];
 					feature_group_name = feature_group_name.substr(0, feature_group_name.size()-1);
 
+<<<<<<< HEAD
 					printf("%s: ", feature_group_name.c_str());
 
 					for(int i = 1; i < split_tokens.size(); i++){
@@ -801,6 +832,9 @@ void read_grammar(string fileName)
 						feature_to_feature_group.emplace(feature_group_name, feature_name);
 					}
 					printf("\n");
+=======
+
+>>>>>>> bb4f4c74258d84a8c84ec805d5fe2112e8f6292f
 				}
 				else
 				{
