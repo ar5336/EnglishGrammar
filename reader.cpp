@@ -16,7 +16,7 @@
 using namespace std;
 using namespace cv;
 
-string current_utterance = "the dog ate the grass on the trail";
+string current_utterance = "eat grass";
 
 bool equals(string a, string b)
 {
@@ -84,9 +84,6 @@ public:
 	string frame_name;
 	string frame_nickname;
 	vector<string> type_heirarchy;
-	// vector<string> pattern;			   // a list of parts of speech or Frame names
-	// vector<PatternNecessity> pattern_types; // whether those parts are optional or not. - not implemented during binarization yet
-	// vector<FeatureTag> pattern_feature_tags;
 	vector<PatternElement> pattern_elements;
 
 	set<string> feature_set; // form of Word
@@ -97,9 +94,14 @@ public:
 	// word frame constructor
 	Frame(vector<string> type_heirarchy,
 		string word_form)
-		: type_heirarchy(type_heirarchy)
+		: type_heirarchy(type_heirarchy),
+		  frame_name(word_form)
 	{
 		// pattern and pattern_form are left null
+		for(string type : type_heirarchy){
+			feature_set.insert(type);
+		}
+		
 		feature_set.emplace(word_form);
 	}
 
@@ -109,16 +111,22 @@ public:
 		: type_heirarchy(type_heirarchy)
 	{
 		// pattern and pattern_form are left null
-		for(int i = 0; i < features.size(); i++){
-			feature_set.emplace(features.at(i));
+		for(string feature : features){
+			feature_set.insert(feature);
 		}
-		feature_set.insert(type_heirarchy.begin(), type_heirarchy.end());
+		
+		for(string type : type_heirarchy){
+			feature_set.insert(type);
+		}
 	}
 
 	// featureless word frame constructor
 	Frame(vector<string> type_heirarchy)
 		: type_heirarchy(type_heirarchy)
 	{
+		for(string type : type_heirarchy){
+			feature_set.insert(type);
+		}
 	}
 
 	// syntax frame constructor
@@ -149,15 +157,15 @@ public:
 		// features not implemented for syntax frames yet
 	}
 
-	// vector<string> get_feature_vector()
-	// {
-	// 	vector<string> type_list = vector<string>(type_set.begin(), type_set.end());
-	// 	return type_list;
-	// }
 
-	string get_part_of_speech()
+	string 	get_part_of_speech()
 	{
 		return type_heirarchy.at(0);
+	}
+
+	bool is_part_of_speech(string part_of_speech)
+	{
+		return feature_set.count(part_of_speech) != 0;
 	}
 
 	// bool is_consumed(string pattern_name)
@@ -170,7 +178,18 @@ public:
 	}
 };
 
-map<string, Frame> word_map;
+map<string, vector<Frame>> word_map;
+void add_to_word_map(Frame frame, string word_string){
+	if (!(word_map.find(word_string) == word_map.end())){
+		word_map.at(word_string).push_back(frame);
+	}
+	else {
+		vector<Frame> frame_vector;
+		frame_vector.push_back(frame);
+		word_map.emplace(word_string, frame_vector);
+	}
+}
+
 map<string, string> base_pos_to_type_map; // not used yet - good for advanced parsing efficiency
 map<string, set<Frame>> pos_map; // not used yet - good for advanced parsing efficiency
 
@@ -215,13 +234,11 @@ bool is_in_bounds(Point point, pair<Point, Point> bounds)
 {
 	Point top_left = bounds.first;
 	Point bottom_right = bounds.second;
-	// printf("top left: %d, %d\n", top_left.x, top_left.y);
-	// printf("bottom right: %d, %d\n", bottom_right.x, bottom_right.y);
 
 	return point.x >= top_left.x && point.x <= bottom_right.x && point.y >= top_left.y && point.y <= bottom_right.y;
 }
 
-bool is_frame_accepted(Frame candidate_frame, vector<FeatureTag> feature_tags)
+bool does_frame_have_features(Frame candidate_frame, vector<FeatureTag> feature_tags)
 {
 	for (int feature_tag_index = 0; feature_tag_index < feature_tags.size(); feature_tag_index++)
 	{
@@ -230,11 +247,14 @@ bool is_frame_accepted(Frame candidate_frame, vector<FeatureTag> feature_tags)
 		set<string> tag_set = candidate_frame.feature_set;
 		if (test_feature_tag.tag_type == FeatureTagType::Necessary){
 			// look for feature in frame
-			printf("looking for feature \"%s\"in frame\n", test_feature_tag.feature_name.c_str());
+			printf("looking for feature \"%s\"\n",
+				test_feature_tag.feature_name.c_str());
+
 			for (string s : tag_set){
 				printf(" %s,", s.c_str());
 			}
 			printf("\n");
+
 			if (tag_set.count(test_feature_tag.feature_name) == 0)
 				return false;
 		} else {
@@ -264,8 +284,10 @@ bool get_matched_frames(Frame left_frame, Frame right_frame, vector<Frame>& matc
 	}
 
 	string match_string = left_string + " " + right_string;
+	printf("finding matching frames - '%s'\n", match_string.c_str());
+
 	// printf("match string: %s\n", match_string.c_str());
-	if (cnf_map.count(match_string) != 0){
+	if (!(cnf_map.find(match_string) == cnf_map.end())){
 		vector<Frame> frames_to_doublecheck = cnf_map.at(match_string);
 
 		// vector<Frame> accepted_frames;
@@ -281,9 +303,9 @@ bool get_matched_frames(Frame left_frame, Frame right_frame, vector<Frame>& matc
 
 			vector<FeatureTag> left_feature_tags = left_pattern_element.feature_tags;
 			vector<FeatureTag> right_feature_tags = right_pattern_element.feature_tags;
-
-			if (is_frame_accepted(left_frame, left_feature_tags)
-				&& is_frame_accepted(right_frame, right_feature_tags))
+			
+			if (does_frame_have_features(left_frame, left_feature_tags)
+				&& does_frame_have_features(right_frame, right_feature_tags))
 				matched_frames.push_back(candidate_frame);
 		}
 
@@ -347,8 +369,10 @@ void update_parse_grid()
 
 		if (does_match)
 		{
-			Frame word_frame_identified = word_map.at(token);
-			parse_grid.at(0).at(token_index).push_back(word_frame_identified);
+			vector<Frame> word_frames_identified = word_map.at(token);
+			for (Frame word_frame : word_frames_identified) {
+				parse_grid[0][token_index].push_back(word_frame);
+			}
 		}
 	}
 
@@ -356,6 +380,7 @@ void update_parse_grid()
 		return;
 
 	// perform cyk algo
+	printf("parsing grammar\n");
 	for (int row = 1; row < token_count; row++)
 	{
 		for (int col = 0; col < token_count - row; col++)
@@ -375,19 +400,18 @@ void update_parse_grid()
 
 			for (int pair_index = 0; pair_index < row; pair_index++){
 				int left_row = row - (pair_index + 1);
-				vector<Frame> left_frames = parse_grid.at(left_row).at(col);
+				vector<Frame> left_frames = parse_grid[left_row][col];
 
 				// for (int right_index = 0; right_index < row; right_index++){
 					int step_diagonal = row - pair_index;
 					int right_row = row - step_diagonal;
 					int right_col = col + step_diagonal;
-					vector<Frame> right_frames = parse_grid.at(right_row).at(right_col);
+					vector<Frame> right_frames = parse_grid[right_row][right_col];
 
 					vector<Frame> matching_frames = find_matching_frames(left_frames, right_frames);
-					for (int matched_index = 0; matched_index < matching_frames.size(); matched_index++){
-						Frame matched_frame = matching_frames.at(matched_index);
+					for (Frame matching_frame : matching_frames){
 						// printf("adding matched frame named %s. to row %d, col %d\n", matched_frame.frame_name.c_str(), row, col);
-						parse_grid.at(row).at(col).push_back(matched_frame);
+						parse_grid[row][col].push_back(matching_frame);
 					}
 				// }
 			}
@@ -398,6 +422,7 @@ void update_parse_grid()
 
 bool check_keypress(char cr)
 {
+	is_highlighted = false;
 	if (cr == 27)
 	{
 		return true; // break
@@ -405,8 +430,13 @@ bool check_keypress(char cr)
 	else
 	{
 		// printf("character: %d\n", cr);
-		if (cr >= 97 && cr <= 122 || cr == 32)
+		if (cr >= 97 && cr <= 122 || cr == 32){
 			current_utterance += cr;
+			update_parse_grid();
+
+			// display();
+		}
+		
 		if (cr == 8)
 		{ // backspace{
 			int utterance_size = current_utterance.size();
@@ -486,6 +516,7 @@ int count_initial_spaces(string str)
 //   > A C
 void binarize_grammar()
 { // first version with assumption of no optional frames - to be updated.
+	printf("binarizing grammar\n");
 	for (int frame_index = 0; frame_index < syntax_frames.size(); frame_index++)
 	{
 		vector<Frame> cnf_subframes;
@@ -562,10 +593,13 @@ void read_grammar(string fileName)
 	fstream newfile;
 	int tab_spaces = 4;
 
+	printf("reading grammar\n");
+
 	newfile.open(fileName, ios::in); // open a file to perform read operation using file object
 	if (newfile.is_open())
 	{ // checking whether the file is open
 		bool reading_syntax = false;
+		bool reading_feature_groups = false;
 		string current_line;
 
 		int previous_indentation = 0;
@@ -610,6 +644,11 @@ void read_grammar(string fileName)
 				reading_syntax = true;
 			}
 
+			if (equals(current_line, "FeatureGroups:"))
+			{
+				reading_feature_groups = true;
+			}
+
 			vector<string> split_tokens;
 			boost::split(split_tokens, current_line, boost::is_any_of(" "), boost::token_compress_on);
 
@@ -617,6 +656,13 @@ void read_grammar(string fileName)
 			string first_token = split_tokens[0];
 			if (first_token.at(first_token.size() - 1) == ':')
 			{
+				term_forms.clear();
+				term_form_names.clear();
+				// if (first_token.compare("MeasureNoun:") == 0){
+				// 	printf(
+				// 		"eureka!\n"
+				// 	);
+				// }
 				// reading a type, to be followed by indent
 				type_heirarchy.push_back(first_token.substr(0, first_token.size() - 1));
 
@@ -683,6 +729,8 @@ void read_grammar(string fileName)
 								necessity = PatternNecessity::Required;
 							}
 
+							printf("'%s'", match_string.c_str());
+
 							// check for features
 							// in this format:
 							// <word>[<feature1>,<feature2>]
@@ -691,6 +739,7 @@ void read_grammar(string fileName)
 							int feature_open_pos = match_string.find('[');
 							if (feature_open_pos != -1)
 							{
+								// pattern element has feature tags
 								string feature_string = match_string.substr(feature_open_pos, match_string.size());
 								match_string = match_string.substr(0, feature_open_pos);
 
@@ -712,7 +761,7 @@ void read_grammar(string fileName)
 							));
 
 						}
-
+						printf("|\n");
 						Frame new_pattern_frame = Frame(
 							pattern_name,
 							pattern_nickname,
@@ -720,6 +769,13 @@ void read_grammar(string fileName)
 
 						syntax_frames.push_back(new_pattern_frame);
 					}
+				}
+				else if (reading_feature_groups)
+				{
+					string feature_group_name = split_tokens[0];
+					feature_group_name = feature_group_name.substr(0, feature_group_name.size()-1);
+
+
 				}
 				else
 				{
@@ -741,27 +797,28 @@ void read_grammar(string fileName)
 						}
 						Frame new_word_frame = Frame(type_pruned, features);
 
-						word_map.emplace(word_string, new_word_frame);
+						add_to_word_map(new_word_frame, word_string);
 					}
 					else {
 						for (int word_form_index = 0; word_form_index < split_tokens.size(); word_form_index++)
 						{
-							string wordString = split_tokens[word_form_index];
+							string word_string = split_tokens[word_form_index];
 							// TODO - add mapping to base form of word for conceptual association
+							
+							Frame new_word_frame;
+
 							if (term_form_names.size() < word_form_index + 1)
 							{
 								// no form list
-								Frame new_word_frame = Frame(type_pruned, wordString);
-								word_map.emplace(wordString, new_word_frame);
+								new_word_frame = Frame(type_pruned);
+
 							}
 							else
 							{
 								string word_form = term_form_names.at(word_form_index);
-								Frame new_word_frame = Frame(type_pruned, word_form);
-
-								word_map.emplace(wordString, new_word_frame);
+								new_word_frame = Frame(type_pruned, word_form);
 							}
-							
+							add_to_word_map(new_word_frame, word_string);
 						}
 					}
 				}
@@ -797,6 +854,8 @@ Mat img(512, 1024, CV_8UC3, cv::Scalar(0));
 Point start_text_corner = cv::Point(10, img.rows * 3 / 4); // top-left position
 Point start_grid_corner = start_text_corner + Point(0, -60);
 
+Scalar HIGHLIGHTER_YELLOW = CV_RGB(50, 25, 0);
+
 void display ()
 {
 	vector<string> split_tokens;
@@ -806,39 +865,8 @@ void display ()
 	img.setTo(Scalar(0)); // clear screen
 
 	int token_count = split_tokens.size();
-	
-	// display the text
-	Point ticker_text_corner = start_text_corner;
-	for (int token_index = 0; token_index < split_tokens.size(); token_index++)
-	{
-		string token = split_tokens[token_index];
-		if (token.size() == 0)
-			continue;
 
-		bool does_match = !(word_map.find(token) == word_map.end());
-
-		if (does_match)
-		{
-			Frame word_frame_identified = word_map.at(token);
-			word_frames.push_back(word_frame_identified);
-		}
-
-		if (token_index != split_tokens.size() - 1)
-			token += ' '; // if not last token, add a space
-
-		if (!does_match)
-		{
-			// not present
-			display_text(img, ticker_text_corner, token, CV_RGB(255, 10, 10));
-		}
-		else
-		{
-			display_text(img, ticker_text_corner, token, CV_RGB(118, 185, 0)); // draw token in green
-		}
-
-		// update text_corner position
-		ticker_text_corner += Point(measure_text(token).width, 0);
-	}
+	vector<bool> is_word_highlighted;
 
 	if (!parse_grid.empty() && token_count != 0) {
 		// diplay and initialize parse grid
@@ -876,10 +904,15 @@ void display ()
 				} else {
 					is_covered_by_highlight = false;
 				}
+
+				if (row == 0)
+					is_word_highlighted.push_back(is_covered_by_highlight);
+
 				// check if this cell is highlighted
 				if (is_covered_by_highlight)
 				{
-					rectangle(img, top_left, bottom_right, CV_RGB(50, 25, 0), cv::FILLED);
+
+					rectangle(img, top_left, bottom_right, HIGHLIGHTER_YELLOW, cv::FILLED);
 				}
 
 				// draw rectangle
@@ -894,18 +927,57 @@ void display ()
 					// display word
 					if (row == 0)
 					{
-						display_text(img, bottom_left, frame.get_part_of_speech(), CV_RGB(100, 100, 200), 0.65f);
+						display_text(img, bottom_left, frame.get_part_of_speech(), CV_RGB(100, 100, 200), 0.45f);
 					} else {
 						// display frame
 						// string frame_name =  
-						display_text(img, bottom_left, frame.frame_name, CV_RGB(100, 200, 100), 0.65f);
+						display_text(img, bottom_left, frame.frame_name, CV_RGB(100, 200, 100), 0.45f);
 
 					}
 
 				}
 			}
 		}
-	}	
+	}
+
+	// display the text
+	Point ticker_text_corner = start_text_corner;
+	for (int token_index = 0; token_index < split_tokens.size(); token_index++)
+	{
+		string token = split_tokens[token_index];
+		if (token.size() == 0)
+			continue;
+
+		bool does_match = !(word_map.find(token) == word_map.end());
+
+		if (does_match)
+		{
+			vector<Frame> word_frames_identified = word_map.at(token);
+
+			word_frames.push_back(word_frames_identified[0]);
+		}
+
+		if (token_index != split_tokens.size() - 1)
+			token += ' '; // if not last token, add a space
+
+		if (is_highlighted && is_word_highlighted[token_index]) {
+			cv::Size size = measure_text(token);
+			rectangle(img, ticker_text_corner, ticker_text_corner+Point(size.width, -size.height), HIGHLIGHTER_YELLOW, cv::FILLED);
+		}
+
+		if (!does_match)
+		{
+			// not present
+			display_text(img, ticker_text_corner, token, CV_RGB(255, 10, 10));
+		}
+		else
+		{
+			display_text(img, ticker_text_corner, token, CV_RGB(118, 185, 0)); // draw token in green
+		}
+
+		// update text_corner position
+		ticker_text_corner += Point(measure_text(token).width, 0);
+	}
 
 	int total_tokenized_width = ticker_text_corner.x - start_text_corner.x;
 
@@ -942,6 +1014,7 @@ void mouse_callback_function(int event, int x, int y, int flags, void* userdata)
 		if (!highlight_found){
 			is_highlighted = false;
 		}
+		display();
 	}
 	else if  ( event == EVENT_RBUTTONDOWN )
 	{ }

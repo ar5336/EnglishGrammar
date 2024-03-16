@@ -62,6 +62,26 @@ Notes:
 [ ] add transitive and intransitive verbs
     (can't  think of verbs that can't be made intransitive. I guess that's why "i just was" requires the 'just')
 
+[ ] add some type group data structure. perhaps I should start splitting the grammar into multiple text files
+    this is in order to make agreement easier to write frames for.
+
+    like
+        Noun[Pronoun,singular] Verb[LinkingVerb,singular]
+            <i am>, <he is>, <she is> !<she am>
+        Noun[Pronoun,plural] Verb[LinkingVerb,plural]
+            <we are>, <they are>
+        
+        with the info
+            NUMBER: singular, plural
+            PERSON: 1stPerson, 2ndPerson, 3rdPerson
+        
+        VerbPhrase: Noun[Pronoun,NUMBER,PERSON] Verb[LinkingVerb,NUMBER,PERSON] (-continuous)
+            <i am>, <they are>, <she is>, <you are>, <we are>
+        
+        this requires parse frames to also have features
+        NounPhrase:
+            Det Noun[NUMBER] -NUMBER
+        
 
 
 
