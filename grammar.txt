@@ -44,10 +44,7 @@ Words:
             meat
             grass
             code
-<<<<<<< HEAD
             rain
-=======
->>>>>>> bb4f4c74258d84a8c84ec805d5fe2112e8f6292f
         Pronoun:
             i -1stPerson -singular -objective
             me -1stPerson -singular -subjective
@@ -84,13 +81,10 @@ Words:
             which
             who
             whom
-<<<<<<< HEAD
         Name:
             steve
             greg
             frank
-=======
->>>>>>> bb4f4c74258d84a8c84ec805d5fe2112e8f6292f
     Verb: 
         Transitive: # simple continuous perfect 3PPresent (pastPart)
             take taking took takes taken
@@ -247,10 +241,3 @@ Frames:
 
     AdjectivePhrase "AP"
         Adjective NounPhrase
-
-FeatureGroups:
-    NUMBER: singular plural
-    GENDER: masculine feminine neuter
-    PAST: perfet pastPart
-    PRESENT: 3PPresent simple
-    PERSON: 1stPerson 2ndPerson 3rdPerson
