@@ -16,7 +16,7 @@
 using namespace std;
 using namespace cv;
 
-string current_utterance = "eat grass";
+string current_utterance = "";
 
 bool equals(string a, string b)
 {
@@ -149,11 +149,13 @@ public:
 	// cnf frame constructor
 	Frame(
 		string frame_name,
+		string frame_nickname,
 		// set<string> type_set,
 		PatternElement left,
 		PatternElement right,
 		set<string> feature_set)
 		: frame_name(frame_name),
+		  frame_nickname(frame_nickname),
 		  feature_set(feature_set)
 		//   type_set(type_set),
 	{
@@ -530,6 +532,7 @@ void binarize_grammar()
 
 		vector<PatternElement> base_pattern = frame.pattern_elements;
 		string base_frame_name = frame.frame_name;
+		string base_frame_nickname = frame.frame_nickname;
 		set<string> base_frame_feature_set = frame.feature_set;
 
 		// create subframe 0 for pattern elements 0 and 1
@@ -554,14 +557,17 @@ void binarize_grammar()
 			set<string> feature_set;
 
 			string frame_name;
+			string frame_nickname;
 			if (subframe_index == 0)
-			{
+			{ // a word
 				frame_name = base_frame_name;
 				feature_set = base_frame_feature_set;
+				frame_nickname = base_frame_nickname;
 			}
 			else
-			{
+			{ // a syntactic frame
 				frame_name = base_frame_name + to_string(subframe_index);
+				frame_nickname = base_frame_nickname + to_string(subframe_index);
 			}
 
 			PatternElement pattern_right = base_pattern.at(base_pattern.size() - 1 - subframe_index);
@@ -579,6 +585,7 @@ void binarize_grammar()
 			Frame new_cnf_frame
 				= Frame(
 					frame_name,
+					frame_nickname,
 					pattern_left,
 					pattern_right,
 					feature_set);
@@ -861,7 +868,7 @@ void display_text(Mat img, Point pos, string text, Scalar color, float font_scal
 			1);
 }
 
-Size measure_text(string text)
+Size measure_text(string text, float font_scale = 1.0)
 {
 	int was_found;
 	return getTextSize(text,
@@ -935,27 +942,35 @@ void display ()
 				{
 
 					rectangle(img, top_left, bottom_right, HIGHLIGHTER_YELLOW, cv::FILLED);
+				} else {
+					rectangle(img, top_left, bottom_right, CV_RGB(0, 0, 0), cv::FILLED);
+
 				}
 
 				// draw rectangle
 				rectangle(img, top_left, bottom_right, CV_RGB(255, 255, 255));
 
 				vector<Frame> frames_in_cell = parse_grid.at(row).at(col);
+				
+				float cell_font_scale = .5f;
 
-				Point bottom_left = top_left + Point(10, cell_height - 10);
+				Point bottom_left = top_left + Point(3, cell_height - 3);
+				Point ticker_cell_text = bottom_left;
 				for(int frame_index = 0; frame_index < frames_in_cell.size(); frame_index++)
 				{
 					Frame frame = frames_in_cell.at(frame_index);
 					// display word
+					string cell_text;
 					if (row == 0)
 					{
-						display_text(img, bottom_left, frame.get_part_of_speech(), CV_RGB(100, 100, 200), 0.45f);
+						cell_text = frame.get_part_of_speech();
+						display_text(img, ticker_cell_text, cell_text, CV_RGB(100, 100, 200), cell_font_scale);
 					} else {
 						// display frame
-						// string frame_name =  
-						display_text(img, bottom_left, frame.frame_name, CV_RGB(100, 200, 100), 0.45f);
-
+						cell_text = frame.frame_nickname;
+						display_text(img, ticker_cell_text, cell_text, CV_RGB(100, 200, 100), cell_font_scale);
 					}
+					ticker_cell_text += Point(measure_text(cell_text, cell_font_scale).width, 0);
 
 				}
 			}
@@ -1024,7 +1039,6 @@ void mouse_callback_function(int event, int x, int y, int flags, void* userdata)
 			for(int col = 0; col < parse_grid.at(row).size() && !highlight_found; col++){
 				pair<Point, Point> cell_bounds = get_cell_bounds(start_grid_corner, row, col);
 				if (is_in_bounds(Point(x, y), cell_bounds)){
-					printf("is in bounds row: %d, col: %d\n", row, col);
 					highlighted_cell_position = pair<int, int>(row, col);
 					highlight_found = true;
 					is_highlighted = true;
