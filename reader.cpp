@@ -286,22 +286,29 @@ bool does_frame_have_features(Frame candidate_frame, bool is_left, Frame& consum
 	for (string feature_group_tag : feature_group_tags) {
 		vector<string> features_to_check_for = feature_group_to_features.at(feature_group_tag);
 
-		printf("number of features to check for: %ld\n", features_to_check_for.size());
 		bool any_feature_matches_group = false;
 		for (string feature_to_check_for : features_to_check_for)
 		{
 			if (candidate_frame.feature_set.count(feature_to_check_for) != 0){
 				any_feature_matches_group = true;
-				printf("found feature group match");
 				// modify the consumer frame's tag. also modify the subsequent appearances of this feature group tag
 				consumer_frame.feature_set.emplace(feature_to_check_for);
 				if (element_index == 0){
-					consumer_frame.pattern_elements[1].feature_tags.push_back(
-						FeatureTag(
-							feature_to_check_for,
-							FeatureTagType::Necessary
-						)
-					);
+					// before appending a feature, check if the subsequent pattern element has a feature_group_tag
+					bool does_have_feature_group = false;
+					for(string potential_matching_feature_group : consumer_frame.pattern_elements[1].feature_group_tags){
+						if (equals(potential_matching_feature_group, feature_group_tag)){
+							does_have_feature_group = true; // todo change the feature_group_tags to a set instead of a vector for perf improvement
+							continue;
+						}
+					}
+					if (does_have_feature_group)
+						consumer_frame.pattern_elements[1].feature_tags.push_back(
+							FeatureTag(
+								feature_to_check_for,
+								FeatureTagType::Necessary
+							)
+						);
 				}
 				any_feature_matches_group = true;
 			}
@@ -496,6 +503,10 @@ bool check_keypress(char cr)
 			// update the cyk grid with the latest utterance
 			update_parse_grid();
 		}
+		if (cr == '\'')
+		{
+			current_utterance += '\'';
+		}
 
 		return false;
 	}
@@ -540,7 +551,7 @@ int count_initial_spaces(string str)
 {
 	char initial_char = str.at(0);
 	int char_index = 0;
-	while (initial_char == ' ')
+	while (initial_char == ' ' && char_index < str.size()-1)
 	{
 		char_index++;
 		initial_char = str.at(char_index);
@@ -831,6 +842,7 @@ void read_grammar(string fileName)
 
 								for(int feature_tag_index = 0; feature_tag_index < feature_names.size(); feature_tag_index++){
 									string feature_name = feature_names[feature_tag_index];
+									trim(feature_name);
 									if (feature_name[0] == '!'){
 										// negatives not allowed on feature groups - assuming this is a regular feature
 										feature_name = feature_name.substr(1, feature_name.size()-1);
@@ -1003,6 +1015,7 @@ void display ()
 
 				
 				bool is_covered_by_highlight;
+				bool is_this_cell_selected;
 				if (is_highlighted){
 					int highlight_row = highlighted_cell_position.first;
 					int highlight_col = highlighted_cell_position.second;

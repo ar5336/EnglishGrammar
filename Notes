@@ -39,7 +39,8 @@ Notes:
     NP > Pronoun Noun
         > the king rode upon <his horse>
 
-[ ] actually use pattern necessity type (this will require extra nuances in binarize_grammar - reference to 'higher' production rules, and modification thereof. With maintenence of reference to the original CNF)
+[ ] actually use pattern necessity type (this will require extra nuances in binarize_grammar
+    - reference to 'higher' production rules, and modification thereof. With maintenence of reference to the original CFG)
 
 [X] clicking on a cell to highligh all the terms that correspond to it in yellow
 
@@ -63,7 +64,7 @@ Notes:
 [ ] add transitive and intransitive verbs
     (can't  think of verbs that can't be made intransitive. I guess that's why "i just was" requires the 'just')
 
-[ ] add some type group data structure. perhaps I should start splitting the grammar into multiple text files
+[X] add some type group data structure. perhaps I should start splitting the grammar into multiple text files
     this is in order to make agreement easier to write frames for.
 
     like
@@ -87,7 +88,15 @@ Notes:
         For example:
             Noun[NUMBER] 
         
+[ ] display the complete contents of a cell you have selected
+    S - Sentence
+        -Plural -1stPerson
 
+        NounPhrase[singular, determined] VerbPhrase
+
+    subsequent clicks cycle through the different frames in the cell
+
+[ ] the cell you have selected, show a tree for it.
 
 
 

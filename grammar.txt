@@ -11,6 +11,7 @@ Words:
         color colors
         food foods
         fish fishes
+        cow cows
         bridge bridges
         castle castles
         village villages
@@ -46,6 +47,8 @@ Words:
         bee bees
         mind minds
         body bodies
+        water waters
+        cookie cookies
         MassNoun:
             pollen
             water
@@ -89,10 +92,10 @@ Words:
             it -3rdPerson -singular -neuter -inanimate
             its -3rdPerson -singular -neuter -possessive -inanimate
         RelativePronoun:
-            that
+            that -inanimate
             which
-            who
-            whom
+            who -animate
+            whom -animate
         Name:
             steve
             greg
@@ -105,30 +108,32 @@ Words:
             why
             which
             whose
-    Verb: 
-        Transitive: # simple continuous perfect 3PPresent (pastPart)
-            take taking took takes taken
-            gift gifting gifted gifts
-            point pointing pointed points
-        Intransitive: # simple continuous perfect 3PPresent (pastPart)
-            ride riding rode rides ridden
-            jump jumping jumped jumps
-            play playing played plays
-            eat eating ate eats eaten
-            drink drinking diank drinks drunk
-            rise rising rose rises risen
-            shake shaking shook shakes shaken
-            stir stirring stirred stirs
-            stand standing stood stands
-            run running ran runs
-            rain raining rained rains
-            snow snowing snowed snows
-            make making made makes
-            grow growing grew grows
-            bark barking barked barks
-            meow meowing meowed meows
-            see seeing saw sees seen
-            lose losing lost loses
+    Verb:
+        MainVerb:
+            Transitive: # simple continuous perfect 3PPresent (pastPart)
+                take taking took takes taken
+                gift gifting gifted gifts
+                point pointing pointed points
+            Intransitive: # simple continuous perfect 3PPresent (pastPart)
+                ride riding rode rides ridden
+                jump jumping jumped jumps
+                play playing played plays
+                eat eating ate eats eaten
+                drink drinking diank drinks drunk
+                rise rising rose rises risen
+                swim simming swam swims swum
+                shake shaking shook shakes shaken
+                stir stirring stirred stirs
+                stand standing stood stands
+                run running ran runs
+                rain raining rained rains
+                snow snowing snowed snows
+                make making made makes
+                grow growing grew grows
+                bark barking barked barks
+                meow meowing meowed meows
+                see seeing saw sees seen
+                lose losing lost loses
         AuxiliaryVerb: # simple continuous perfect 3PPresent (pastPart)
             be being was is been
             have having had has
@@ -138,6 +143,9 @@ Words:
             must -obligation
             will -offer
             will -futureProbability
+            may -futureProbability
+            could -futureProbability
+            might -futureProbability
             would -offer
             can -ability
             could -ability
@@ -146,15 +154,18 @@ Words:
             shall
         LinkingVerb:
             am -singular -1stPerson -continuous
-            is -3rdPerson -singular
-            are -plural -3rdPerson -present
-            are -singular -2ndPerson
-            are -plural -1stPerson
+            is -3rdPerson -singular -masculine -continuous
+            is -3rdPerson -singular -feminine -continuous
+            are -plural -3rdPerson -present -continuous
+            are -plural -3rdPerson -present -neuter -continuous
+            are -singular -2ndPerson -continuous
+            are -plural -2ndPerson -continuous
+            are -plural -1stPerson -continuous
             be 
             been
             being
             did
-            do -plural
+            do -plural -present
             does -singular
             had -perfect
             has -pastPart -3rdPerson
@@ -162,19 +173,21 @@ Words:
             was
             were
     Adjective:
-        NonComparable:
-            beautiful
-            ceaseless
-        Comparable: # absolute comparative superlative
-            happy happier happiest
-            funny funnier funniest
-            fast faster fastest
-            quick quicker quickest
-            lazy lazier laziest
-            brown browner brownest
-            fat fatter fattest
-            ugly uglier ugliest
-            dark darker darkest
+        MainAdjective:
+            NonComparable:
+                beautiful
+                ceaseless
+                favorite
+            Comparable: # absolute comparative superlative
+                happy happier happiest
+                funny funnier funniest
+                fast faster fastest
+                quick quicker quickest
+                lazy lazier laziest
+                brown browner brownest
+                fat fatter fattest
+                ugly uglier ugliest
+                dark darker darkest
         PossessiveAdjective:
             my -1stPerson -singular -possessive
             our -1stPerson -plural -possessive
@@ -185,6 +198,11 @@ Words:
         over
         under
     Adverb:
+        Descriptive:
+            quickly
+            slowly
+            rapidly
+        often
         over
         not
     Determiner:
@@ -234,9 +252,10 @@ Words:
 FeatureGroups:
     NUMBER= singular plural
     GENDER= masculine feminine neuter
-    PAST= perfet pastPart
-    PRESENT= 3PPresent simple
+    PAST= perfect pastPart
+    PRESENT= 3PPresent simple continuous
     PERSON= 1stPerson 2ndPerson 3rdPerson
+    MODE= advice obligation offer futureProbability ability permission
 
 Frames:
     NounPhrase "NP"
@@ -245,21 +264,23 @@ Frames:
         Determiner AdjectivePhrase[plural] -plural -determined
         NounPhrase[determined] PrepPhrase
         Noun[Pronoun,possessive] Noun -determined
+            # my cat, his cat, her cat
 
         Adjective[PossessiveAdjective] Noun -determined
+        Adjective[MainAdjective] Noun[NUMBER] -NUMBER
 
         Noun Conjunction Noun -plural
 
         Noun[Pronoun,possessive] NounPhrase[!determined,NUMBER] -determined -NUMBER
-            # this also doesn't appear to work
+            # my cat, *my the cat ... bad examples
     VerbPhrase "VP"
-        Verb NounPhrase
+        Verb[MainVerb] NounPhrase
         Verb Adverb
         Adverb Verb
 
         Verb[!perfect] Noun[MassNoun] -singular
         Verb[!3PPresent] Noun[MassNoun] -plural
-            # eat grass, eats grass
+            # eat grass, eats grass, eating grass
 
         Noun[plural] Verb[simple] -plural
         Noun[singular] Verb[!simple,!continuous,!3PPresent] -singular
@@ -277,25 +298,42 @@ Frames:
         Preposition NounPhrase
         Preposition VerbPhrase
     Sentence "S"
-        Noun[Pronoun,NUMBER]  Verb[LinkingVerb,NUMBER] Adjective -NUMBER
-            # this currently does not work
+        PreIndicativePhrase Adjective
+            # i am happy
+
+        InterrogativeClause[NUMBER] VerbPhrase[NUMBER]
+            # can i eat the cookie, can i eat grass
+
+        NounPhrase[NUMBER] PostIndicativePhrase[NUMBER]
+            # the waters are rising
         VerbPhrase NounPhrase
+        NounPhrase[NUMBER] VerbPhrase[NUMBER]
         VerbPhrase PrepPhrase
         VerbPhrase AdjectivePhrase
-        NounPhrase[plural] VerbPhrase[plural] -plural
         Sentence PrepPhrase
-        Noun[Pronoun,NUMBER] VerbPhrase[NUMBER]
-        Noun[Pronoun,plural] VerbPhrase[plural]
+        Noun[Pronoun,plural] VerbPhrase
     Question "Q"
-        InterrogativeClause[singular] VerbPhrase[singular] -singular
-        InterrogativeClause[plural] VerbPhrase[plural] -plural
-    InterrogativeClause "IC"
-        Verb[ModalVerb] Noun[NUMBER] -NUMBER
+        InterrogativeClause[NUMBER] VerbPhrase[NUMBER] -NUMBER
+    InterrogativeClause "IntC"
+        Verb[ModalVerb,MODE] Noun[NUMBER] -NUMBER -MODE
             # can you, can i
+            # should i, might i
 
         Verb[LinkingVerb,PERSON,NUMBER] Noun[Pronoun,PERSON,NUMBER] -PERSON -NUMBER
             # am i
             # are we
+
+        Verb[LinkingVerb,continuous,NUMBER] NounPhrase[NUMBER] -present -continuous -NUMBER
+            # is a house
+            # do the horses
+    PostIndicativePhrase "poIP"
+        Verb[LinkingVerb,continuous,NUMBER] Verb[continuous] -present -continuous -NUMBER
+            # are rising
+            # is rising
+    PreIndicativePhrase "prIP"
+        Noun[Pronoun,NUMBER,PERSON]  Verb[LinkingVerb,NUMBER,PERSON] -NUMBER
+            # i am
+            # you are
     Adjective "Adj"
         Adjective Adjective
     AdjectivePhrase "AP"
