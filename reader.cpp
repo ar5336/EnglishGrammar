@@ -40,11 +40,9 @@ class FeatureTag
 public:
 	string feature_name;
 	FeatureTagType tag_type;
-	bool is_feature_group;
 
 	FeatureTag(string name, FeatureTagType type)
 	: feature_name(name), tag_type(type){
-
 	}
 };
 
@@ -55,6 +53,7 @@ public:
 	string pattern_true_match_type;
 	PatternNecessity necessity;
 	vector<FeatureTag> feature_tags;
+	vector<string> feature_group_tags;
 
 	// default constructor
 	PatternElement()
@@ -71,11 +70,13 @@ public:
 		string match_string,
 		string pattern_true_match_type,
 		PatternNecessity necessity,
-		vector<FeatureTag> feature_tags)
+		vector<FeatureTag> feature_tags,
+		vector<string> feature_group_tags)
 	: match_string(match_string),
 	  pattern_true_match_type(pattern_true_match_type),
 	  necessity(necessity),
-	  feature_tags(feature_tags)
+	  feature_tags(feature_tags),
+	  feature_group_tags(feature_group_tags)
 	{}
 };
 
@@ -87,7 +88,8 @@ public:
 	vector<string> type_heirarchy;
 	vector<PatternElement> pattern_elements;
 
-	set<string> feature_set; // form of Word
+	set<string> feature_set; // feature applied to word or syntax pattern
+	set<string> feature_groups;
 
 	// default constructor
 	Frame() {}
@@ -137,14 +139,14 @@ public:
 		// vector<string> pattern,
 		// vector<PatternNecessity> pattern_types
 		vector<PatternElement> pattern_elements,
-		set<string> feature_set)
+		set<string> feature_set,
+		set<string> feature_groups)
 		: frame_name(frame_name),
 		  frame_nickname(frame_nickname),
 		  pattern_elements(pattern_elements),
-		  feature_set(feature_set)
-	{
-		// features not implemented for syntax frames yet
-	}
+		  feature_set(feature_set),
+		  feature_groups(feature_groups)
+	{ }
 
 	// cnf frame constructor
 	Frame(
@@ -153,10 +155,12 @@ public:
 		// set<string> type_set,
 		PatternElement left,
 		PatternElement right,
-		set<string> feature_set)
+		set<string> feature_set,
+		set<string> feature_groups)
 		: frame_name(frame_name),
 		  frame_nickname(frame_nickname),
-		  feature_set(feature_set)
+		  feature_set(feature_set),
+		  feature_groups(feature_groups)
 		//   type_set(type_set),
 	{
 		pattern_elements.push_back(left);
@@ -208,6 +212,8 @@ vector<Frame> cnf_frames;
 map<string, vector<Frame>> cnf_map; // frame A > B C becomes map entry {"B C", "A"}
 
 map<string, string> feature_to_feature_group;
+map<string, vector<string>> feature_group_to_features;
+set<string> feature_group_set;
 
 // map<int, vector<Frame>> pattern_length_map; // unused yet
 // map<set<string>, vector<Frame>> pattern_map; // not used at the moment - good for efficiency when parsing
@@ -248,12 +254,21 @@ bool is_in_bounds(Point point, pair<Point, Point> bounds)
 	return point.x >= top_left.x && point.x <= bottom_right.x && point.y >= top_left.y && point.y <= bottom_right.y;
 }
 
-bool does_frame_have_features(Frame candidate_frame, vector<FeatureTag> feature_tags)
+bool does_frame_have_features(Frame candidate_frame, bool is_left, Frame& consumer_frame)
 {
-	for (int feature_tag_index = 0; feature_tag_index < feature_tags.size(); feature_tag_index++)
-	{
-		FeatureTag test_feature_tag = feature_tags[feature_tag_index];
+	vector<FeatureTag> feature_tags;
+	int element_index;
+	if (is_left){
+		element_index = 0;
+	} else {
+		element_index = 1;
+	}
+	PatternElement pattern_element = consumer_frame.pattern_elements[element_index];
+	feature_tags = pattern_element.feature_tags;
 
+	// first test the regular tags
+	for (FeatureTag test_feature_tag : feature_tags)
+	{
 		set<string> tag_set = candidate_frame.feature_set;
 		if (test_feature_tag.tag_type == FeatureTagType::Necessary){
 			// look for feature in frame
@@ -265,28 +280,57 @@ bool does_frame_have_features(Frame candidate_frame, vector<FeatureTag> feature_
 				return false;
 		}
 	}
+
+	vector<string> feature_group_tags = pattern_element.feature_group_tags;
+	// then test for feature groups
+	for (string feature_group_tag : feature_group_tags) {
+		vector<string> features_to_check_for = feature_group_to_features.at(feature_group_tag);
+
+		printf("number of features to check for: %ld\n", features_to_check_for.size());
+		bool any_feature_matches_group = false;
+		for (string feature_to_check_for : features_to_check_for)
+		{
+			if (candidate_frame.feature_set.count(feature_to_check_for) != 0){
+				any_feature_matches_group = true;
+				printf("found feature group match");
+				// modify the consumer frame's tag. also modify the subsequent appearances of this feature group tag
+				consumer_frame.feature_set.emplace(feature_to_check_for);
+				if (element_index == 0){
+					consumer_frame.pattern_elements[1].feature_tags.push_back(
+						FeatureTag(
+							feature_to_check_for,
+							FeatureTagType::Necessary
+						)
+					);
+				}
+				any_feature_matches_group = true;
+			}
+		}
+		if (!any_feature_matches_group)
+			return false; // consider changing this if the behavior is unexpected
+	}
 	return true;
 }
 
-bool get_matched_frames(Frame left_frame, Frame right_frame, vector<Frame>& matched_frames){ // update to vector<Frame>
+bool get_matched_frames(Frame left_consumer_frame, Frame right_consumer_frame, vector<Frame>& matched_frames){ // update to vector<Frame>
 	string left_string;
-	if (left_frame.is_word_frame()){
+	if (left_consumer_frame.is_word_frame()){
 		// is a word
-		left_string = left_frame.get_part_of_speech();
+		left_string = left_consumer_frame.get_part_of_speech();
 	} else {
-		left_string = left_frame.frame_name;
+		left_string = left_consumer_frame.frame_name;
 	}
 
 	string right_string;
-	if (right_frame.is_word_frame()){
+	if (right_consumer_frame.is_word_frame()){
 		// is a word
-		right_string = right_frame.get_part_of_speech();
+		right_string = right_consumer_frame.get_part_of_speech();
 	} else {
-		right_string = right_frame.frame_name;
+		right_string = right_consumer_frame.frame_name;
 	}
 
 	string match_string = left_string + " " + right_string;
-	printf("finding matching frames - '%s'\n", match_string.c_str());
+	// printf("finding matching frames - '%s'\n", match_string.c_str());
 
 	// printf("match string: %s\n", match_string.c_str());
 	if (!(cnf_map.find(match_string) == cnf_map.end())){
@@ -306,8 +350,8 @@ bool get_matched_frames(Frame left_frame, Frame right_frame, vector<Frame>& matc
 			vector<FeatureTag> left_feature_tags = left_pattern_element.feature_tags;
 			vector<FeatureTag> right_feature_tags = right_pattern_element.feature_tags;
 			
-			if (does_frame_have_features(left_frame, left_feature_tags)
-				&& does_frame_have_features(right_frame, right_feature_tags))
+			if (does_frame_have_features(left_consumer_frame, true, candidate_frame)
+				&& does_frame_have_features(right_consumer_frame, false, candidate_frame))
 				matched_frames.push_back(candidate_frame);
 		}
 
@@ -534,6 +578,7 @@ void binarize_grammar()
 		string base_frame_name = frame.frame_name;
 		string base_frame_nickname = frame.frame_nickname;
 		set<string> base_frame_feature_set = frame.feature_set;
+		set<string> base_frame_feature_groups = frame.feature_groups;
 
 		// create subframe 0 for pattern elements 0 and 1
 
@@ -555,19 +600,22 @@ void binarize_grammar()
 		for (int subframe_index = 0; subframe_index < num_subframes; subframe_index++)
 		{
 			set<string> feature_set;
+			set<string> feature_groups;
 
 			string frame_name;
 			string frame_nickname;
 			if (subframe_index == 0)
-			{ // a word
+			{ // the base frame
 				frame_name = base_frame_name;
 				feature_set = base_frame_feature_set;
+				feature_groups = base_frame_feature_groups;
 				frame_nickname = base_frame_nickname;
 			}
 			else
-			{ // a syntactic frame
+			{ // a product of binarization
 				frame_name = base_frame_name + to_string(subframe_index);
 				frame_nickname = base_frame_nickname + to_string(subframe_index);
+				feature_groups = base_frame_feature_groups;
 			}
 
 			PatternElement pattern_right = base_pattern.at(base_pattern.size() - 1 - subframe_index);
@@ -588,7 +636,8 @@ void binarize_grammar()
 					frame_nickname,
 					pattern_left,
 					pattern_right,
-					feature_set);
+					feature_set,
+					feature_groups);
 			cnf_frames.push_back(new_cnf_frame);
 
 			// add elements to cnf_map
@@ -709,7 +758,7 @@ void read_grammar(string fileName)
 			}
 			else
 			{
-				// reading an entry
+				// reading an syntax entry
 				if (reading_syntax)
 				{
 					// determine if you're reading a name / nickname line or a pattern line
@@ -724,10 +773,16 @@ void read_grammar(string fileName)
 					}
 					else
 					{
+						if (first_token[0] == '#')
+						{
+							// it's a comment, continue
+							continue;
+						}
 						// is a pattern frame
 
 						vector<PatternElement> pattern_elements;
 						set<string> features;
+						set<string> feature_groups;
 						for (int pattern_element_index = 0; pattern_element_index < split_tokens.size(); pattern_element_index++)
 						{
 							PatternNecessity necessity;
@@ -736,6 +791,7 @@ void read_grammar(string fileName)
 							// check for - prefix indicating this being a feature
 							if (match_string[0] == '-'){
 								string feature_name = match_string.substr(1, match_string.size()-1);
+								// check if the feature has the name of a group
 								features.emplace(feature_name);
 								continue;
 							}
@@ -754,13 +810,14 @@ void read_grammar(string fileName)
 								necessity = PatternNecessity::Required;
 							}
 
-							printf("'%s'", match_string.c_str());
+							// printf("'%s'", match_string.c_str());
 
 							// check for features
 							// in this format:
 							// <word>[<feature1>,<feature2>]
 
 							vector<FeatureTag> feature_tags;
+							vector<string> pattern_feature_groups;
 							int feature_open_pos = match_string.find('[');
 							if (feature_open_pos != -1)
 							{
@@ -775,10 +832,21 @@ void read_grammar(string fileName)
 								for(int feature_tag_index = 0; feature_tag_index < feature_names.size(); feature_tag_index++){
 									string feature_name = feature_names[feature_tag_index];
 									if (feature_name[0] == '!'){
+										// negatives not allowed on feature groups - assuming this is a regular feature
 										feature_name = feature_name.substr(1, feature_name.size()-1);
+										if (feature_group_set.count(feature_name) != 0){
+											throw invalid_argument("feature groups are not allowed to be inverted yet.\n");
+										}
+
 										feature_tags.push_back(FeatureTag(feature_name, FeatureTagType::Prohibited));
 									} else {
-										feature_tags.push_back(FeatureTag(feature_name, FeatureTagType::Necessary));
+										// check if feature name is that of a feature group
+										if (feature_group_set.count(feature_name) != 0) {
+											pattern_feature_groups.push_back(feature_name);
+										}
+										else {
+											feature_tags.push_back(FeatureTag(feature_name, FeatureTagType::Necessary));
+										}
 									}
 								}
 							}
@@ -787,7 +855,8 @@ void read_grammar(string fileName)
 								match_string,
 								"",
 								necessity,
-								feature_tags
+								feature_tags,
+								pattern_feature_groups
 							));
 
 						}
@@ -795,16 +864,30 @@ void read_grammar(string fileName)
 							pattern_name,
 							pattern_nickname,
 							pattern_elements,
-							features);
+							features,
+							feature_groups);
 
 						syntax_frames.push_back(new_pattern_frame);
 					}
 				}
 				else if (reading_feature_groups)
 				{
+					//FORMAT:
+					//	GROUPNAME= feature1 feature2 feature3
 					string feature_group_name = split_tokens[0];
+					// cut off the '='
 					feature_group_name = feature_group_name.substr(0, feature_group_name.size()-1);
 
+					feature_group_set.emplace(feature_group_name);
+
+					vector<string> feature_names;
+					for (int i = 1; i < split_tokens.size(); i++){
+						string feature_name = split_tokens[i];
+						feature_names.push_back(feature_name);
+
+						feature_to_feature_group.emplace(feature_name, feature_group_name);
+					}
+					feature_group_to_features.emplace(feature_group_name, feature_names);
 				}
 				else
 				{

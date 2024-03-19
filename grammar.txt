@@ -44,6 +44,8 @@ Words:
         soup soups
         flower flowers
         bee bees
+        mind minds
+        body bodies
         MassNoun:
             pollen
             water
@@ -126,22 +128,26 @@ Words:
             bark barking barked barks
             meow meowing meowed meows
             see seeing saw sees seen
+            lose losing lost loses
         AuxiliaryVerb: # simple continuous perfect 3PPresent (pastPart)
             be being was is been
             have having had has
             do doing did does done
         ModalVerb:
-            should
-            must
-            would
-            will
-            can
-            may
+            should -advice
+            must -obligation
+            will -offer
+            will -futureProbability
+            would -offer
+            can -ability
+            could -ability
+            can -permission
+            may -permissoin
             shall
         LinkingVerb:
             am -singular -1stPerson -continuous
             is -3rdPerson -singular
-            are -plural -3rdPerson
+            are -plural -3rdPerson -present
             are -singular -2ndPerson
             are -plural -1stPerson
             be 
@@ -183,9 +189,9 @@ Words:
         not
     Determiner:
         Article:
-            a
-            an
-            the
+            a -general
+            an -general
+            the -determined
         Demonstrative: # singular plural
             this these
             that those
@@ -234,48 +240,62 @@ FeatureGroups:
 
 Frames:
     NounPhrase "NP"
-        Determiner Noun[plural] -plural -determined
-        Determiner Noun[singular] -singular -determined
+        Determiner Noun[NUMBER] -NUMBER -determined
+
         Determiner AdjectivePhrase[plural] -plural -determined
         NounPhrase[determined] PrepPhrase
         Noun[Pronoun,possessive] Noun -determined
+
         Adjective[PossessiveAdjective] Noun -determined
-        Noun[Pronoun,possessive] NounPhrase[!determined] -determined
+
+        Noun Conjunction Noun -plural
+
+        Noun[Pronoun,possessive] NounPhrase[!determined,NUMBER] -determined -NUMBER
+            # this also doesn't appear to work
     VerbPhrase "VP"
         Verb NounPhrase
         Verb Adverb
         Adverb Verb
+
         Verb[!perfect] Noun[MassNoun] -singular
         Verb[!3PPresent] Noun[MassNoun] -plural
+            # eat grass, eats grass
+
         Noun[plural] Verb[simple] -plural
         Noun[singular] Verb[!simple,!continuous,!3PPresent] -singular
-        NounPhrase[plural] Verb -plural
-        NounPhrase[singular] Verb -singular
+
+        NounPhrase[plural] Verb[!3PPresent] -plural
+        NounPhrase[singular] Verb[!simple] -singular
+
         Noun[Pronoun,singular,neuter,inanimate] Verb[3PPresent]
-        VerbPhrase[singular] Conjunction VerbPhrase[singular] -singular
+            # he runs
+        VerbPhrase Conjunction VerbPhrase -plural
+            # eats grass and drinks water
+            # eating grass and drinking water
     PrepPhrase "PP"
         Preposition Noun
         Preposition NounPhrase
         Preposition VerbPhrase
     Sentence "S"
-        Noun[Pronoun,singular]  Verb[LinkingVerb,singular] Adjective
+        Noun[Pronoun,NUMBER]  Verb[LinkingVerb,NUMBER] Adjective -NUMBER
+            # this currently does not work
         VerbPhrase NounPhrase
         VerbPhrase PrepPhrase
         VerbPhrase AdjectivePhrase
         NounPhrase[plural] VerbPhrase[plural] -plural
         Sentence PrepPhrase
-        Noun[Pronoun,singular] VerbPhrase[singular]
+        Noun[Pronoun,NUMBER] VerbPhrase[NUMBER]
         Noun[Pronoun,plural] VerbPhrase[plural]
     Question "Q"
         InterrogativeClause[singular] VerbPhrase[singular] -singular
         InterrogativeClause[plural] VerbPhrase[plural] -plural
     InterrogativeClause "IC"
-        Verb[LinkingVerb,singular] VerbPhrase[singular] -singular
-        Verb[LinkingVerb,plural] VerbPhrase[plural] -plural
-        Noun[InterrogativePronoun] Noun[singular] -singular
-        Noun[InterrogativePronoun] Noun[plural] -plural
-        Verb[LinkingVerb, 1stPerson, singular] Noun[Pronoun, 1stPerson, singular] -singular 
-        Verb[LinkingVerb, 1stPerson, plural] Noun[Pronoun, 1stPerson, plural] -plural 
+        Verb[ModalVerb] Noun[NUMBER] -NUMBER
+            # can you, can i
+
+        Verb[LinkingVerb,PERSON,NUMBER] Noun[Pronoun,PERSON,NUMBER] -PERSON -NUMBER
+            # am i
+            # are we
     Adjective "Adj"
         Adjective Adjective
     AdjectivePhrase "AP"
