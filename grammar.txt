@@ -49,6 +49,7 @@ Words:
         body bodies
         water waters
         cookie cookies
+        pig pigs
         MassNoun:
             pollen
             water
@@ -60,6 +61,7 @@ Words:
             code
             rain
             hair
+            land
         Pronoun:
             i -1stPerson -singular -objective
             me -1stPerson -singular -subjective
@@ -117,11 +119,12 @@ Words:
             Intransitive: # simple continuous perfect 3PPresent (pastPart)
                 ride riding rode rides ridden
                 jump jumping jumped jumps
+                fly flying flew flies flown
                 play playing played plays
                 eat eating ate eats eaten
                 drink drinking diank drinks drunk
                 rise rising rose rises risen
-                swim simming swam swims swum
+                swim swimming swam swims swum
                 shake shaking shook shakes shaken
                 stir stirring stirred stirs
                 stand standing stood stands
@@ -153,23 +156,32 @@ Words:
             may -permissoin
             shall
         LinkingVerb:
-            am -singular -1stPerson -continuous
-            is -3rdPerson -singular -masculine -continuous
-            is -3rdPerson -singular -feminine -continuous
-            are -plural -3rdPerson -present -continuous
-            are -plural -3rdPerson -present -neuter -continuous
-            are -singular -2ndPerson -continuous
-            are -plural -2ndPerson -continuous
-            are -plural -1stPerson -continuous
+            am -singular -1stPerson -present
+            is -3rdPerson -singular -masculine -present
+            is -3rdPerson -singular -feminine -present
+            are -plural -3rdPerson -present
+            are -plural -3rdPerson -neuter -present
+            are -singular -2ndPerson -present
+            are -plural -2ndPerson -present
+            are -plural -1stPerson -present
             be 
             been
             being
             did
-            do -plural -present
-            does -singular
+            do -singular -present -1stPerson
+            do -plural -present -1stPerson
+            do -singular -present -2ndPerson
+            do -plural -present -2ndPerson
+            do -plural -present -3rdPerson
+            does -singular -present -2ndPerson
+            does -singular -present -3rdPerson
             had -perfect
-            has -pastPart -3rdPerson
-            have -1stPerson -2ndPerson -pastPart
+            have -1stPerson -pastPart -singular
+            have -2ndPerson -pastPart -singular
+            has -3rdPerson -pastPart -singular
+            have -1stPerson -pastPart -plural
+            have -2ndPerson -pastPart -plural
+            have -3rdPerson -pastPart -plural
             was
             were
     Adjective:
@@ -263,7 +275,7 @@ Frames:
 
         Determiner AdjectivePhrase[plural] -plural -determined
         NounPhrase[determined] PrepPhrase
-        Noun[Pronoun,possessive] Noun -determined
+        Noun[Pronoun,subjective] Noun -determined
             # my cat, his cat, her cat
 
         Adjective[PossessiveAdjective] Noun -determined
@@ -277,6 +289,9 @@ Frames:
         Verb[MainVerb] NounPhrase
         Verb Adverb
         Adverb Verb
+
+        VerbPhrase PrepPhrase
+        Verb[MainVerb] PrepPhrase
 
         Verb[!perfect] Noun[MassNoun] -singular
         Verb[!3PPresent] Noun[MassNoun] -plural
@@ -300,6 +315,10 @@ Frames:
     Sentence "S"
         PreIndicativePhrase Adjective
             # i am happy
+        PreIndicativePhrase Verb[MainVerb,continuous] -continuous
+            # the dog is running
+        HabilitivePhrase Verb[MainVerb,simple]
+            # he can run
 
         InterrogativeClause[NUMBER] VerbPhrase[NUMBER]
             # can i eat the cookie, can i eat grass
@@ -308,7 +327,6 @@ Frames:
             # the waters are rising
         VerbPhrase NounPhrase
         NounPhrase[NUMBER] VerbPhrase[NUMBER]
-        VerbPhrase PrepPhrase
         VerbPhrase AdjectivePhrase
         Sentence PrepPhrase
         Noun[Pronoun,plural] VerbPhrase
@@ -319,11 +337,11 @@ Frames:
             # can you, can i
             # should i, might i
 
-        Verb[LinkingVerb,PERSON,NUMBER] Noun[Pronoun,PERSON,NUMBER] -PERSON -NUMBER
+        Verb[LinkingVerb,PERSON,NUMBER] Noun[Pronoun,PERSON,NUMBER,!possessive,!subjective] -PERSON -NUMBER
             # am i
             # are we
 
-        Verb[LinkingVerb,continuous,NUMBER] NounPhrase[NUMBER] -present -continuous -NUMBER
+        Verb[LinkingVerb,present,NUMBER] NounPhrase[NUMBER] -present -NUMBER
             # is a house
             # do the horses
     PostIndicativePhrase "poIP"
@@ -334,6 +352,13 @@ Frames:
         Noun[Pronoun,NUMBER,PERSON]  Verb[LinkingVerb,NUMBER,PERSON] -NUMBER
             # i am
             # you are
+        NounPhrase[NUMBER]  Verb[LinkingVerb,NUMBER] -NUMBER
+            # the dog is
+            # my dogs are
+    HabilitivePhrase "HP"
+        Noun[Pronoun,NUMBER] Verb[ModalVerb,ability] -NUMBER
+            # you can
+            # he can
     Adjective "Adj"
         Adjective Adjective
     AdjectivePhrase "AP"
