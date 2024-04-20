@@ -1,6 +1,28 @@
+# CC = g++
+# PROJECT = reader
+# SRC = reader.cpp
+# LIBS = `pkg-config --cflags --libs opencv4`
+# $(PROJECT) : $(SRC)
+# 	$(CC) $(SRC) -o $(PROJECT) $(LIBS) -I /usr/include/boost_1_84_0
+
 CC = g++
-PROJECT = reader
-SRC = reader.cpp
-LIBS = `pkg-config --cflags --libs opencv4`
-$(PROJECT) : $(SRC)
-	$(CC) $(SRC) -o $(PROJECT) $(LIBS) -I /usr/include/boost_1_84_0
+
+# put -Wall back when you're ready
+# -Wextra when you're very ready
+CFLAGS =  -I /usr/include/opencv4 -I /usr/include/boost_1_84_0
+LDFLAGS = `pkg-config --cflags --libs opencv4`
+
+SOURCES = reader.cpp frames.cpp grammar.cpp grammar_reader.cpp string_operators.cpp
+OBJECTS = $(SOURCES:.cpp=.o)
+EXECUTABLE = myprogram
+
+all: $(EXECUTABLE)
+
+$(EXECUTABLE): $(OBJECTS)
+	$(CC) $(OBJECTS) $(LDFLAGS) -o $(EXECUTABLE)
+
+.cpp.o:
+	$(CC) $(LDFLAGS) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -f $(OBJECTS) $(EXECUTABLE)

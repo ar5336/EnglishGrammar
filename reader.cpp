@@ -1,233 +1,23 @@
 #include <iostream>
-// #include <iomanip>
 #include </usr/local/include/opencv4/opencv2/highgui.hpp>
 #include </usr/local/include/opencv4/opencv2/tracking.hpp>
 #include </usr/local/include/opencv4/opencv2/videoio/videoio_c.h>
 #include <vector>
-// #include <unordered_set>
 #include <map>
-// #include <iostream>
 #include <fstream>
-#include <boost/algorithm/string.hpp>
 #include <set>
-// #include <set>
-// // #include <bits/stdc++.h>
+
+#include "grammar_reader.hpp"
+#include "frames.hpp"
+#include "grammar.hpp"
+#include "string_operators.hpp"
 
 using namespace std;
 using namespace cv;
 
 string current_utterance = "";
 
-bool equals(string a, string b)
-{
-	return a.compare(b) == 0;
-}
-
-enum PatternNecessity
-{
-	Required = 1,
-	Optional = 2,
-};
-
-enum FeatureTagType
-{
-	Necessary = 1,
-	Prohibited = 2,
-};
-
-class FeatureTag
-{
-public:
-	string feature_name;
-	FeatureTagType tag_type;
-
-	FeatureTag(string name, FeatureTagType type)
-		: feature_name(name), tag_type(type)
-	{
-	}
-};
-
-class PatternElement
-{
-public:
-	string match_string;
-	string pattern_true_match_type;
-	PatternNecessity necessity;
-	vector<FeatureTag> feature_tags;
-	vector<string> feature_group_tags;
-
-	// default constructor
-	PatternElement()
-		: necessity(PatternNecessity::Required) {}
-
-	// constructor for intermediate frame
-	PatternElement(string match_string)
-		: match_string(match_string),
-		  necessity(PatternNecessity::Required)
-	{
-	}
-
-	// complete constructor
-	PatternElement(
-		string match_string,
-		string pattern_true_match_type,
-		PatternNecessity necessity,
-		vector<FeatureTag> feature_tags,
-		vector<string> feature_group_tags)
-		: match_string(match_string),
-		  pattern_true_match_type(pattern_true_match_type),
-		  necessity(necessity),
-		  feature_tags(feature_tags),
-		  feature_group_tags(feature_group_tags)
-	{
-	}
-};
-
-class Frame
-{
-public:
-	string frame_name;
-	string frame_nickname;
-	vector<string> type_heirarchy;
-	vector<PatternElement> pattern_elements;
-
-	set<string> feature_set; // feature applied to word or syntax pattern
-	set<string> feature_groups;
-
-	// default constructor
-	Frame() {}
-
-	// word frame constructor
-	Frame(vector<string> type_heirarchy,
-		  string word_form)
-		: type_heirarchy(type_heirarchy),
-		  frame_name(word_form)
-	{
-		// pattern and pattern_form are left null
-		for (string type : type_heirarchy)
-		{
-			feature_set.insert(type);
-		}
-
-		feature_set.emplace(word_form);
-	}
-
-	// word frame with multiple features
-	Frame(vector<string> type_heirarchy,
-		  vector<string> features)
-		: type_heirarchy(type_heirarchy)
-	{
-		// pattern and pattern_form are left null
-		for (string feature : features)
-		{
-			feature_set.insert(feature);
-		}
-
-		for (string type : type_heirarchy)
-		{
-			feature_set.insert(type);
-		}
-	}
-
-	// featureless word frame constructor
-	Frame(vector<string> type_heirarchy)
-		: type_heirarchy(type_heirarchy)
-	{
-		for (string type : type_heirarchy)
-		{
-			feature_set.insert(type);
-		}
-	}
-
-	// syntax frame constructor
-	Frame(
-		string frame_name,
-		string frame_nickname,
-		// vector<string> pattern,
-		// vector<PatternNecessity> pattern_types
-		vector<PatternElement> pattern_elements,
-		set<string> feature_set,
-		set<string> feature_groups)
-		: frame_name(frame_name),
-		  frame_nickname(frame_nickname),
-		  pattern_elements(pattern_elements),
-		  feature_set(feature_set),
-		  feature_groups(feature_groups)
-	{
-	}
-
-	// cnf frame constructor
-	Frame(
-		string frame_name,
-		string frame_nickname,
-		// set<string> type_set,
-		PatternElement left,
-		PatternElement right,
-		set<string> feature_set,
-		set<string> feature_groups)
-		: frame_name(frame_name),
-		  frame_nickname(frame_nickname),
-		  feature_set(feature_set),
-		  feature_groups(feature_groups)
-	//   type_set(type_set),
-	{
-		pattern_elements.push_back(left);
-		pattern_elements.push_back(right);
-		// features not implemented for syntax frames yet
-	}
-
-	string get_part_of_speech()
-	{
-		return type_heirarchy.at(0);
-	}
-
-	bool is_part_of_speech(string part_of_speech)
-	{
-		return feature_set.count(part_of_speech) != 0;
-	}
-
-	// bool is_consumed(string pattern_name)
-	// {
-	// 	return !(type_set.find(pattern_name) == type_set.end());
-	// }
-
-	bool is_word_frame()
-	{
-		return !type_heirarchy.empty();
-	}
-};
-
-map<string, vector<Frame>> word_map;
-void add_to_word_map(Frame frame, string word_string)
-{
-	if (!(word_map.find(word_string) == word_map.end()))
-	{
-		word_map.at(word_string).push_back(frame);
-	}
-	else
-	{
-		vector<Frame> frame_vector;
-		frame_vector.push_back(frame);
-		word_map.emplace(word_string, frame_vector);
-	}
-}
-
-map<string, string> base_pos_to_type_map; // not used yet - good for advanced parsing efficiency
-map<string, set<Frame>> pos_map;		  // not used yet - good for advanced parsing efficiency
-
-// map<string, string> syntax_nickname_to_name_map;
-vector<Frame> syntax_frames;
-map<string, Frame> syntax_name_map;
-
-vector<Frame> cnf_frames;
-map<string, vector<Frame>> cnf_map; // frame A > B C becomes map entry {"B C", "A"}
-
-map<string, string> feature_to_feature_group;
-map<string, vector<string>> feature_group_to_features;
-set<string> feature_group_set;
-
-// map<int, vector<Frame>> pattern_length_map; // unused yet
-// map<set<string>, vector<Frame>> pattern_map; // not used at the moment - good for efficiency when parsing
+Grammar grammar = Grammar();
 
 // rows of columns of lists of frames
 //  r3  X
@@ -300,7 +90,7 @@ bool does_frame_have_features(Frame candidate_frame, bool is_left, Frame &consum
 	// then test for feature groups
 	for (string feature_group_tag : feature_group_tags)
 	{
-		vector<string> features_to_check_for = feature_group_to_features.at(feature_group_tag);
+		vector<string> features_to_check_for = grammar.feature_group_to_features.at(feature_group_tag);
 
 		bool any_feature_matches_group = false;
 		for (string feature_to_check_for : features_to_check_for)
@@ -365,9 +155,9 @@ bool get_matched_frames(Frame left_consumer_frame, Frame right_consumer_frame, v
 	// printf("finding matching frames - '%s'\n", match_string.c_str());
 
 	// printf("match string: %s\n", match_string.c_str());
-	if (!(cnf_map.find(match_string) == cnf_map.end()))
+	if (!(grammar.cnf_map.find(match_string) == grammar.cnf_map.end()))
 	{
-		vector<Frame> frames_to_doublecheck = cnf_map.at(match_string);
+		vector<Frame> frames_to_doublecheck = grammar.cnf_map.at(match_string);
 
 		// vector<Frame> accepted_frames;
 		for (int frame_index = 0; frame_index < frames_to_doublecheck.size(); frame_index++)
@@ -447,11 +237,11 @@ void update_parse_grid()
 	for (int token_index = 0; token_index < token_count; token_index++)
 	{
 		string token = split_tokens[token_index];
-		bool does_match = !(word_map.find(token) == word_map.end());
+		bool does_match = !(grammar.word_map.find(token) == grammar.word_map.end());
 
 		if (does_match)
 		{
-			vector<Frame> word_frames_identified = word_map.at(token);
+			vector<Frame> word_frames_identified = grammar.word_map.at(token);
 			for (Frame word_frame : word_frames_identified)
 			{
 				parse_grid[0][token_index].push_back(word_frame);
@@ -543,53 +333,6 @@ bool check_keypress(char cr)
 	}
 }
 
-inline void ltrim(string &s)
-{
-	s.erase(s.begin(), find_if(s.begin(), s.end(), [](unsigned char ch)
-							   { return !isspace(ch); }));
-}
-
-// trim from end (in place)
-inline void rtrim(string &s)
-{
-	s.erase(find_if(s.rbegin(), s.rend(), [](unsigned char ch)
-					{ return !isspace(ch); })
-				.base(),
-			s.end());
-}
-
-inline bool starts_and_ends_with(string l, string r)
-{
-	// TODO - refactor
-	return false;
-}
-
-inline string trim_front_and_back(string s)
-{
-	if (s.size() <= 2)
-		throw invalid_argument("string too small in trim_front_and_back");
-
-	return s.substr(1, s.size() - 2);
-}
-
-inline void trim(string &s)
-{
-	rtrim(s);
-	ltrim(s);
-}
-
-int count_initial_spaces(string str)
-{
-	char initial_char = str.at(0);
-	int char_index = 0;
-	while (initial_char == ' ' && char_index < str.size() - 1)
-	{
-		char_index++;
-		initial_char = str.at(char_index);
-	}
-	return char_index - 1;
-}
-
 //
 //
 //
@@ -607,11 +350,11 @@ int count_initial_spaces(string str)
 void binarize_grammar()
 { // first version with assumption of no optional frames - to be updated.
 	printf("binarizing grammar\n");
-	for (int frame_index = 0; frame_index < syntax_frames.size(); frame_index++)
+	for (int frame_index = 0; frame_index < grammar.syntax_frames.size(); frame_index++)
 	{
 		vector<Frame> cnf_subframes;
 
-		Frame frame = syntax_frames.at(frame_index);
+		Frame frame = grammar.syntax_frames.at(frame_index);
 
 		int pattern_length = frame.pattern_elements.size();
 		int num_subframes = pattern_length - 1;
@@ -679,354 +422,23 @@ void binarize_grammar()
 				pattern_right,
 				feature_set,
 				feature_groups);
-			cnf_frames.push_back(new_cnf_frame);
+			grammar.cnf_frames.push_back(new_cnf_frame);
 
 			// add elements to cnf_map
 			string match_pattern = pattern_left.match_string + " " + pattern_right.match_string;
-			if (!(cnf_map.find(match_pattern) == cnf_map.end()))
+			if (!(grammar.cnf_map.find(match_pattern) == grammar.cnf_map.end()))
 			{
-				cnf_map.at(match_pattern).push_back(new_cnf_frame);
+				grammar.cnf_map.at(match_pattern).push_back(new_cnf_frame);
 			}
 			else
 			{
 				vector<Frame> new_frame_vec;
 				new_frame_vec.push_back(new_cnf_frame);
-				cnf_map.emplace(match_pattern, new_frame_vec);
+				grammar.cnf_map.emplace(match_pattern, new_frame_vec);
 			}
 		}
 	}
 }
-
-enum GrammarReaderState{
-	ReadingWords = 1,
-	ReadingSyntax = 2,
-	ReadingFeatureGroups = 3,
-};
-
-class GrammarReader
-{
-private:
-	GrammarReaderState state;
-	string current_line;
-
-	int previous_indentation = 0;
-
-	vector<PatternNecessity> term_forms;
-	vector<string> term_form_names;
-
-	vector<string> type_heirarchy;
-
-	string pattern_name;
-	string pattern_nickname;
-
-	string first_token;
-	vector<string> split_tokens;
-
-	void add_term_forms(
-		vector<PatternNecessity>& term_form_types,
-		vector<string>& term_form_names)
-	{
-		term_form_types.clear();
-		term_form_names.clear();
-		// reading a type, to be followed by indent
-		type_heirarchy.push_back(first_token.substr(0, first_token.size() - 1));
-
-		// check for formlist formatted like this:
-		// 		PoSType: #form1 form2 (form3)
-		if (split_tokens.size() > 1 && split_tokens[1].at(0) == '#')
-		{
-			for (int i = 2; i < split_tokens.size(); i++)
-			{
-				string term_form_string = split_tokens[i];
-				if (term_form_string.at(0) == '(' && term_form_string.back() == ')')
-				{
-					// is optional
-					term_form_types.push_back(PatternNecessity::Optional);
-					term_form_names.push_back(term_form_string.substr(1, term_form_string.size() - 2));
-				}
-				else
-				{
-					// is required
-					term_form_types.push_back(PatternNecessity::Required);
-					term_form_names.push_back(term_form_string);
-				}
-			}
-		}
-		else
-		{
-			term_form_names.clear();
-		}
-	}
-
-	void read_syntax_entry() {
-		// determine if you're reading a name / nickname line or a pattern line
-		// the second token of a pattern name line is quoted
-		string second_token = split_tokens[1];
-		bool is_pattern_name_line = (second_token.at(0) == '"' && second_token.back() == '"');
-
-		if (is_pattern_name_line)
-		{
-			pattern_name = first_token;
-			pattern_nickname = trim_front_and_back(second_token);
-		}
-		else
-		{
-			if (first_token[0] == '#')
-			{
-				// it's a comment, continue
-				return;
-			}
-			// is a pattern frame
-
-			vector<PatternElement> pattern_elements;
-			set<string> features;
-			set<string> feature_groups;
-			for (int pattern_element_index = 0; pattern_element_index < split_tokens.size(); pattern_element_index++)
-			{
-				PatternNecessity necessity;
-				string match_string = split_tokens[pattern_element_index];
-
-				// check for - prefix indicating this being a feature
-				if (match_string[0] == '-')
-				{
-					string feature_name = match_string.substr(1, match_string.size() - 1);
-					// check if the feature has the name of a group
-					features.emplace(feature_name);
-					continue;
-				}
-
-				// check for parens
-				bool is_optional = (match_string.at(0) == '(' && match_string.back() == ')');
-				if (is_optional)
-				{
-					string no_parens = trim_front_and_back(match_string);
-
-					match_string = no_parens;
-					necessity = PatternNecessity::Optional;
-				}
-				else
-				{
-					necessity = PatternNecessity::Required;
-				}
-
-				// printf("'%s'", match_string.c_str());
-
-				// check for features
-				// in this format:
-				// <word>[<feature1>,<feature2>]
-
-				vector<FeatureTag> feature_tags;
-				vector<string> pattern_feature_groups;
-				int feature_open_pos = match_string.find('[');
-				if (feature_open_pos != -1)
-				{
-					// pattern element has feature tags
-					string feature_string = match_string.substr(feature_open_pos, match_string.size());
-					match_string = match_string.substr(0, feature_open_pos);
-
-					feature_string = trim_front_and_back(feature_string);
-					vector<string> feature_names;
-					boost::split(feature_names, feature_string, boost::is_any_of(","), boost::token_compress_off);
-
-					for (int feature_tag_index = 0; feature_tag_index < feature_names.size(); feature_tag_index++)
-					{
-						string feature_name = feature_names[feature_tag_index];
-						trim(feature_name);
-						if (feature_name[0] == '!')
-						{
-							// negatives not allowed on feature groups - assuming this is a regular feature
-							feature_name = feature_name.substr(1, feature_name.size() - 1);
-							if (feature_group_set.count(feature_name) != 0)
-							{
-								throw invalid_argument("feature groups are not allowed to be inverted yet.\n");
-							}
-
-							feature_tags.push_back(FeatureTag(feature_name, FeatureTagType::Prohibited));
-						}
-						else
-						{
-							// check if feature name is that of a feature group
-							if (feature_group_set.count(feature_name) != 0)
-							{
-								pattern_feature_groups.push_back(feature_name);
-							}
-							else
-							{
-								feature_tags.push_back(FeatureTag(feature_name, FeatureTagType::Necessary));
-							}
-						}
-					}
-				}
-
-				pattern_elements.push_back(PatternElement(
-					match_string,
-					"",
-					necessity,
-					feature_tags,
-					pattern_feature_groups));
-			}
-			Frame new_pattern_frame = Frame(
-				pattern_name,
-				pattern_nickname,
-				pattern_elements,
-				features,
-				feature_groups);
-
-			syntax_frames.push_back(new_pattern_frame);
-		}
-	}
-
-	void read_feature_group_entry()
-	{
-		// FORMAT:
-		//	GROUPNAME= feature1 feature2 feature3
-		string feature_group_name = split_tokens[0];
-		// cut off the '='
-		feature_group_name = feature_group_name.substr(0, feature_group_name.size() - 1);
-
-		feature_group_set.emplace(feature_group_name);
-
-		vector<string> feature_names;
-		for (int i = 1; i < split_tokens.size(); i++)
-		{
-			string feature_name = split_tokens[i];
-			feature_names.push_back(feature_name);
-
-			feature_to_feature_group.emplace(feature_name, feature_group_name);
-		}
-		feature_group_to_features.emplace(feature_group_name, feature_names);
-	}
-
-	void read_word_entry()
-	{
-		// reading word
-
-		// have a copy type_heirarchy for inserting
-		vector<string> type_pruned = vector<string>(type_heirarchy.begin() + 1, type_heirarchy.end());
-
-		// otherwise it is a list of word forms that corresponds to the current term
-		// therefore, populate the hash set of words with the newly created word object
-		if (split_tokens.size() >= 2 && split_tokens.at(1).at(0) == '-')
-		{
-			// reading a word with feature markers (should not have had word for indicated by #list)
-			string word_string = split_tokens[0];
-			vector<string> features;
-
-			for (int i = 1; i < split_tokens.size(); i++)
-			{
-				string feature_name = split_tokens[i];
-				features.push_back(feature_name.substr(1, feature_name.size()));
-			}
-			Frame new_word_frame = Frame(type_pruned, features);
-
-			add_to_word_map(new_word_frame, word_string);
-		}
-		else
-		{
-			for (int word_form_index = 0; word_form_index < split_tokens.size(); word_form_index++)
-			{
-				string word_string = split_tokens[word_form_index];
-				// TODO - add mapping to base form of word for conceptual association
-
-				Frame new_word_frame;
-
-				if (term_form_names.size() < word_form_index + 1)
-				{
-					// no form list
-					new_word_frame = Frame(type_pruned);
-				}
-				else
-				{
-					string word_form = term_form_names.at(word_form_index);
-					new_word_frame = Frame(type_pruned, word_form);
-				}
-				add_to_word_map(new_word_frame, word_string);
-			}
-		}
-	}
-
-public:
-	GrammarReader()
-	{
-		state = GrammarReaderState::ReadingWords;
-
-	}
-
-	void read_grammar(string fileName)
-	{
-		fstream newfile;
-		int tab_spaces = 4;
-
-		printf("reading grammar\n");
-
-		newfile.open(fileName, ios::in); // open a file to perform read operation using file object
-		if (newfile.is_open())
-		{ // checking whether the file is open
-
-
-			while (getline(newfile, current_line))
-			{ // read data from file object and put it into string.
-				printf("%s\n", current_line.c_str());
-				if (current_line.size() == 0)
-					continue;
-
-				// measure indentation by counting initial spaces
-				int initial_spaces = count_initial_spaces(current_line);
-				int current_indentation = initial_spaces / tab_spaces;
-
-				if (current_indentation < previous_indentation)
-				{
-					for (int i = 0; i < previous_indentation - current_indentation; i++)
-					{
-						if (type_heirarchy.size() > 0)
-						{
-							type_heirarchy.pop_back();
-						}
-						term_forms.clear();
-						term_form_names.clear();
-					}
-				}
-				previous_indentation = current_indentation;
-
-				trim(current_line);
-
-				if (equals(current_line, "FeatureGroups:"))
-				{
-					state = GrammarReaderState::ReadingFeatureGroups;
-					continue;
-				}
-				if (equals(current_line, "Frames:"))
-				{
-					state = GrammarReaderState::ReadingSyntax;
-				}
-
-				boost::split(split_tokens, current_line, boost::is_any_of(" "), boost::token_compress_on);
-
-				// if the first token ends in a ":" you're going up a level in the type_heirarchy
-				first_token = split_tokens[0];
-				if (first_token.at(first_token.size() - 1) == ':')
-				{
-					add_term_forms(term_forms, term_form_names);
-				}
-				else
-				{
-					switch(state) {
-						case GrammarReaderState::ReadingWords:
-							read_word_entry();
-							break;
-						case GrammarReaderState::ReadingSyntax:
-							read_syntax_entry();
-							break;
-						case GrammarReaderState::ReadingFeatureGroups:
-							read_feature_group_entry();
-							break;
-					}
-				}
-			}
-			newfile.close(); // close the file object.
-		}
-	}
-};
 
 
 void display_text(Mat img, Point pos, string text, Scalar color, float font_scale = 1.0)
@@ -1161,11 +573,11 @@ void display()
 		if (token.size() == 0)
 			continue;
 
-		bool does_match = !(word_map.find(token) == word_map.end());
+		bool does_match = !(grammar.word_map.count(token) == 0);
 
 		if (does_match)
 		{
-			vector<Frame> word_frames_identified = word_map.at(token);
+			vector<Frame> word_frames_identified = grammar.word_map.at(token);
 
 			word_frames.push_back(word_frames_identified[0]);
 		}
@@ -1254,7 +666,7 @@ int main(int argc, char **argv)
 
 	// Mat image;
 	// read the grammar
-	GrammarReader reader = GrammarReader();
+	GrammarReader reader = GrammarReader(&grammar);
 	reader.read_grammar("grammar.txt");
 
 	// translate the read frames into cnf frames

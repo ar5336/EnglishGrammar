@@ -2,6 +2,7 @@
     "files.associations": {
         "*.tcc": "cpp",
         "source_location": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "string": "cpp"
     }
 }
