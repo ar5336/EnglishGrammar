@@ -333,113 +333,6 @@ bool check_keypress(char cr)
 	}
 }
 
-//
-//
-//
-//
-// (A)  B  (C)  D
-
-//    1
-//   0 \
-//  / \ \
-// A (B) C
-
-// 0 > A B
-// 1 > 0 C
-//   > A C
-void binarize_grammar()
-{ // first version with assumption of no optional frames - to be updated.
-	printf("binarizing grammar\n");
-	for (int frame_index = 0; frame_index < grammar.syntax_frames.size(); frame_index++)
-	{
-		vector<Frame> cnf_subframes;
-
-		Frame frame = grammar.syntax_frames.at(frame_index);
-
-		int pattern_length = frame.pattern_elements.size();
-		int num_subframes = pattern_length - 1;
-
-		vector<PatternElement> base_pattern = frame.pattern_elements;
-		string base_frame_name = frame.frame_name;
-		string base_frame_nickname = frame.frame_nickname;
-		set<string> base_frame_feature_set = frame.feature_set;
-		set<string> base_frame_feature_groups = frame.feature_groups;
-
-		// create subframe 0 for pattern elements 0 and 1
-
-		//      AL      - AL > 1 C
-		//     / \      -  1 > A B
-		//    1   \     
-		//   / \   \    
-		//  A   B   C
-
-		//        AL       - AL > 1 D
-		//       / \       -  1 > 2 C
-		//      1   \      -  2 > A B
-		//     / \   \
-		//    2   \   \
-		//   / \   \   \
-		//  A   B   C   D
-
-		// create subframes for subsequent elements
-		for (int subframe_index = 0; subframe_index < num_subframes; subframe_index++)
-		{
-			set<string> feature_set;
-			set<string> feature_groups;
-
-			string frame_name;
-			string frame_nickname;
-			if (subframe_index == 0)
-			{ // the base frame
-				frame_name = base_frame_name;
-				feature_set = base_frame_feature_set;
-				feature_groups = base_frame_feature_groups;
-				frame_nickname = base_frame_nickname;
-			}
-			else
-			{ // a product of binarization
-				frame_name = base_frame_name + to_string(subframe_index);
-				frame_nickname = base_frame_nickname + to_string(subframe_index);
-				feature_groups = base_frame_feature_groups;
-			}
-
-			PatternElement pattern_right = base_pattern.at(base_pattern.size() - 1 - subframe_index);
-			PatternElement pattern_left;
-			if (subframe_index == num_subframes - 1)
-			{
-				pattern_left = base_pattern.at(0);
-			}
-			else
-			{
-				pattern_left.match_string = base_frame_name + to_string(subframe_index + 1);
-			}
-			// printf("CNF: %s > %s %s\n", frame_name.c_str(), pattern_left.match_string.c_str(), pattern_right.match_string.c_str());
-
-			Frame new_cnf_frame = Frame(
-				frame_name,
-				frame_nickname,
-				pattern_left,
-				pattern_right,
-				feature_set,
-				feature_groups);
-			grammar.cnf_frames.push_back(new_cnf_frame);
-
-			// add elements to cnf_map
-			string match_pattern = pattern_left.match_string + " " + pattern_right.match_string;
-			if (!(grammar.cnf_map.find(match_pattern) == grammar.cnf_map.end()))
-			{
-				grammar.cnf_map.at(match_pattern).push_back(new_cnf_frame);
-			}
-			else
-			{
-				vector<Frame> new_frame_vec;
-				new_frame_vec.push_back(new_cnf_frame);
-				grammar.cnf_map.emplace(match_pattern, new_frame_vec);
-			}
-		}
-	}
-}
-
 
 void display_text(Mat img, Point pos, string text, Scalar color, float font_scale = 1.0)
 {
@@ -670,7 +563,7 @@ int main(int argc, char **argv)
 	reader.read_grammar("grammar.txt");
 
 	// translate the read frames into cnf frames
-	binarize_grammar();
+	grammar.binarize_grammar();
 
 	update_parse_grid();
 	display();

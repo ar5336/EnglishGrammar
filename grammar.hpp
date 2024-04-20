@@ -32,6 +32,8 @@ public:
     Grammar();
 
     void add_to_word_map(Frame frame, string word_string);
+
+    void binarize_grammar();
 };
 
 #endif
