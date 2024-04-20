@@ -1,70 +1,71 @@
 Words:
-    Noun: # singular (plural)
-        thing things
-        dog dogs
-        fox foxes
-        cat cats
-        mouse mice
-        home homes
-        house houses
-        horse horses
-        moose
-        color colors
-        food foods
-        fish fishes
-        cow cows
-        bridge bridges
-        castle castles
-        village villages
-        town towns
-        city cities
-        forest forests
-        field fields
-        river rivers
-        lake lakes
-        sea seas
-        ocean oceans
-        valley valleys
-        peasant peasants
-        knight knights
-        king kings
-        battle battles
-        war wars
-        gun guns
-        axe axes
-        road roads
-        trail trails
-        mountain mountains
-        meat meats
-        side sides
-        grass grasses
-        law laws
-        rain rains
-        snow snows
-        person people
-        people peoples
-        soup soups
-        flower flowers
-        bee bees
-        mind minds
-        body bodies
-        water waters
-        cookie cookies
-        pig pigs
-        animal animals
-        MassNoun:
-            pollen
-            water
-            food
-            grain
-            air
-            meat
-            grass
-            code
-            rain
-            hair
-            land
-            guts
+    Noun:
+        MainNoun: # singular (plural)
+            thing things
+            dog dogs
+            fox foxes
+            cat cats
+            mouse mice
+            home homes
+            house houses
+            horse horses
+            moose
+            color colors
+            food foods
+            fish fishes
+            cow cows
+            bridge bridges
+            castle castles
+            village villages
+            town towns
+            city cities
+            forest forests
+            field fields
+            river rivers
+            lake lakes
+            sea seas
+            ocean oceans
+            valley valleys
+            peasant peasants
+            knight knights
+            king kings
+            battle battles
+            war wars
+            gun guns
+            axe axes
+            road roads
+            trail trails
+            mountain mountains
+            meat meats
+            side sides
+            grass grasses
+            law laws
+            rain rains
+            snow snows
+            person people
+            people peoples
+            soup soups
+            flower flowers
+            bee bees
+            mind minds
+            body bodies
+            water waters
+            cookie cookies
+            pig pigs
+            animal animals
+            MassNoun:
+                pollen
+                water
+                food
+                grain
+                air
+                meat
+                grass
+                code
+                rain
+                hair
+                land
+                guts
         Pronoun:
             i -1stPerson -singular -objective
             me -1stPerson -singular -subjective
@@ -160,7 +161,6 @@ Words:
             would -offer
             can -ability
             could -ability
-            can -permission
             may -permissoin
             shall
         LinkingVerb:
@@ -203,6 +203,8 @@ Words:
                 rancorous
                 afraid
                 confused
+                alive
+                hungry
             Comparable: # absolute comparative superlative
                 angry angrier angriest
                 happy happier happiest
@@ -338,6 +340,8 @@ Frames:
         Preposition NounPhrase
         Preposition VerbPhrase
     Sentence "S"
+        Noun[plural] Verb[LinkingVerb,neuter] Noun[plural]
+            # horses are animals
         PreIndicativePhrase Adjective[Comparable,absolute]
             # i am happy
         PreIndicativePhrase Adjective[NonComparable]
@@ -373,6 +377,8 @@ Frames:
         NounPhrase AuxiliaryPhrase
     Question "Q"
         Verb[ModalVerb,MODE] VerbPhrase[NUMBER] -NUMBER
+            # will i run
+            # might i run
 
         InterrogativeClause[NUMBER,MODE] VerbPhrase[simple] -NUMBER -MODE
             # can a fish live in the house

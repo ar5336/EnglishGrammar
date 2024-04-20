@@ -41,6 +41,8 @@ public:
     // the dog barked
     vector<vector<vector<Frame>>> parse_grid;
 
+    string current_utterance;
+
     pair<int, int> highlighted_cell_position;
     bool is_highlighted;
 
@@ -48,7 +50,7 @@ public:
 
     Parser();
     
-    void update_parse_grid(string current_utterance);
+    void update_parse_grid(string new_utterance);
 
 };
 

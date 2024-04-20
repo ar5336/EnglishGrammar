@@ -3,6 +3,14 @@
         "*.tcc": "cpp",
         "source_location": "cpp",
         "vector": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "*.ipp": "cpp",
+        "unordered_map": "cpp",
+        "fstream": "cpp",
+        "istream": "cpp",
+        "numeric": "cpp",
+        "ostream": "cpp",
+        "sstream": "cpp",
+        "syncstream": "cpp"
     }
 }
