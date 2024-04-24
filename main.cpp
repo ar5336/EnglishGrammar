@@ -12,11 +12,12 @@
 #include "string_operators.hpp"
 #include "parser.hpp"
 #include "displayer.hpp"
+#include "interpretation.hpp"
 
 using namespace std;
 using namespace cv;
 
-string current_utterance = "";
+string current_utterance = "horses are animals";
 
 Parser parser;
 
@@ -84,7 +85,16 @@ bool check_keypress(char cr)
 		if (cr == 13)
 		{ // enter
 			// update the cyk grid with the latest utterance
-			parser.update_parse_grid(current_utterance);
+			// parser.update_parse_grid(current_utterance);
+			// interpret the sentence
+
+			auto base_frame = Frame();
+			if (parser.try_get_top_interpretation(base_frame)){
+				auto interp_handler = InterpretationHandler(&parser, base_frame);
+
+				interp_handler.construct_predicate();
+
+			}
 		}
 		if (cr == '\'')
 		{

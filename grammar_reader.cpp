@@ -194,12 +194,13 @@ void GrammarReader::read_word_entry()
             string feature_name = split_tokens[i];
             features.push_back(feature_name.substr(1, feature_name.size()));
         }
-        Frame new_word_frame = Frame(type_pruned, features);
+        Frame new_word_frame = Frame(word_string, type_pruned, features);
 
         grammar->add_to_word_map(new_word_frame, word_string);
     }
     else
     {
+        string base_word_form = split_tokens[0];
         for (int word_form_index = 0; word_form_index < split_tokens.size(); word_form_index++)
         {
             string word_string = split_tokens[word_form_index];
@@ -210,12 +211,12 @@ void GrammarReader::read_word_entry()
             if (term_form_names.size() < word_form_index + 1)
             {
                 // no form list
-                new_word_frame = Frame(type_pruned);
+                new_word_frame = Frame(word_string, type_pruned);
             }
             else
             {
                 string word_form = term_form_names.at(word_form_index);
-                new_word_frame = Frame(type_pruned, word_form);
+                new_word_frame = Frame(base_word_form, type_pruned, word_form);
             }
             grammar->add_to_word_map(new_word_frame, word_string);
         }

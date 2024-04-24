@@ -53,19 +53,22 @@ Words:
             cookie cookies
             pig pigs
             animal animals
+            mammal mammals
+            bird birds
             MassNoun:
                 pollen
                 water
                 food
                 grain
-                air
                 meat
                 grass
                 code
                 rain
                 hair
-                land
                 guts
+                land -location
+                sea -location
+                air -location
         Pronoun:
             i -1stPerson -singular -objective
             me -1stPerson -singular -subjective
@@ -305,6 +308,9 @@ Frames:
 
         Noun[Pronoun,possessive] NounPhrase[!determined,NUMBER] -determined -NUMBER
             # my cat, *my the cat ... bad examples
+
+        # Noun[location] Noun[NUMBER] -NUMBER
+            # land animals, sea animals
     VerbPhrase "VP"
         Verb[MainVerb,TENSE] NounPhrase -TENSE
         Verb Adverb
@@ -340,8 +346,8 @@ Frames:
         Preposition NounPhrase
         Preposition VerbPhrase
     Sentence "S"
-        Noun[plural] Verb[LinkingVerb,neuter] Noun[plural]
-            # horses are animals
+        PreIndicativePhrase[plural] Noun[plural]
+            # horses are mammals
         PreIndicativePhrase Adjective[Comparable,absolute]
             # i am happy
         PreIndicativePhrase Adjective[NonComparable]
@@ -419,6 +425,9 @@ Frames:
         NounPhrase[NUMBER]  Verb[LinkingVerb,NUMBER] -NUMBER
             # the dog is
             # my dogs are
+        Noun[plural]  Verb[LinkingVerb,plural] -plural
+            # dogs are
+            # horses are
     HabilitivePhrase "HP"
         Noun[Pronoun,NUMBER] Verb[ModalVerb,ability] -NUMBER
             # you can

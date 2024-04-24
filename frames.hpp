@@ -52,6 +52,20 @@ public:
 		vector<string> feature_group_tags);
 };
 
+class FrameCoordinates
+{
+public:
+	int row, col, num;
+
+	FrameCoordinates();
+
+	FrameCoordinates(int row, int col, int num);
+
+	bool is_empty();
+
+	void print_out();
+};
+
 class Frame
 {
 public:
@@ -63,26 +77,36 @@ public:
 	set<string> feature_set; // feature applied to word or syntax pattern
 	set<string> feature_groups;
 
+	bool is_binarized;
+
+	// there are only used when constructing interpretations
+	FrameCoordinates left_match;
+	FrameCoordinates right_match;
+
 	// default constructor
 	Frame();
 
 	// word frame constructor
-	Frame(vector<string> type_heirarchy,
-		  string word_form);
+	Frame(
+		string frame_name,
+		vector<string> type_heirarchy,
+		string word_form);
 
 	// word frame with multiple features
-	Frame(vector<string> type_heirarchy,
-		  vector<string> features);
+	Frame(
+		string frame_name,
+		vector<string> type_heirarchy,
+		vector<string> features);
 
 	// featureless word frame constructor
-	Frame(vector<string> type_heirarchy);
+	Frame(
+		string frame_name,
+		vector<string> type_heirarchy);
 
 	// syntax frame constructor
 	Frame(
 		string frame_name,
 		string frame_nickname,
-		// vector<string> pattern,
-		// vector<PatternNecessity> pattern_types
 		vector<PatternElement> pattern_elements,
 		set<string> feature_set,
 		set<string> feature_groups);
@@ -91,17 +115,32 @@ public:
 	Frame(
 		string frame_name,
 		string frame_nickname,
-		// set<string> type_set,
 		PatternElement left,
 		PatternElement right,
 		set<string> feature_set,
 		set<string> feature_groups);
+
+	Frame(
+		string frame_name,
+		string frame_nickname,
+		PatternElement left,
+		PatternElement right,
+		set<string> feature_set,
+		set<string> feature_groups,
+		FrameCoordinates left_match,
+		FrameCoordinates right_match);
+	
+	Frame with_links(
+		FrameCoordinates to_left,
+    	FrameCoordinates to_right);
 
 	string get_part_of_speech();
 
 	bool is_part_of_speech(string part_of_speech);
 
 	bool is_word_frame();
+
+	void print_out(string title);
 };
 
 #endif

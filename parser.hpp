@@ -15,6 +15,9 @@ class Parser
 private:
     Grammar grammar;
 
+    FrameCoordinates left_frame_coordinates;
+    FrameCoordinates right_frame_coordinates;
+
     bool does_frame_have_features(
         Frame candidate_frame,
         bool is_left,
@@ -52,6 +55,9 @@ public:
     
     void update_parse_grid(string new_utterance);
 
+    bool try_get_top_interpretation(Frame& interp_frame);
+
+    bool try_get_frame_at(FrameCoordinates coords, Frame& result_frame);
 };
 
 #endif

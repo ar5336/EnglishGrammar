@@ -11,6 +11,8 @@
         "numeric": "cpp",
         "ostream": "cpp",
         "sstream": "cpp",
-        "syncstream": "cpp"
+        "syncstream": "cpp",
+        "type_traits": "cpp",
+        "optional": "cpp"
     }
 }

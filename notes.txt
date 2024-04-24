@@ -99,6 +99,105 @@ Notes:
 [ ] the cell you have selected, show a tree for it.
 
 
+------ brainstorm
 
 
+
+how predicates are supposed to look
+
+pigs are animals
+birds are animals
+birds can fly
+
+animal encompasses pig
+animal encompasses bird
+bird can fly
+animal can eat
+
+?can animal eat? Y
+?can bird eat? Y
+?can animal fly? N
+?can pig fly? N
+
+"pigs are land animals"
+"birds are animals"
+"birds can fly"
+
+?"can pigs fly"
+    NO
+
+"objects can fly if they are thrown"
+"animals are objects"
+?"can pigs fly"
+    SOMETIMES
+
+
+"cats are animals"
+
+    S [p:issubsetof]
+
+predicate: cat issubsetof animal
+
+"animals can run"
+
+    S [p:habilitative]
+
+predicate: animal can run
+    this should prompt the creation of a
+    cat can run
  
+ "knights fight in battles"
+ "kings appoint knights"
+ "knights are people"
+ "kings are people"
+ "adults are people"
+ "adults can fight"
+ "babies are not adults"
+ "babies are people"
+
+    DO_STH_TO_STH person give gift person
+
+
+
+Statements made by the deranged:
+given predicates:
+    CAN_DO horse run                "horses can run"
+    HAS_PROPERTY horse fast         "horses are fast"
+    IS_SUBSET_OF horse mammal       "horse are mammals"
+    IS_SUBSET_OF mammal animal      "mammals are animals"
+    IS_INSTANCE_OF charles horse    "charles is a horse"
+derived predicates:
+    CAN_DO charles run
+    HAS_PROPERTY charles fast
+    IS_SUBSET_OF horse animal
+    IS_INSTANCE_OF charles mammal
+    IS_INSTANCE_OF charles animal
+
+
+ALL_AND
+    HAS_PROPERTY horse fast
+    IS_SUBSET_OF horse racehorse
+
+
+
+
+
+"are horses fast"
+?HAS_PROPERTY horse fast -> YES
+
+"are horses mammals"
+?IS_SUBSET_OF horse mammal -> YES
+
+"is charles fast"
+?HAS_PROPERTY charles fast -> YES
+    requires inheritance of HAS_PROPERTY
+
+"can charles run"
+?CAN_DO chales run -> YES
+
+a Predicate KnowledgeBase can contain any number of predicates.
+    it has given predicates displayed in red
+    it also has inferred predicates displayed in orange
+
+
+

@@ -128,7 +128,10 @@ bool Parser::get_matched_frames(
             vector<FeatureTag> right_feature_tags = right_pattern_element.feature_tags;
 
             if (does_frame_have_features(left_consumer_frame, true, candidate_frame) && does_frame_have_features(right_consumer_frame, false, candidate_frame))
-                matched_frames.push_back(candidate_frame);
+                matched_frames.push_back(
+                    candidate_frame.with_links(
+                        left_frame_coordinates,
+                        right_frame_coordinates));
         }
 
         // for (int i = 0; i < accepted_frames.size(); i++){
@@ -150,6 +153,9 @@ vector<Frame> Parser::find_matching_frames(vector<Frame> left_frames, vector<Fra
         for (int right_index = 0; right_index < right_frames.size(); right_index++)
         {
             Frame right_frame = right_frames.at(right_index);
+
+            left_frame_coordinates.num = left_index;
+            right_frame_coordinates.num = right_index;
 
             vector<Frame> matched_frames;
             if (get_matched_frames(left_frame, right_frame, matched_frames))
@@ -176,7 +182,7 @@ Parser::Parser() {}
 void Parser::update_parse_grid(string new_utterance)
 {
     current_utterance = new_utterance;
-    
+
     // tokenize the utterance
     vector<string> split_tokens;
     boost::split(split_tokens, current_utterance, boost::is_any_of(" "), boost::token_compress_on);
@@ -245,6 +251,9 @@ void Parser::update_parse_grid(string new_utterance)
                 int right_col = col + step_diagonal;
                 vector<Frame> right_frames = parse_grid[right_row][right_col];
 
+                left_frame_coordinates = FrameCoordinates(left_row, col, -1);
+                right_frame_coordinates = FrameCoordinates(right_row, right_col, -1);
+
                 vector<Frame> matching_frames = find_matching_frames(left_frames, right_frames);
                 for (Frame matching_frame : matching_frames)
                 {
@@ -254,4 +263,27 @@ void Parser::update_parse_grid(string new_utterance)
             }
         }
     }
+}
+
+bool Parser::try_get_top_interpretation(Frame& interp_frame)
+{
+    auto parse_grid_top_cell = parse_grid[parse_grid.size()-1][0];
+    if (parse_grid_top_cell.size() == 0)
+    {
+        return false;
+    }
+    interp_frame = parse_grid_top_cell[0];
+
+    return true;
+}
+
+bool Parser::try_get_frame_at(FrameCoordinates coords, Frame& result_frame)
+{
+    // maybe the problem is the passing by reference here?
+    if (!coords.is_empty())
+    {
+        result_frame = parse_grid[coords.row][coords.col][coords.num];
+        return true;
+    }
+    return false;
 }
