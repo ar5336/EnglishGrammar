@@ -9,6 +9,7 @@
 #include "string_operators.hpp"
 #include "frames.hpp"
 #include "parser.hpp"
+#include "predicate.hpp"
 
 using namespace std;
 using namespace cv;
@@ -20,10 +21,13 @@ private:
     Mat image;
     Point start_text_corner; // top-left position
     Point start_grid_corner;
+    Point start_predicate_corner;
 
     Scalar HIGHLIGHTER_YELLOW;
 
     Parser *parser;
+
+    PredicateHandler *predicate_handler;
 
     void display_text(Mat img, Point pos, string text, Scalar color, float font_scale);
 
@@ -34,7 +38,7 @@ public:
 
     Displayer(string screen_name);
 
-    void init(Parser *parser_ptr, void (*mouse_callback_func)(int, int, int, int, void*));
+    void init(Parser *parser_ptr, PredicateHandler* predicate_handler_ptr, void (*mouse_callback_func)(int, int, int, int, void*));
 
     void display();
 

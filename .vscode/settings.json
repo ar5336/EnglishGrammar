@@ -13,6 +13,7 @@
         "sstream": "cpp",
         "syncstream": "cpp",
         "type_traits": "cpp",
-        "optional": "cpp"
+        "optional": "cpp",
+        "mutex": "cpp"
     }
 }

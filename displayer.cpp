@@ -33,13 +33,17 @@ Displayer::Displayer(string screen_name)
     : screen_name(screen_name)
     {
         image = Mat(512, 1024, CV_8UC3, cv::Scalar(0));
-        start_text_corner = cv::Point(10, image.rows * 3 / 4);
+        start_text_corner = Point(10, image.rows * 3 / 4);
         start_grid_corner = start_text_corner + Point(0, -60);
+        start_predicate_corner = Point(image.cols *6/10, image.rows * 1/4);
 
         HIGHLIGHTER_YELLOW = CV_RGB(50, 25, 0);
     };
 
-void Displayer::init(Parser *parser_ptr, void (*mouse_callback_func)(int, int, int, int, void*)) {
+void Displayer::init(
+    Parser *parser_ptr,
+    PredicateHandler *predicate_handler_ptr,
+    void (*mouse_callback_func)(int, int, int, int, void*)) {
     // set the callback function for any mouse event
 
     setMouseCallback(screen_name, mouse_callback_func, NULL);
@@ -47,6 +51,7 @@ void Displayer::init(Parser *parser_ptr, void (*mouse_callback_func)(int, int, i
     resizeWindow(screen_name, 1024, 512);
     
     parser = parser_ptr;
+    predicate_handler = predicate_handler_ptr;
 }
 
 void Displayer::display()
@@ -188,6 +193,16 @@ void Displayer::display()
     Point cursor_bottom = cursor_top + Point(0, -text_size.height);
 
     cv::line(image, cursor_top, cursor_bottom, CV_RGB(200, 20, 20), 2, cv::LINE_4, 0);
+
+    // display predicate handler
+
+    Point predicate_ticker_corner = start_predicate_corner;
+    if (predicate_handler->predicates.size() > 0) {
+        for (auto predicate : predicate_handler->predicates) {
+            display_text(image, predicate_ticker_corner, predicate.stringify(), CV_RGB(255, 10, 10), 0.6f);
+            predicate_ticker_corner += Point(0, 40);
+        }
+    }
 
     cv::imshow("reader", image);
 }

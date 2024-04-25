@@ -17,13 +17,15 @@
 using namespace std;
 using namespace cv;
 
-string current_utterance = "horses are animals";
+string current_utterance = "mammals are animals";
 
 Parser parser;
 
 Grammar grammar = Grammar();
 
 Displayer displayer = Displayer("reader");
+
+PredicateHandler predicate_handler = PredicateHandler();
 
 void mouse_callback_function(int event, int x, int y, int flags, void *userdata)
 {
@@ -85,15 +87,16 @@ bool check_keypress(char cr)
 		if (cr == 13)
 		{ // enter
 			// update the cyk grid with the latest utterance
-			// parser.update_parse_grid(current_utterance);
 			// interpret the sentence
 
 			auto base_frame = Frame();
 			if (parser.try_get_top_interpretation(base_frame)){
 				auto interp_handler = InterpretationHandler(&parser, base_frame);
 
-				interp_handler.construct_predicate();
+				auto predicate = interp_handler.construct_predicate();
 
+				predicate_handler.predicates.push_back(predicate);
+				displayer.display();
 			}
 		}
 		if (cr == '\'')
@@ -117,7 +120,7 @@ int main(int argc, char **argv)
 
 	parser = Parser(grammar);
 
-	displayer.init(&parser, mouse_callback_function);
+	displayer.init(&parser, &predicate_handler, mouse_callback_function);
 
 	parser.update_parse_grid(current_utterance);
 

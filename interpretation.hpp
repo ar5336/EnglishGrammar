@@ -5,27 +5,8 @@
 
 #include "frames.hpp"
 #include "parser.hpp"
-#include "predicate_statement.hpp"
+#include "predicate.hpp"
 #include "string_operators.hpp"
-
-// an object that stores a tree of binary frames.
-// this object can then be reconfigured back into complete frames (using info stored inside the binary frames)
-// this interpretation can then be transformed into a predicate statement
-
-// class Interpretation
-// {
-// public:
-//     Interpretation *left_side;
-//     Interpretation *right_side;
-
-//     Frame frame;
-
-//     Interpretation(Parser parser);
-
-//     bool is_base_interpretation;
-
-//     bool is_word_frame();
-// };
 
 class InterpretationHandler
 {
@@ -39,7 +20,7 @@ public:
 
     InterpretationHandler(Parser* parser, Frame base_frame);
 
-    void construct_predicate();
+    Predicate construct_predicate();
 };
 
 #endif
