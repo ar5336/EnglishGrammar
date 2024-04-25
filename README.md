@@ -2,3 +2,6 @@ A parser for english written in c++ using boost and opencv. I'm using opencv to 
 
 Yeah they're all in the base folder i'll change that eventually.
 Notes.txt includes all my planned 'features' for this, but i really only think one step ahead.
+
+currently working on making it store knowledge in First-order predicate logic
+so that you can tell it information, then ask questions about it
