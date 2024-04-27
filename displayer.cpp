@@ -42,11 +42,9 @@ Displayer::Displayer(string screen_name)
 
 void Displayer::init(
     Parser *parser_ptr,
-    PredicateHandler *predicate_handler_ptr,
-    void (*mouse_callback_func)(int, int, int, int, void*)) {
+    PredicateHandler *predicate_handler_ptr) {
     // set the callback function for any mouse event
 
-    setMouseCallback(screen_name, mouse_callback_func, NULL);
 
     resizeWindow(screen_name, 1024, 512);
     
@@ -198,8 +196,16 @@ void Displayer::display()
 
     Point predicate_ticker_corner = start_predicate_corner;
     if (predicate_handler->predicates.size() > 0) {
-        for (auto predicate : predicate_handler->predicates) {
-            display_text(image, predicate_ticker_corner, predicate.stringify(), CV_RGB(255, 10, 10), 0.6f);
+        for (auto predicate_of_type : predicate_handler->predicates) {
+            auto predicate = predicate_of_type.second;
+            auto pred_type = predicate_of_type.first;
+            if (pred_type == KnowledgeType::GIVEN) {
+                display_text(image, predicate_ticker_corner, predicate.stringify(), CV_RGB(255, 10, 10), 0.6f);
+
+            } else {
+                display_text(image, predicate_ticker_corner, predicate.stringify(), CV_RGB(255, 78, 99), 0.6f);
+
+            }
             predicate_ticker_corner += Point(0, 40);
         }
     }

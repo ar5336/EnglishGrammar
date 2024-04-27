@@ -29,5 +29,82 @@ string Predicate::stringify()
     return result;
 }
 
-PredicateHandler::PredicateHandler(){}
+void PredicateHandler::UpdateInheritanceMap()
+{
+    for (auto pred_of_type : predicates)
+    {
+        if (pred_of_type.first == KnowledgeType::INFERRED)
+            continue;
+        
+        auto pred = pred_of_type.second;
 
+        // is a given predicate
+        if (pred.type == PredicateType::IS_SUBSET_OF) {
+            inheritance_map.emplace(pred.arguments[0], pred.arguments[1]);
+        }
+
+        for (string arg : pred.arguments)
+        {
+            entity_set.emplace(arg);
+        }
+
+        // populate the first_arg_to_predicate_map
+        string first_arg = pred.arguments[0];
+
+        if (first_arg_to_predicate_map.count(first_arg) != 0)
+        {
+            first_arg_to_predicate_map.at(first_arg).push_back(pred);
+        } else {
+            vector<Predicate> preds = {pred};
+            first_arg_to_predicate_map.emplace(first_arg, preds);
+        }
+    }
+}
+
+vector<string> PredicateHandler::IdentifyAllParents(string entity_name)
+{
+    // TODO - update inheritance_map to be <string> => vector<string>
+    // so you can have multiple inheritance
+    vector<string> parent_stack;
+    string current_entity_name = entity_name;
+    while (inheritance_map.count(current_entity_name) != 0)
+    {
+        string parent = inheritance_map.at(current_entity_name);
+        parent_stack.push_back(parent);
+        current_entity_name = parent;
+    }
+    return parent_stack;
+}
+
+PredicateHandler::PredicateHandler(){
+    // first_arg_to_predicate_map = map<string, vector<Predicate>>();
+    
+    // predicates.push_back(pair(KnowledgeType::GIVEN, Predicate(PredicateType::IS_SUBSET_OF, vector<string> {"horse", "mammal"})));
+    // predicates.push_back(pair(KnowledgeType::GIVEN, Predicate(PredicateType::IS_SUBSET_OF, vector<string> {"mammal", "animal"})));
+}
+
+void PredicateHandler::InferPredicates(){
+    // first pass, build inheritance map
+    UpdateInheritanceMap();
+
+    for(string entity : entity_set)
+    {
+        auto parent_list = IdentifyAllParents(entity);
+
+        for (string parent : parent_list) {
+            if (first_arg_to_predicate_map.count(parent) != 0)
+            {
+                auto parent_predicates = first_arg_to_predicate_map.at(parent);
+
+                for (auto parent_predicate : parent_predicates)
+                {
+                    auto new_tupe = parent_predicate.type;
+                    auto changed_args = parent_predicate.arguments;
+                    changed_args[0] = entity;
+
+                    predicates.push_back(pair(KnowledgeType::INFERRED, Predicate(new_tupe, changed_args)));
+                }
+            }
+        }
+    }
+}

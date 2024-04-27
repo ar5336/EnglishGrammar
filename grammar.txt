@@ -55,6 +55,8 @@ Words:
             animal animals
             mammal mammals
             bird birds
+            eagle eagles
+            raven ravens
             MassNoun:
                 pollen
                 water

@@ -17,7 +17,7 @@
 using namespace std;
 using namespace cv;
 
-string current_utterance = "mammals are animals";
+string current_utterance = "";
 
 Parser parser;
 
@@ -29,6 +29,7 @@ PredicateHandler predicate_handler = PredicateHandler();
 
 void mouse_callback_function(int event, int x, int y, int flags, void *userdata)
 {
+	// still doesn't work
 	if (event == EVENT_LBUTTONDOWN)
 	{
 		// cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
@@ -86,16 +87,18 @@ bool check_keypress(char cr)
 		}
 		if (cr == 13)
 		{ // enter
-			// update the cyk grid with the latest utterance
 			// interpret the sentence
 
 			auto base_frame = Frame();
-			if (parser.try_get_top_interpretation(base_frame)){
+			if (parser.try_get_top_interpretation(base_frame)
+				&& (equals(base_frame.frame_name, "Sentence")
+				|| equals(base_frame.frame_name, "Question"))){
 				auto interp_handler = InterpretationHandler(&parser, base_frame);
 
 				auto predicate = interp_handler.construct_predicate();
 
-				predicate_handler.predicates.push_back(predicate);
+				predicate_handler.predicates.push_back(pair(KnowledgeType::GIVEN, predicate));
+				predicate_handler.InferPredicates();
 				displayer.display();
 			}
 		}
@@ -119,8 +122,10 @@ int main(int argc, char **argv)
 	grammar.binarize_grammar();
 
 	parser = Parser(grammar);
+    setMouseCallback(displayer.screen_name, mouse_callback_function, NULL);
 
-	displayer.init(&parser, &predicate_handler, mouse_callback_function);
+	displayer.init(&parser, &predicate_handler);
+
 
 	parser.update_parse_grid(current_utterance);
 

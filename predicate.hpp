@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <utility>
+#include <set>
 
 #include "string_operators.hpp"
 
@@ -29,17 +31,30 @@ public:
     string stringify();
 };
 
-class PredicateGroup
+enum KnowledgeType
 {
-    vector<Predicate> predicates;
+    GIVEN,
+    INFERRED,
 };
 
 class PredicateHandler
 {
+private:
+    map<string, string> inheritance_map;
+    set<string> entity_set;
+    map<string, vector<Predicate> > first_arg_to_predicate_map;
+    // map<string, vector<Predicate>> entity_to_predicate_map;
+
+    void UpdateInheritanceMap();
+
+    vector<string> IdentifyAllParents(string entityName);
+
 public:
-    vector<Predicate> predicates;
+    vector<pair<KnowledgeType, Predicate>> predicates;
 
     PredicateHandler();
+
+    void InferPredicates();
 };
 
 #endif

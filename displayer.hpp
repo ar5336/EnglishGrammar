@@ -38,7 +38,7 @@ public:
 
     Displayer(string screen_name);
 
-    void init(Parser *parser_ptr, PredicateHandler* predicate_handler_ptr, void (*mouse_callback_func)(int, int, int, int, void*));
+    void init(Parser *parser_ptr, PredicateHandler* predicate_handler_ptr);
 
     void display();
 
