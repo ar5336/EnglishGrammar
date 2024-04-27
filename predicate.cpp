@@ -29,6 +29,21 @@ string Predicate::stringify()
     return result;
 }
 
+inline bool operator<(const Predicate& lhs, const Predicate& rhs)
+{
+    if (lhs.type < rhs.type)
+        return true;
+    
+    if (lhs.arguments.size() < rhs.arguments.size())
+        return true;
+    
+    for (int i = 0; i < lhs.arguments.size(); i++) {
+        if (lhs.arguments[i] < rhs.arguments[i])
+            return true;
+    }
+    return false;
+}
+
 void PredicateHandler::UpdateInheritanceMap()
 {
     for (auto pred_of_type : predicates)
@@ -79,8 +94,9 @@ vector<string> PredicateHandler::IdentifyAllParents(string entity_name)
 PredicateHandler::PredicateHandler(){
     // first_arg_to_predicate_map = map<string, vector<Predicate>>();
     
-    // predicates.push_back(pair(KnowledgeType::GIVEN, Predicate(PredicateType::IS_SUBSET_OF, vector<string> {"horse", "mammal"})));
-    // predicates.push_back(pair(KnowledgeType::GIVEN, Predicate(PredicateType::IS_SUBSET_OF, vector<string> {"mammal", "animal"})));
+    predicates.push_back(pair(KnowledgeType::GIVEN, Predicate(PredicateType::IS_SUBSET_OF, vector<string> {"horse", "mammal"})));
+    predicates.push_back(pair(KnowledgeType::GIVEN, Predicate(PredicateType::IS_SUBSET_OF, vector<string> {"mammal", "animal"})));
+    InferPredicates();
 }
 
 void PredicateHandler::InferPredicates(){
@@ -90,7 +106,7 @@ void PredicateHandler::InferPredicates(){
     for(string entity : entity_set)
     {
         auto parent_list = IdentifyAllParents(entity);
-
+        
         for (string parent : parent_list) {
             if (first_arg_to_predicate_map.count(parent) != 0)
             {
@@ -102,7 +118,13 @@ void PredicateHandler::InferPredicates(){
                     auto changed_args = parent_predicate.arguments;
                     changed_args[0] = entity;
 
-                    predicates.push_back(pair(KnowledgeType::INFERRED, Predicate(new_tupe, changed_args)));
+                    // TODO - find a more efficient way of not inferring certain already-inferred things
+                    auto new_pred = Predicate(new_tupe, changed_args);
+                    if (inferred_predicates.count(new_pred) == 0) {
+                        predicates.push_back(pair(KnowledgeType::INFERRED, new_pred));
+                        inferred_predicates.emplace(new_pred);
+                        printf("adding: %s\n", new_pred.stringify().c_str());
+                    }
                 }
             }
         }

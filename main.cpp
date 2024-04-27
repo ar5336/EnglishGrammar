@@ -100,6 +100,8 @@ bool check_keypress(char cr)
 				predicate_handler.predicates.push_back(pair(KnowledgeType::GIVEN, predicate));
 				predicate_handler.InferPredicates();
 				displayer.display();
+
+				// current_utterance = "";
 			}
 		}
 		if (cr == '\'')

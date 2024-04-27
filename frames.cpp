@@ -190,7 +190,6 @@ Frame Frame::with_links(
     FrameCoordinates to_left,
     FrameCoordinates to_right)
 {
-    printf("frame name: %s\n", frame_name.c_str());
     auto new_frame = Frame(
         frame_name,
         frame_nickname,

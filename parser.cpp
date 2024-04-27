@@ -223,7 +223,7 @@ void Parser::update_parse_grid(string new_utterance)
         return;
 
     // perform cyk algo
-    printf("parsing grammar\n");
+    // printf("parsing utterance\n");
     for (int row = 1; row < token_count; row++)
     {
         for (int col = 0; col < token_count - row; col++)

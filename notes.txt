@@ -42,7 +42,7 @@ Notes:
 [ ] actually use pattern necessity type (this will require extra nuances in binarize_grammar
     - reference to 'higher' production rules, and modification thereof. With maintenence of reference to the original CFG)
 
-[X] clicking on a cell to highligh all the terms that correspond to it in yellow
+[X] clicking on a cell to highlight all the terms that correspond to it in yellow - BROKE
 
 [ ] a frame inherits the features of the wordFrames it matches to
 
@@ -60,6 +60,8 @@ Notes:
 
     We must be able to reconstruct a tree of complete CFG frames from a CNF grid
     1. throw out all loose intermediate cnf frames - they did not fully match.
+
+    this will become necessary for good predicate production. consider an 'if this then that' type statement
 
 [ ] add transitive and intransitive verbs
     (can't  think of verbs that can't be made intransitive. I guess that's why "i just was" requires the 'just')
@@ -98,6 +100,7 @@ Notes:
 
 [ ] the cell you have selected, show a tree for it.
 
+[ ] get highlighting back online
 
 ------ brainstorm
 

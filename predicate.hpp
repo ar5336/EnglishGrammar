@@ -31,6 +31,8 @@ public:
     string stringify();
 };
 
+inline bool operator<(const Predicate& lhs, const Predicate& rhs);
+
 enum KnowledgeType
 {
     GIVEN,
@@ -44,6 +46,8 @@ private:
     set<string> entity_set;
     map<string, vector<Predicate> > first_arg_to_predicate_map;
     // map<string, vector<Predicate>> entity_to_predicate_map;
+
+    set<Predicate> inferred_predicates;
 
     void UpdateInheritanceMap();
 
