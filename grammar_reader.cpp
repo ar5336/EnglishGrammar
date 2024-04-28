@@ -243,7 +243,7 @@ void GrammarReader::read_grammar(string fileName)
 
         while (getline(newfile, current_line))
         { // read data from file object and put it into string.
-            printf("%s\n", current_line.c_str());
+            // printf("%s\n", current_line.c_str());
             if (current_line.size() == 0)
                 continue;
 

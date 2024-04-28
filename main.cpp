@@ -27,12 +27,14 @@ Displayer displayer = Displayer("reader");
 
 PredicateHandler predicate_handler = PredicateHandler();
 
+bool is_shift_pressed = false;
+
 void mouse_callback_function(int event, int x, int y, int flags, void *userdata)
 {
 	// still doesn't work
 	if (event == EVENT_LBUTTONDOWN)
 	{
-		// cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+		cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
 		bool highlight_found = false;
 		for (int row = 0; row < parser.parse_grid.size() && !highlight_found; row++)
 		{
@@ -58,18 +60,44 @@ void mouse_callback_function(int event, int x, int y, int flags, void *userdata)
 	else if (event == EVENT_RBUTTONDOWN) { }
 	else if (event == EVENT_MBUTTONDOWN) { }
 	else if (event == EVENT_MOUSEMOVE) { }
+	else if (event == EVENT_MOUSEWHEEL) { }
 }
 
 bool check_keypress(char cr)
 {
 	string current_utterance = parser.current_utterance;
 	parser.is_highlighted = false;
+
+	if (cr == -31) // shift
+	{
+		is_shift_pressed = true;
+	}
+
+	if (!is_shift_pressed){
+		if (cr == 81) // left
+		{
+		}
+		if (cr == 82 ) // up
+		{
+			displayer.scroll -= 10;
+		}
+		if (cr == 83) // right
+		{
+		}
+		if (cr == 84)
+		{
+			displayer.scroll += 10;
+		}
+	}
+	
+
 	if (cr == 27)
 	{
 		return true; // break
 	}
 	else
 	{
+		is_shift_pressed = false;
 		if (cr >= 97 && cr <= 122 || cr == 32)
 		{
 			string new_utterance = current_utterance += cr;

@@ -38,6 +38,8 @@ Displayer::Displayer(string screen_name)
         start_predicate_corner = Point(image.cols *6/10, image.rows * 1/4);
 
         HIGHLIGHTER_YELLOW = CV_RGB(50, 25, 0);
+
+        scroll = 0;
     };
 
 void Displayer::init(
@@ -194,7 +196,7 @@ void Displayer::display()
 
     // display predicate handler
 
-    Point predicate_ticker_corner = start_predicate_corner;
+    Point predicate_ticker_corner = start_predicate_corner + Point(0, scroll);
     if (predicate_handler->predicates.size() > 0) {
         for (auto predicate_of_type : predicate_handler->predicates) {
             auto predicate = predicate_of_type.second;
@@ -203,7 +205,7 @@ void Displayer::display()
                 display_text(image, predicate_ticker_corner, predicate.stringify(), CV_RGB(255, 10, 10), 0.6f);
 
             } else {
-                display_text(image, predicate_ticker_corner, predicate.stringify(), CV_RGB(255, 78, 99), 0.6f);
+                display_text(image, predicate_ticker_corner, predicate.stringify(), CV_RGB(255, 140, 0), 0.6f);
 
             }
             predicate_ticker_corner += Point(0, 40);

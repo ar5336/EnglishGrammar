@@ -81,12 +81,17 @@ vector<string> PredicateHandler::IdentifyAllParents(string entity_name)
     // TODO - update inheritance_map to be <string> => vector<string>
     // so you can have multiple inheritance
     vector<string> parent_stack;
+
+    set<string> visited_entities;
     string current_entity_name = entity_name;
-    while (inheritance_map.count(current_entity_name) != 0)
+    while (inheritance_map.count(current_entity_name) != 0
+        && visited_entities.count(current_entity_name) == 0)
     {
         string parent = inheritance_map.at(current_entity_name);
         parent_stack.push_back(parent);
+        visited_entities.emplace(current_entity_name);
         current_entity_name = parent;
+        
     }
     return parent_stack;
 }
@@ -96,6 +101,10 @@ PredicateHandler::PredicateHandler(){
     
     predicates.push_back(pair(KnowledgeType::GIVEN, Predicate(PredicateType::IS_SUBSET_OF, vector<string> {"horse", "mammal"})));
     predicates.push_back(pair(KnowledgeType::GIVEN, Predicate(PredicateType::IS_SUBSET_OF, vector<string> {"mammal", "animal"})));
+    predicates.push_back(pair(KnowledgeType::GIVEN, Predicate(PredicateType::IS_SUBSET_OF, vector<string> {"bird", "animal"})));
+    predicates.push_back(pair(KnowledgeType::GIVEN, Predicate(PredicateType::IS_SUBSET_OF, vector<string> {"raven", "bird"})));
+    predicates.push_back(pair(KnowledgeType::GIVEN, Predicate(PredicateType::CAN_DO, vector<string> {"bird", "fly"})));
+    
     InferPredicates();
 }
 
@@ -121,9 +130,11 @@ void PredicateHandler::InferPredicates(){
                     // TODO - find a more efficient way of not inferring certain already-inferred things
                     auto new_pred = Predicate(new_tupe, changed_args);
                     if (inferred_predicates.count(new_pred) == 0) {
-                        predicates.push_back(pair(KnowledgeType::INFERRED, new_pred));
-                        inferred_predicates.emplace(new_pred);
-                        printf("adding: %s\n", new_pred.stringify().c_str());
+                        // seemingly, the order here matters for some reason
+                        auto was_inserted = inferred_predicates.insert(new_pred);
+                        if (was_inserted.second) {
+                            predicates.push_back(pair(KnowledgeType::INFERRED, new_pred));
+                        }
                     }
                 }
             }

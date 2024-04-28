@@ -77,7 +77,6 @@ Frame::Frame(
 
     feature_set.emplace(word_form);
 
-    printf("word frame constructor\n");
 }
 
 	// word frame with multiple features

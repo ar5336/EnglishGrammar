@@ -135,9 +135,14 @@ Words:
                 fly flying flew flies flown
                 play playing played plays
                 eat eating ate eats eaten
+                drink drinking drank drinks drunk
                 rise rising rose rises risen
                 swim swimming swam swims swum
                 shake shaking shook shakes shaken
+                breathe breathing breathed breathes
+                fly flying flew flies flew
+                bark barking barked barks
+                think thinking thought thinks thunk
                 stir stirring stirred stirs
                 stand standing stood stands
                 run running ran runs
@@ -145,7 +150,6 @@ Words:
                 snow snowing snowed snows
                 make making made makes
                 grow growing grew grows
-                bark barking barked barks
                 meow meowing meowed meows
                 see seeing saw sees seen
                 lose losing lost loses

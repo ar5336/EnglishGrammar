@@ -35,6 +35,7 @@ private:
 
 public:
     string screen_name;
+    int scroll;
 
     Displayer(string screen_name);
 
