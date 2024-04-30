@@ -37,6 +37,8 @@ public:
     string screen_name;
     int scroll;
 
+    string response_string;
+
     Displayer(string screen_name);
 
     void init(Parser *parser_ptr, PredicateHandler* predicate_handler_ptr);

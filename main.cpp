@@ -17,7 +17,7 @@
 using namespace std;
 using namespace cv;
 
-string current_utterance = "";
+string current_utterance = "can ravens fly";
 
 Parser parser;
 
@@ -97,6 +97,7 @@ bool check_keypress(char cr)
 	}
 	else
 	{
+		displayer.response_string = "";
 		is_shift_pressed = false;
 		if (cr >= 97 && cr <= 122 || cr == 32)
 		{
@@ -123,10 +124,23 @@ bool check_keypress(char cr)
 				|| equals(base_frame.frame_name, "Question"))){
 				auto interp_handler = InterpretationHandler(&parser, base_frame);
 
-				auto predicate = interp_handler.construct_predicate();
+				auto predicate = Predicate();
+				if (interp_handler.TryConstructPredicate(predicate))
+				{
+					if (predicate.speechAct == SpeechActs::QUESTION) {
+						auto response = predicate_handler.DetermineResponse(predicate);
+						if (response == ResponseType::YES) {
+							displayer.response_string = "Yes";
+						}
+						if (response == ResponseType::NO) {
 
-				predicate_handler.predicates.push_back(pair(KnowledgeType::GIVEN, predicate));
-				predicate_handler.InferPredicates();
+							displayer.response_string = "No";
+						}
+					} else {
+						predicate_handler.add(predicate);
+						predicate_handler.InferPredicates();
+					}
+				}
 				displayer.display();
 
 				// current_utterance = "";
@@ -152,9 +166,9 @@ int main(int argc, char **argv)
 	grammar.binarize_grammar();
 
 	parser = Parser(grammar);
-    setMouseCallback(displayer.screen_name, mouse_callback_function, NULL);
 
 	displayer.init(&parser, &predicate_handler);
+    setMouseCallback(displayer.screen_name, mouse_callback_function, NULL);
 
 
 	parser.update_parse_grid(current_utterance);

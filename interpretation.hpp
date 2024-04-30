@@ -20,7 +20,7 @@ public:
 
     InterpretationHandler(Parser* parser, Frame base_frame);
 
-    Predicate construct_predicate();
+    bool TryConstructPredicate(Predicate& predicate);
 };
 
 #endif

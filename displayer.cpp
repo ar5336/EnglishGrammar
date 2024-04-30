@@ -212,7 +212,14 @@ void Displayer::display()
         }
     }
 
-    cv::imshow("reader", image);
+    // display the response string
+    // Point response_corner = Point(image.cols * 8 / 10, image.rows / 8);
+    Point response_corner = Point(30, 30);
+    if (response_string.size() != 0) {
+        display_text(image, response_corner, response_string, CV_RGB(255, 30, 200), 1.2f);
+    }
+
+    cv::imshow(screen_name, image);
 }
 
 pair<Point, Point> Displayer::get_cell_bounds(int row, int col)

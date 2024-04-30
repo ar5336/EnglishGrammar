@@ -18,15 +18,25 @@ enum PredicateType
     NONE,
 };
 
+enum SpeechActs
+{
+    STATEMENT,
+    QUESTION,
+    DEMAND
+};
+
 class Predicate
 {
 public:
     PredicateType type;
     vector<string> arguments;
+    SpeechActs speechAct;
 
     Predicate();
 
     Predicate(PredicateType name, vector<string> arguments);
+
+    Predicate(PredicateType name, vector<string> arguments, SpeechActs speechAct);
 
     string stringify();
 };
@@ -39,6 +49,12 @@ enum KnowledgeType
     INFERRED,
 };
 
+enum ResponseType
+{
+    YES,
+    NO,
+};
+
 class PredicateHandler
 {
 private:
@@ -47,14 +63,18 @@ private:
     map<string, vector<Predicate> > first_arg_to_predicate_map;
     // map<string, vector<Predicate>> entity_to_predicate_map;
 
+    set<Predicate> given_predicates;
     set<Predicate> inferred_predicates;
 
     void UpdateInheritanceMap();
 
     vector<string> IdentifyAllParents(string entityName);
-
 public:
     vector<pair<KnowledgeType, Predicate>> predicates;
+
+    ResponseType DetermineResponse(Predicate queryPredicate);
+
+    void add(Predicate predicate);
 
     PredicateHandler();
 

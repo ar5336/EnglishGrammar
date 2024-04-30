@@ -165,11 +165,11 @@ Words:
             will -offer
             will -futureProbability
             may -futureProbability
-            could -futureProbability
             might -futureProbability
             would -offer
             can -ability
             could -ability
+            could -futureProbability
             may -permissoin
             shall
         LinkingVerb:
@@ -388,7 +388,7 @@ Frames:
         Noun AuxiliaryPhrase
         NounPhrase AuxiliaryPhrase
     Question "Q"
-        Verb[ModalVerb,MODE] VerbPhrase[NUMBER] -NUMBER
+        Verb[ModalVerb,MODE] VerbPhrase[NUMBER] -NUMBER -MODE
             # will i run
             # might i run
 

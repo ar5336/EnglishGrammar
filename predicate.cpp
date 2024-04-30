@@ -15,14 +15,22 @@ string get_pred_type_string(PredicateType pt)
 Predicate::Predicate()
 {
     type = PredicateType::NONE;
+    arguments = vector<string>(6);
 }
 
 Predicate::Predicate(PredicateType type, vector<string> arguments)
-    : type(type), arguments(arguments){ }
+    : type(type), arguments(arguments), speechAct(SpeechActs::STATEMENT) {}
+
+Predicate::Predicate(PredicateType type, vector<string> arguments, SpeechActs speechAct)
+    : type(type), arguments(arguments), speechAct(speechAct){ }
 
 string Predicate::stringify()
 {
-    string result = get_pred_type_string(type);
+    string result;
+    if (speechAct == SpeechActs::QUESTION) {
+        result += "Q|";
+    }
+    result += get_pred_type_string(type);
     for (string arg : arguments) {
         result += (" " + arg);
     }
@@ -76,6 +84,19 @@ void PredicateHandler::UpdateInheritanceMap()
     }
 }
 
+ResponseType PredicateHandler::DetermineResponse(Predicate queryPredicate)
+{
+    // simple yes/no as of now
+    auto asStatement = Predicate(queryPredicate.type, queryPredicate.arguments);
+
+    if (given_predicates.count(asStatement) != 0
+        || inferred_predicates.count(asStatement) != 0)
+        {
+            return ResponseType::YES;
+        }
+    return ResponseType::NO;
+}
+
 vector<string> PredicateHandler::IdentifyAllParents(string entity_name)
 {
     // TODO - update inheritance_map to be <string> => vector<string>
@@ -96,14 +117,22 @@ vector<string> PredicateHandler::IdentifyAllParents(string entity_name)
     return parent_stack;
 }
 
+void PredicateHandler::add(Predicate predicate)
+{
+    if ((given_predicates.emplace(predicate)).second)
+    {
+        predicates.push_back(pair(KnowledgeType::GIVEN, predicate));
+    }
+
+}
+
 PredicateHandler::PredicateHandler(){
     // first_arg_to_predicate_map = map<string, vector<Predicate>>();
     
-    predicates.push_back(pair(KnowledgeType::GIVEN, Predicate(PredicateType::IS_SUBSET_OF, vector<string> {"horse", "mammal"})));
-    predicates.push_back(pair(KnowledgeType::GIVEN, Predicate(PredicateType::IS_SUBSET_OF, vector<string> {"mammal", "animal"})));
-    predicates.push_back(pair(KnowledgeType::GIVEN, Predicate(PredicateType::IS_SUBSET_OF, vector<string> {"bird", "animal"})));
-    predicates.push_back(pair(KnowledgeType::GIVEN, Predicate(PredicateType::IS_SUBSET_OF, vector<string> {"raven", "bird"})));
-    predicates.push_back(pair(KnowledgeType::GIVEN, Predicate(PredicateType::CAN_DO, vector<string> {"bird", "fly"})));
+    add(Predicate(PredicateType::IS_SUBSET_OF, vector<string> {"horse", "mammal"}));
+    add(Predicate(PredicateType::IS_SUBSET_OF, vector<string> {"bird", "animal"}));
+    add(Predicate(PredicateType::IS_SUBSET_OF, vector<string> {"raven", "bird"}));
+    add(Predicate(PredicateType::CAN_DO, vector<string> {"bird", "fly"}));
     
     InferPredicates();
 }
