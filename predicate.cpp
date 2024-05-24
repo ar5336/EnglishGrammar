@@ -39,17 +39,7 @@ string Predicate::stringify()
 
 inline bool operator<(const Predicate& lhs, const Predicate& rhs)
 {
-    if (lhs.type < rhs.type)
-        return true;
-    
-    if (lhs.arguments.size() < rhs.arguments.size())
-        return true;
-    
-    for (int i = 0; i < lhs.arguments.size(); i++) {
-        if (lhs.arguments[i] < rhs.arguments[i])
-            return true;
-    }
-    return false;
+    return tie(lhs.type, lhs.arguments) < tie(rhs.type, rhs.arguments);
 }
 
 void PredicateHandler::UpdateInheritanceMap()
@@ -89,11 +79,14 @@ ResponseType PredicateHandler::DetermineResponse(Predicate queryPredicate)
     // simple yes/no as of now
     auto asStatement = Predicate(queryPredicate.type, queryPredicate.arguments);
 
-    if (given_predicates.count(asStatement) != 0
-        || inferred_predicates.count(asStatement) != 0)
+    auto is_given = given_predicates.count(asStatement) != 0;
+    auto is_inferred = inferred_predicates.count(asStatement) != 0;
+
+    if (is_given || is_inferred)
         {
             return ResponseType::YES;
         }
+
     return ResponseType::NO;
 }
 

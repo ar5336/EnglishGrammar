@@ -45,7 +45,6 @@ bool InterpretationHandler::TryConstructPredicate(Predicate& predicate)
 
             predicate = Predicate(PredicateType::CAN_DO, args, SpeechActs::QUESTION);
 
-            printf("asking: %s\n", predicate.stringify().c_str());
             return true;
         }
 
