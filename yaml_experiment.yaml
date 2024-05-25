@@ -1,0 +1,9 @@
+grammar:
+  Sentence: [A[c, bat], b, c]
+    Pattern: 
+      NounPhrase[Number]
+      VerbPhrase[Object]
+        - VERB_APPLIES
+    Features:
+
+      

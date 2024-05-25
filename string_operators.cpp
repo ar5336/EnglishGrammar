@@ -51,3 +51,9 @@ bool equals(string a, string b)
 {
 	return a.compare(b) == 0;
 }
+
+bool is_str_empty(string str)
+{
+	trim(str);
+	return str.size() == 0;
+}

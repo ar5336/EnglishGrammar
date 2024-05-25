@@ -57,7 +57,9 @@ Words:
             bird birds
             eagle eagles
             raven ravens
+            wheel wheels
             MassNoun:
+                grease
                 pollen
                 water
                 food
@@ -145,7 +147,9 @@ Words:
                 think thinking thought thinks thunk
                 stir stirring stirred stirs
                 stand standing stood stands
+                walk walking walked walks
                 run running ran runs
+                crawl crawling crawled crawls
                 rain raining rained rains
                 snow snowing snowed snows
                 make making made makes
@@ -154,6 +158,7 @@ Words:
                 see seeing saw sees seen
                 lose losing lost loses
                 live living lived lives
+                get getting got gets gotten
         AuxiliaryVerb:
             be -continuous
             have -perfect
@@ -226,6 +231,7 @@ Words:
                 ugly uglier ugliest
                 dark darker darkest
                 mad madder maddest
+                squeaky squeakier squeakiest
         PossessiveAdjective:
             my -1stPerson -singular -possessive
             our -1stPerson -plural -possessive
@@ -303,7 +309,7 @@ Frames:
     NounPhrase "NP"
         Determiner Noun[NUMBER] -NUMBER -determined
 
-        Determiner AdjectivePhrase[plural] -plural -determined
+        Determiner AdjectivePhrase[NUMBER] -NUMBER -determined
         NounPhrase[determined] PrepPhrase
 
         Adjective[PossessiveAdjective] Noun -determined
@@ -314,6 +320,12 @@ Frames:
 
         Noun[Pronoun,possessive] NounPhrase[!determined,NUMBER] -determined -NUMBER
             # my cat, *my the cat ... bad examples
+
+        Determiner[determined] Noun[MassNoun] -determined -singular
+            # the water
+            # that grease
+
+        Determiner[Demonstrative] Noun[MassNoun]
 
         # Noun[location] Noun[NUMBER] -NUMBER
             # land animals, sea animals
@@ -420,7 +432,8 @@ Frames:
             # is rising
     ModalPhrase "MP"
         Verb[ModalVerb,MODE] Verb[MainVerb] -MODE
-            # can run
+            # can run -habilitive
+            # may run -futureProbability
     ComparativeObject "CO"
         PreIndicativePhrase Adjective[comparative]
             # i am happier
@@ -439,4 +452,4 @@ Frames:
             # you can
             # he can
     AdjectivePhrase "AP"
-        Adjective NounPhrase
+        Adjective Noun[NUMBER] -NUMBER

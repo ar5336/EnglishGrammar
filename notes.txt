@@ -143,7 +143,7 @@ predicate: cat issubsetof animal
 
 "animals can run"
 
-    S [p:habilitative]
+    S [p:habilitive]
 
 predicate: animal can run
     this should prompt the creation of a
@@ -203,4 +203,13 @@ a Predicate KnowledgeBase can contain any number of predicates.
     it also has inferred predicates displayed in orange
 
 
+"squeaky wheel gets the grease"
 
+IS_INSTANCE_OF c wheel
+IS_INSTANCE_OF g grease
+HAS_PROPERTY c squeaky
+VERB_APPLIES c get g
+
+AdjectivePhrase => HAS_PROPERTY
+
+[ ] put predicate construction in the grammar. that way the interpretation is done there

@@ -170,7 +170,6 @@ int main(int argc, char **argv)
 	displayer.init(&parser, &predicate_handler);
     setMouseCallback(displayer.screen_name, mouse_callback_function, NULL);
 
-
 	parser.update_parse_grid(current_utterance);
 
 	displayer.display();
