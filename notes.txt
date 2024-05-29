@@ -213,3 +213,16 @@ VERB_APPLIES c get g
 AdjectivePhrase => HAS_PROPERTY
 
 [ ] put predicate construction in the grammar. that way the interpretation is done there
+
+
+"a person can live in a house"
+{
+    CAN_DO person live
+    PREPOSITION person inside house
+}
+
+"a person can live under a house
+{
+    CAN_DO person live
+    PREPOSITION person under house
+}

@@ -9,7 +9,7 @@
 #include "string_operators.hpp"
 #include "frames.hpp"
 #include "parser.hpp"
-#include "predicate.hpp"
+#include "predicate_handler.hpp"
 
 using namespace std;
 using namespace cv;

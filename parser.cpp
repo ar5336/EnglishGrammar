@@ -134,11 +134,7 @@ bool Parser::get_matched_frames(
                         right_frame_coordinates));
         }
 
-        // for (int i = 0; i < accepted_frames.size(); i++){
-        // 	matched_frames.push_back(accepted_frames.at(i));
-        // }
         return true;
-        // printf("\tthe frame's name: %s\n", found_frame.frame_name.c_str());
     }
     return false;
 

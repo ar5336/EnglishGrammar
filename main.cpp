@@ -13,6 +13,7 @@
 #include "parser.hpp"
 #include "displayer.hpp"
 #include "interpretation.hpp"
+#include "predicate_handler.hpp"
 
 using namespace std;
 using namespace cv;
@@ -127,7 +128,7 @@ bool check_keypress(char cr)
 				auto predicate = Predicate();
 				if (interp_handler.TryConstructPredicate(predicate))
 				{
-					if (predicate.speechAct == SpeechActs::QUESTION) {
+					if (predicate.speech_act == SpeechActs::QUESTION) {
 						auto response = predicate_handler.DetermineResponse(predicate);
 						if (response == ResponseType::YES) {
 							displayer.response_string = "Yes";
@@ -137,7 +138,7 @@ bool check_keypress(char cr)
 							displayer.response_string = "No";
 						}
 					} else {
-						predicate_handler.add(predicate);
+						predicate_handler.tell(predicate);
 						predicate_handler.InferPredicates();
 					}
 				}
