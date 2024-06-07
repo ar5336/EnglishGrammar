@@ -364,7 +364,7 @@ Frames:
         Preposition NounPhrase
         Preposition VerbPhrase
     Sentence "S"
-        PreIndicativePhrase[plural] Noun[plural]
+        PreIndicativePhrase[plural] Noun[plural] -plural
             # horses are mammals
         PreIndicativePhrase Adjective[Comparable,absolute]
             # i am happy
@@ -380,8 +380,10 @@ Frames:
 
         NounPhrase[NUMBER] PostIndicativePhrase[NUMBER]
             # the waters are rising
-        Noun[NUMBER] PostIndicativePhrase[NUMBER]
-            # waters are rising, horse is running
+
+        Noun[NUMBER] PostIndicativePhrase[NUMBER] -NUMBER
+            # waters are rising
+            # horse is running
 
         Noun[plural] ModalPhrase[MODE] -MODE
             # dogs can run, !dog can run

@@ -56,9 +56,8 @@ void Displayer::init(
 
 void Displayer::display()
 {
-    vector<string> split_tokens;
+    vector<string> split_tokens = split_spaces(parser->current_utterance);
     vector<Frame> word_frames;
-    boost::split(split_tokens, parser->current_utterance, boost::is_any_of(" "), boost::token_compress_on);
 
     image.setTo(Scalar(0)); // clear screen
 

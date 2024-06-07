@@ -181,7 +181,7 @@ void Parser::update_parse_grid(string new_utterance)
 
     // tokenize the utterance
     vector<string> split_tokens;
-    boost::split(split_tokens, current_utterance, boost::is_any_of(" "), boost::token_compress_on);
+    split_tokens = split_spaces(current_utterance);
     int token_count = split_tokens.size();
 
     // initialize the parse_grid

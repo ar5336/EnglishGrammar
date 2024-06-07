@@ -20,4 +20,8 @@ int count_initial_spaces(string str);
 
 bool equals(string a, string b);
 
+vector<string> split_character(string str, string split);
+
+vector<string> split_spaces(string str);
+
 #endif

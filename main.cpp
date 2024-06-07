@@ -143,8 +143,6 @@ bool check_keypress(char cr)
 					}
 				}
 				displayer.display();
-
-				// current_utterance = "";
 			}
 		}
 		if (cr == '\'')

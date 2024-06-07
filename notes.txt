@@ -226,3 +226,57 @@ AdjectivePhrase => HAS_PROPERTY
     CAN_DO person live
     PREPOSITION person under house
 }
+
+?? how to construct predicates from grammar rules
+
+simplest case
+    S => PreIndicativePhrase[plural] Noun[plural] -plural <IS_SUBSET_OF PreIndicativePhrase.Noun Noun.Noun>
+            # horses are mammals
+        
+        PreIndicativePhrase must emit "horse"
+
+    PreIndicativePhrase => Noun[plural]  Verb[LinkingVerb,plural] -plural <object:Noun>
+
+each grammar formation category is expected to emit a certain predicate structure.
+"a horse" - IS_INSTANCE_OF h horse
+"a horse runs" - DOES h run
+
+>!
+IS_INSTANCE_OF x horse
+IS_SUBSET_OF x mammal
+
+>!
+IS_INSTANCE_OF x mammal
+CAN_DO x breathe
+
+>~
+IS_INSTANCE_OF x horse
+CAN_DO x breathe
+
+>?
+IS_INSTANCE_OF x horse
+CAN_DO x breathe
+
+to process the question, each of the declarations must be matched against.
+they should be indexed by length, variables mentioned. Then looped through (more indexing can be added later)
+    ? predicate types mentioned?
+        [] the responder could use the results of the indexing to determine its response
+            some variables aren't present -> i don't know anything about <insert missing variables>
+            length mismatch -> i don't know anything about that
+
+    to implement this, add a PredicateStatement object that holds a list of predicates in itself
+        it can be evaluated, ?checked for contradictions with other predicateStatements?
+    
+    the PredicateHandler should be renamed to the StatementHandler
+        It should have an infer statements, just liek this has inferPredicates
+    
+
+>! "if it is hungry it drools"
+IS x hungry
+DOES x drool
+
+> "doe
+
+
+>! "if a horse is in a field then it is running"
+PREPOSITION x, in, field

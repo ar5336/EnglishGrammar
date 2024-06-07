@@ -120,3 +120,16 @@ void PredicateHandler::InferPredicates(){
         }
     }
 }
+
+Predicate PredicateHandler::PredFromString(string input)
+{
+    auto tokens = split_spaces(input);
+
+    PredicateType type = PredicateUtil::StringToType(tokens[0]);
+    if (type != PredicateType::NONE)
+    {
+        auto arguments = vector<string>(tokens.begin()+1, tokens.end());
+        return Predicate(type, arguments);
+    }
+    return Predicate(PredicateType::NONE, vector<string>());
+}

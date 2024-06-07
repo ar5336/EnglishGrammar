@@ -57,3 +57,15 @@ bool is_str_empty(string str)
 	trim(str);
 	return str.size() == 0;
 }
+
+vector<string> split_character(string str, string split)
+{
+	vector<string> split_tokens;
+	boost::split(split_tokens, str, boost::is_any_of(split), boost::token_compress_on);
+	return split_tokens;
+}
+
+vector<string> split_spaces(string str)
+{
+	return split_character(str, " ");
+}

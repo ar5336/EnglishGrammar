@@ -7,6 +7,7 @@
 #include <set>
 
 #include "predicate.hpp"
+#include "string_operators.hpp"
 
 enum KnowledgeType
 {
@@ -61,6 +62,8 @@ public:
     void AddPredicate(string type, vector<string> arguments);
 
     int PredIntFromString(string type);
+
+    Predicate PredFromString(string input);
 };
 
 #endif

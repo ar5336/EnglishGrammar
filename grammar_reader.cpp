@@ -102,8 +102,7 @@ void GrammarReader::read_syntax_entry()
                 match_string = match_string.substr(0, feature_open_pos);
 
                 feature_string = trim_front_and_back(feature_string);
-                vector<string> feature_names;
-                boost::split(feature_names, feature_string, boost::is_any_of(","), boost::token_compress_off);
+                vector<string> feature_names = split_character(feature_string, ",");
 
                 for (int feature_tag_index = 0; feature_tag_index < feature_names.size(); feature_tag_index++)
                 {
@@ -277,7 +276,7 @@ void GrammarReader::read_grammar(string fileName)
                 state = GrammarReaderState::ReadingSyntax;
             }
 
-            boost::split(split_tokens, current_line, boost::is_any_of(" "), boost::token_compress_on);
+            split_tokens = split_spaces(current_line);
 
             // if the first token ends in a ":" you're going up a level in the type_heirarchy
             first_token = split_tokens[0];
