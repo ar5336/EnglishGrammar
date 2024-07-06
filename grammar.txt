@@ -131,20 +131,20 @@ Words:
                 give giving gave gives given
                 tear tearing tore tears torn
                 rip ripping ripped rips
-            Intransitive: # simple continuous perfect 3PPresent (pastPart)
                 ride riding rode rides ridden
-                jump jumping jumped jumps
-                fly flying flew flies flown
                 play playing played plays
                 eat eating ate eats eaten
                 drink drinking drank drinks drunk
+                think thinking thought thinks thunk
+            Intransitive: # simple continuous perfect 3PPresent (pastPart)
+                fly flying flew flies flown
+                jump jumping jumped jumps
                 rise rising rose rises risen
                 swim swimming swam swims swum
                 shake shaking shook shakes shaken
                 breathe breathing breathed breathes
                 fly flying flew flies flew
                 bark barking barked barks
-                think thinking thought thinks thunk
                 stir stirring stirred stirs
                 stand standing stood stands
                 walk walking walked walks

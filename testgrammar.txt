@@ -1,19 +1,62 @@
 Words:
-    A:
-        ayy
-        ei
-    B:
-        bee
-    C:
-        cee
-        see
-    D:
-        dee
-    E:
-        ee
-    F:
-        eff
+    Noun:
+        MainNoun: # singular (plural)
+            dog dogs
+            horse horses
+            cat cats
+            fox foxes
+    Verb:
+        MainVerb:
+            Transitive: # simple continuous perfect 3PPresent (pastPart)
+                take taking took takes taken
+                eat eating ate eats eaten
+            Intransitive: # simple continuous perfect 3PPresent (pastPart)
+                jump jumping jumped jumps
+    Adjective:
+        quick
+        brown
+        lazy
+    Preposition:
+        in
+        over
+        under
+    Determiner:
+        the
+        a
+
+FeatureGroups:
+    NUMBER= singular plural
+    TENSE=  simple continous perfect 3PPresent pastPart
+
+Predicates:
+    IS_INSTANCE_OF object nounClass
+    HAS_PROPERTY object property
+    PREPOSITION action preposition subject
+    ACTION actionVariable actor action
 
 Frames:
-    Alphabet "AL"
-        A (B) C (D) E
+    NounPhrase "NP"
+        Determiner Noun[NUMBER] -NUMBER
+
+        Determiner AdjectivePhrase[NUMBER] -NUMBER
+        # the quick brown fox
+        # a lazy dog
+
+    VerbPhrase "VP"
+        NounPhrase Verb <ACTION actionVariable:! actor:NounPhrase->IS_INSTANCE_OF.object action:Verb.frame_name>
+        # the quick brown fox jumps
+
+        VerbPhrase PrepPhrase <PrepPhrase->PREPOSITION.action=VerbPhrase->IS_INSTANCE_OF.object>
+        # the quick brown fox jumps over the lazy dog
+
+    PrepPhrase "PP"
+        Preposition NounPhrase <PREPOSITION action:! preposition:Preposition.frame_name subject:NounPhrase.IS_INSTANCE_OF.object>
+        # over the lazy dog
+
+    AdjectivePhrase "AP"
+        Adjective Noun[NUMBER] -NUMBER <IS_INSTANCE_OF ! Noun.frame_name | HAS_PROPERTY ! Adjective.frame_name>
+        # brown fox
+        # lazy dog
+
+        Adjective AdjectivePhrase[NUMBER] -NUMBER <HAS_PROPERTY AdjectivePhrase.IS_INSTANCE_OF.subject Adjective.frame_name>
+        # quick brown fox
