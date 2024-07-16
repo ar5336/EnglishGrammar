@@ -114,39 +114,38 @@ Frame::Frame(
     }
 }
 
-	// syntax frame constructor
+// syntax frame constructor
 Frame::Frame(
     string frame_name,
     string frame_nickname,
-    // vector<string> pattern,
-    // vector<PatternNecessity> pattern_types
     vector<PatternElement> pattern_elements,
     set<string> feature_set,
-    set<string> feature_groups)
+    set<string> feature_groups,
+    PredicateFormationRules formation_rules)
     : frame_name(frame_name),
         frame_nickname(frame_nickname),
         pattern_elements(pattern_elements),
         feature_set(feature_set),
-        feature_groups(feature_groups)
+        feature_groups(feature_groups),
+        predicate_formation_rules(formation_rules)
 {
     is_binarized = false;
-
-    // left_match = *this;
-    // right_match = &(Frame());
 }
 
-	// cnf frame constructor
+// cnf frame constructor
 Frame::Frame(
     string frame_name,
     string frame_nickname,
     PatternElement left,
     PatternElement right,
     set<string> feature_set,
-    set<string> feature_groups)
+    set<string> feature_groups,
+    PredicateFormationRules formation_rules)
     : frame_name(frame_name),
         frame_nickname(frame_nickname),
         feature_set(feature_set),
-        feature_groups(feature_groups)
+        feature_groups(feature_groups),
+        predicate_formation_rules(formation_rules)
 {
     is_binarized = true;
     pattern_elements.push_back(left);
@@ -167,13 +166,15 @@ Frame::Frame(
     set<string> feature_set,
     set<string> feature_groups,
     FrameCoordinates left_match,
-    FrameCoordinates right_match)
+    FrameCoordinates right_match,
+    Expression accumulated_expression)
     : frame_name(frame_name),
         frame_nickname(frame_nickname),
         feature_set(feature_set),
         feature_groups(feature_groups),
         left_match(left_match),
-        right_match(right_match)
+        right_match(right_match),
+        accumulated_expression(accumulated_expression)
 {
     is_binarized = true;
     pattern_elements.push_back(left);
@@ -197,9 +198,27 @@ Frame Frame::with_links(
         feature_set,
         feature_groups,
         to_left,
-        to_right
+        to_right,
+        accumulated_expression
     );
 
+    return new_frame;
+}
+
+Frame Frame::with_expression(
+    Expression new_expression)
+{
+    auto new_frame = Frame(
+        frame_name,
+        frame_nickname,
+        pattern_elements[0],
+        pattern_elements[1],
+        feature_set,
+        feature_groups,
+        left_match,
+        right_match,
+        new_expression
+    );
 
     return new_frame;
 }
@@ -217,6 +236,11 @@ bool Frame::is_part_of_speech(string part_of_speech)
 bool Frame::is_word_frame()
 {
     return !type_heirarchy.empty();
+}
+
+bool Frame::is_matched()
+{
+    return !left_match.is_empty() && !right_match.is_empty();
 }
 
 

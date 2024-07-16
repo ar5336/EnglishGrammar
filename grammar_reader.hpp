@@ -15,12 +15,15 @@ enum GrammarReaderState{
 	ReadingWords = 1,
 	ReadingSyntax = 2,
 	ReadingFeatureGroups = 3,
+	ReadingPredicateTemplates = 4,
 };
 
 class GrammarReader
 {
 private:
     Grammar* grammar;
+	PredicateHandler* predicate_handler;
+	PredicateTemplateHandler* predicate_template_handler;
 
 	GrammarReaderState state;
 	string current_line;
@@ -48,8 +51,10 @@ private:
 
 	void read_word_entry();
 
+	void read_predicate_template_entry();
+
 public:
-	GrammarReader(Grammar* grammar_ptr);
+	GrammarReader(Grammar *grammar_ptr, PredicateHandler *predicate_handler_ptr, PredicateTemplateHandler* predicate_template_handler);
 
 	void read_grammar(string fileName);
 };

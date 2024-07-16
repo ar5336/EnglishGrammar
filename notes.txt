@@ -533,3 +533,5 @@ oh and a small upgrade to this would be for class heirarchies for verbs.
 
 "gliding is a type of flying"
     > ravens can glide
+
+create a Noun class, so that 

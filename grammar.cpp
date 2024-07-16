@@ -47,6 +47,7 @@ void Grammar::binarize_grammar()
 		string base_frame_nickname = frame.frame_nickname;
 		set<string> base_frame_feature_set = frame.feature_set;
 		set<string> base_frame_feature_groups = frame.feature_groups;
+		PredicateFormationRules base_frame_formaiton_rules = frame.predicate_formation_rules;
 
 		// create subframe 0 for pattern elements 0 and 1
 
@@ -98,13 +99,21 @@ void Grammar::binarize_grammar()
 			}
 			// printf("CNF: %s > %s %s\n", frame_name.c_str(), pattern_left.match_string.c_str(), pattern_right.match_string.c_str());
 
+			PredicateFormationRules formation_rules = base_frame_formaiton_rules;
+			// if (subframe_index == 0)
+			// {
+			// 	formation_rules = base_frame_formaiton_rules;
+			// 	// TODO - update the formation rules inheritance while binarizing
+			// }
+
 			Frame new_cnf_frame = Frame(
 				frame_name,
 				frame_nickname,
 				pattern_left,
 				pattern_right,
 				feature_set,
-				feature_groups);
+				feature_groups,
+				formation_rules);
 			cnf_frames.push_back(new_cnf_frame);
 
 			// add elements to cnf_map

@@ -10,6 +10,20 @@
 
 using namespace std;
 
+class VariableNamer
+{
+private: 
+    string alphabet = "abcdefghijklmnopqrstuvwxyz";
+    int current_index;
+
+public:
+    set<string> existing_names;
+
+    VariableNamer();
+
+    string generate_name();
+};
+
 class Parser
 {
 private:
@@ -17,6 +31,10 @@ private:
 
     FrameCoordinates left_frame_coordinates;
     FrameCoordinates right_frame_coordinates;
+
+    PredicateHandler* predicate_handler;
+
+    VariableNamer variable_namer;
 
     bool does_frame_have_features(
         Frame candidate_frame,
@@ -29,6 +47,21 @@ private:
         vector<Frame> &matched_frames);
 
     vector<Frame> find_matching_frames(vector<Frame> left_frames, vector<Frame> right_frames);
+
+    Expression apply_formation_rules_on_expression(PredicateFormationRules formation_rule, Frame left_frame, Frame right_frame);
+
+    Expression apply_predicate_creation_rule(PredicateCreator creator);
+
+    Frame apply_word_frame_accessor(WordFrameAccessor word_frame_accessor);
+
+    string get_argument_accessor(Frame left_frame, Frame right_frame, PatternElementPredicateAccessor pattern_predicate_accessor);
+
+    Expression set_argument_accessor(
+        Expression combined_expression,
+        Frame left_frame,
+        Frame right_frame,
+        PatternElementPredicateAccessor argument_accessor,
+        string operand_variable);
 
 public:
     // rows of columns of lists of frames

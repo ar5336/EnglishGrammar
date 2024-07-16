@@ -196,15 +196,15 @@ void Displayer::display()
     // display predicate handler
 
     Point predicate_ticker_corner = start_predicate_corner + Point(0, scroll);
-    if (predicate_handler->predicates.size() > 0) {
-        for (auto predicate_of_type : predicate_handler->predicates) {
-            auto predicate = predicate_of_type.second;
-            auto pred_type = predicate_of_type.first;
-            if (pred_type == KnowledgeType::GIVEN) {
-                display_text(image, predicate_ticker_corner, predicate.stringify(), CV_RGB(255, 10, 10), 0.6f);
+    if (predicate_handler->expressions.size() > 0) {
+        for (auto expression_of_type : predicate_handler->expressions) {
+            auto expression = expression_of_type.second;
+            auto expr_type = expression_of_type.first;
+            if (expr_type == KnowledgeType::GIVEN) {
+                display_text(image, predicate_ticker_corner, expression.stringify(), CV_RGB(255, 10, 10), 0.6f);
 
             } else {
-                display_text(image, predicate_ticker_corner, predicate.stringify(), CV_RGB(255, 140, 0), 0.6f);
+                display_text(image, predicate_ticker_corner, expression.stringify(), CV_RGB(255, 140, 0), 0.6f);
 
             }
             predicate_ticker_corner += Point(0, 40);

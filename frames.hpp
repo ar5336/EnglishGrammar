@@ -1,6 +1,8 @@
 #ifndef FRAMES_HPP
 #define FRAMES_HPP
 
+#include "predicate_rule_reader.hpp"
+
 #include <string>
 #include <vector>
 #include <set>
@@ -73,6 +75,7 @@ public:
 	string frame_nickname;
 	vector<string> type_heirarchy;
 	vector<PatternElement> pattern_elements;
+	PredicateFormationRules predicate_formation_rules;
 
 	set<string> feature_set; // feature applied to word or syntax pattern
 	set<string> feature_groups;
@@ -82,6 +85,8 @@ public:
 	// there are only used when constructing interpretations
 	FrameCoordinates left_match;
 	FrameCoordinates right_match;
+
+	Expression accumulated_expression;
 
 	// default constructor
 	Frame();
@@ -109,7 +114,8 @@ public:
 		string frame_nickname,
 		vector<PatternElement> pattern_elements,
 		set<string> feature_set,
-		set<string> feature_groups);
+		set<string> feature_groups,
+		PredicateFormationRules formation_rules);
 
 	// cnf frame constructor
 	Frame(
@@ -118,8 +124,10 @@ public:
 		PatternElement left,
 		PatternElement right,
 		set<string> feature_set,
-		set<string> feature_groups);
+		set<string> feature_groups,
+		PredicateFormationRules formation_rules);
 
+	// matched frame constructor
 	Frame(
 		string frame_name,
 		string frame_nickname,
@@ -128,7 +136,8 @@ public:
 		set<string> feature_set,
 		set<string> feature_groups,
 		FrameCoordinates left_match,
-		FrameCoordinates right_match);
+		FrameCoordinates right_match,
+		Expression accumulated_expression);
 	
 	Frame with_links(
 		FrameCoordinates to_left,
@@ -139,6 +148,10 @@ public:
 	bool is_part_of_speech(string part_of_speech);
 
 	bool is_word_frame();
+
+	bool is_matched();
+
+	Frame with_expression(Expression expression);
 
 	void print_out(string title);
 };

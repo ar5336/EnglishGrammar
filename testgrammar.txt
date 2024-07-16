@@ -43,20 +43,20 @@ Frames:
         # a lazy dog
 
     VerbPhrase "VP"
-        NounPhrase Verb <ACTION actionVariable:! actor:NounPhrase->IS_INSTANCE_OF.object action:Verb.frame_name>
+        NounPhrase Verb <ACTION actionVariable:! actor:NounPhrase->IS_INSTANCE_OF.object action:Verb>
         # the quick brown fox jumps
 
         VerbPhrase PrepPhrase <PrepPhrase->PREPOSITION.action=VerbPhrase->IS_INSTANCE_OF.object>
         # the quick brown fox jumps over the lazy dog
 
     PrepPhrase "PP"
-        Preposition NounPhrase <PREPOSITION action:! preposition:Preposition.frame_name subject:NounPhrase.IS_INSTANCE_OF.object>
+        Preposition NounPhrase <PREPOSITION action:! preposition:Preposition subject:NounPhrase.IS_INSTANCE_OF.object>
         # over the lazy dog
 
     AdjectivePhrase "AP"
-        Adjective Noun[NUMBER] -NUMBER <IS_INSTANCE_OF ! Noun.frame_name | HAS_PROPERTY ! Adjective.frame_name>
+        Adjective Noun[NUMBER] -NUMBER <IS_INSTANCE_OF object:! nounClass:Noun | HAS_PROPERTY object:! property:Adjective>
         # brown fox
         # lazy dog
 
-        Adjective AdjectivePhrase[NUMBER] -NUMBER <HAS_PROPERTY AdjectivePhrase.IS_INSTANCE_OF.subject Adjective.frame_name>
+        Adjective AdjectivePhrase[NUMBER] -NUMBER <HAS_PROPERTY object:AdjectivePhrase.IS_INSTANCE_OF.subject peroperty:Adjective>
         # quick brown fox

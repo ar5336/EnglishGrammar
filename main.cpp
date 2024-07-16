@@ -6,6 +6,11 @@
 #include <fstream>
 #include <set>
 
+#include <execinfo.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 #include "grammar_reader.hpp"
 #include "frames.hpp"
 #include "grammar.hpp"
@@ -14,11 +19,12 @@
 #include "displayer.hpp"
 #include "interpretation.hpp"
 #include "predicate_handler.hpp"
+#include "test.hpp"
 
 using namespace std;
 using namespace cv;
 
-string current_utterance = "can ravens fly";
+string current_utterance = "the quick brown fox";
 
 Parser parser;
 
@@ -26,7 +32,9 @@ Grammar grammar = Grammar();
 
 Displayer displayer = Displayer("reader");
 
-PredicateHandler predicate_handler = PredicateHandler();
+PredicateTemplateHandler predicate_template_handler = PredicateTemplateHandler();
+
+PredicateHandler predicate_handler = PredicateHandler(&predicate_template_handler);
 
 bool is_shift_pressed = false;
 
@@ -125,22 +133,24 @@ bool check_keypress(char cr)
 				|| equals(base_frame.frame_name, "Question"))){
 				auto interp_handler = InterpretationHandler(&parser, base_frame);
 
-				auto predicate = Predicate();
-				if (interp_handler.TryConstructPredicate(predicate))
+				auto expression = Expression();
+				if (interp_handler.TryConstructExpression(expression))
 				{
-					if (predicate.speech_act == SpeechActs::QUESTION) {
-						auto response = predicate_handler.DetermineResponse(predicate);
-						if (response == ResponseType::YES) {
-							displayer.response_string = "Yes";
-						}
-						if (response == ResponseType::NO) {
+					predicate_handler.tell(expression);
+					predicate_handler.InferExpressions();
+					// if (predicate.speech_act == SpeechActs::QUESTION) {
+					// 	auto response = predicate_handler.DetermineResponse(predicate);
+					// 	if (response == ResponseType::YES) {
+					// 		displayer.response_string = "Yes";
+					// 	}
+					// 	if (response == ResponseType::NO) {
 
-							displayer.response_string = "No";
-						}
-					} else {
-						predicate_handler.tell(predicate);
-						predicate_handler.InferPredicates();
-					}
+					// 		displayer.response_string = "No";
+					// 	}
+					// } else {
+					// 	predicate_handler.tell(predicate);
+					// 	predicate_handler.InferPredicates();
+					// }
 				}
 				displayer.display();
 			}
@@ -154,12 +164,32 @@ bool check_keypress(char cr)
 	}
 }
 
+void handler(int sig) {
+  void *array[10];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 10);
+
+  // print out all the frames to stderr
+  fprintf(stderr, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+  exit(1);
+}
+
 int main(int argc, char **argv)
 {
-	// Mat image;
+	if (argc > 1 && ((string)argv[1] == "--test"))
+	{
+		test_all();
+		return 1;
+	}
+
+	signal(11, handler);   // install our handler
+
 	// read the grammar
-	GrammarReader reader = GrammarReader(&grammar);
-	reader.read_grammar("grammar.txt");
+	GrammarReader reader = GrammarReader(&grammar, &predicate_handler, &predicate_template_handler);
+	reader.read_grammar("testgrammar.txt");
 
 	// translate the read frames into cnf frames
 	grammar.binarize_grammar();

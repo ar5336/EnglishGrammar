@@ -15,12 +15,13 @@ private:
 	bool try_get_right_link(Frame*& result_ptr);
 
     Parser* parser;
+    PredicateHandler* handler;
 public:
     Frame base_frame;
 
     InterpretationHandler(Parser* parser, Frame base_frame);
 
-    bool TryConstructPredicate(Predicate& predicate);
+    bool TryConstructExpression(Expression& predicate);
 };
 
 #endif

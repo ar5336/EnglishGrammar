@@ -1,5 +1,19 @@
 #include "parser.hpp"
 
+VariableNamer::VariableNamer() {}
+
+string VariableNamer::generate_name()
+{
+    if (current_index < 26)
+    {
+        string result = alphabet[current_index]+"";
+        current_index++;
+        return result;
+    }
+
+    throw "failed to generate name";
+}
+
 bool Parser::does_frame_have_features(
     Frame candidate_frame,
     bool is_left,
@@ -131,7 +145,12 @@ bool Parser::get_matched_frames(
                 matched_frames.push_back(
                     candidate_frame.with_links(
                         left_frame_coordinates,
-                        right_frame_coordinates));
+                        right_frame_coordinates)
+                                   .with_expression(
+                                       apply_formation_rules_on_expression(
+                                            candidate_frame.predicate_formation_rules,
+                                            left_consumer_frame,
+                                            right_consumer_frame)));
         }
 
         return true;
@@ -139,6 +158,187 @@ bool Parser::get_matched_frames(
     return false;
 
 }
+
+bool try_get_word_frame(WordFrameAccessor accessor, Frame left_frame, Frame right_frame, Frame &word_frame)
+{
+    string frame_name = accessor.predicate_template.predicate;
+
+    Frame identified_frame;
+    if (left_frame.feature_set.count(frame_name) != 0)
+    {
+        identified_frame = left_frame;
+    }
+    else if (right_frame.feature_set.count(frame_name) != 0)
+    {
+        identified_frame = right_frame;
+    }
+    else 
+    {
+        printf("disaster: neither of the identified frames could be matched to when accessing word frame\n");
+        return false;
+    }
+
+    if (identified_frame.is_word_frame()){
+        word_frame = identified_frame;
+        return true;
+    } 
+
+    word_frame = Frame();
+    return false;
+}
+
+Expression Parser::apply_formation_rules_on_expression(PredicateFormationRules formation_rule, Frame left_frame, Frame right_frame)
+{
+    // make sure that both left and right frame are matched
+
+    if (! ((left_frame.is_matched() || left_frame.is_word_frame()) &&
+          ((right_frame.is_matched() || right_frame.is_word_frame()))))
+          throw("both frames should be matched during predicate formation");
+
+    // first, combine the two expressions
+    // Expression left_expression = left_frame.accumulated_expression;
+    // Expression right_expression = right_frame.accumulated_expression;
+    Expression combined_expression = Expression::combine_expressions(left_frame.accumulated_expression, right_frame.accumulated_expression);
+    // auto expression_predicates = combined_expressions.predicates;
+
+
+
+    // apply the modification rules before the formation rules. note - not hard decision may be changed
+    // vector<Predicate> modified_predicates;
+    for (int i = 0; i < formation_rule.predicate_modifiers.size(); i++)
+    {
+        PredicateModifier modifier = formation_rule.predicate_modifiers[i];
+
+        PatternElementPredicateAccessor assignee = modifier.left_equal;
+        string assignee_frame = assignee.syntax_frame_name;
+
+        PatternElementPredicateAccessor operand = modifier.right_equal;
+
+        // first get the operand's value
+        string operand_variable = get_argument_accessor(left_frame, right_frame, operand);
+
+        combined_expression = set_argument_accessor(combined_expression, left_frame, right_frame, assignee, operand_variable);
+    }
+
+    // TODO - create a PredicateFormationContext to keep track of variable names that have already been used
+    vector<Predicate> created_predicates;
+    string wildcard_value = variable_namer.generate_name();
+    for (int i = 0; i < formation_rule.predicate_creators.size(); i++)
+    {
+        PredicateCreator creator = formation_rule.predicate_creators[i];
+
+        auto predicate_template = creator.predicate;
+
+        int word_frame_index = 0;
+        auto word_frame_accessors = creator.word_frame_accessors;
+
+        int pattern_predicate_index = 0;
+        auto pattern_predicate_acessors = creator.pattern_predicate_accessors;
+
+        vector<string> calculated_arguments;
+
+        for (auto creation_type : creator.parameter_creation_types)
+        {
+            if (creation_type == ParameterCreationType::WORD_FRAME)
+            {
+                WordFrameAccessor word_frame_accessor = word_frame_accessors[word_frame_index];
+
+                Frame word_frame = Frame();
+                if (try_get_word_frame(word_frame_accessor, left_frame, right_frame, word_frame))
+                {
+                    calculated_arguments.push_back(word_frame.frame_name);
+                } else {
+                    calculated_arguments.push_back("retrieval_failed");
+                }
+
+                word_frame_index++;
+            }
+            else if (creation_type == ParameterCreationType::FRAME_PREDICATE_PROPERTY)
+            {
+                PatternElementPredicateAccessor pattern_argument_accessor = pattern_predicate_acessors[pattern_predicate_index];
+
+                calculated_arguments.push_back(get_argument_accessor(left_frame, right_frame, pattern_argument_accessor));
+                pattern_predicate_index++;
+            }
+            else if (creation_type == ParameterCreationType::WILDCARD)
+            {
+                calculated_arguments.push_back(wildcard_value);
+            }
+        }
+
+
+        created_predicates.push_back(predicate_handler->ConstructPredicate(predicate_template.predicate, calculated_arguments));
+    }
+
+    // add the created predicates to the expression
+    return Expression::combine_expressions(combined_expression, Expression(created_predicates));
+}
+
+bool try_get_predicate(Frame left_frame, Frame right_frame, PatternElementPredicateAccessor accessor, Predicate& result_predicate)
+{
+    string frame_name = accessor.syntax_frame_name;
+
+    Frame identified_frame;
+    if (left_frame.feature_set.count(frame_name) != 0)
+    {
+        identified_frame = left_frame;
+    }
+    else if (right_frame.feature_set.count(frame_name) != 0)
+    {
+        identified_frame = right_frame;
+    }
+    else 
+    {
+        printf("disaster: neither of the identified frames could be matched to\n");
+        return false;
+    }
+
+    string predicate_name = accessor.predicate_name;
+
+    result_predicate = Expression::get_predicate_by_name(identified_frame.accumulated_expression, predicate_name);
+    return true;
+}
+
+string Parser::get_argument_accessor(Frame left_frame, Frame right_frame, PatternElementPredicateAccessor accessor)
+{
+    Predicate original_predicate;
+    if (!try_get_predicate(left_frame, right_frame, accessor, original_predicate))
+    {
+        return "borked";
+    }
+
+    string accessor_paramter_name = accessor.parameter_name;
+
+    string argument = original_predicate.get_argument(accessor_paramter_name);
+
+    return argument;
+}
+
+Expression Parser::set_argument_accessor(
+    Expression combined_expression,
+    Frame left_frame,
+    Frame right_frame,
+    PatternElementPredicateAccessor argument_accessor,
+    string operand_variable)
+{
+    Predicate original_predicate;
+    if (!try_get_predicate(left_frame, right_frame, argument_accessor, original_predicate))
+    {
+        printf("disaster: failed to access assignee of predicate modifier rule\n");
+        return combined_expression;
+    }
+
+    combined_expression.extract_predicate(original_predicate);
+
+    // create new expression with argument assigned
+    Predicate modified_predicate = original_predicate.with_modified_argument(argument_accessor.parameter_name, operand_variable);
+
+    vector<Predicate> new_predicates = combined_expression.predicates;
+    new_predicates.push_back(modified_predicate);
+
+    return Expression(new_predicates);
+}
+
 
 vector<Frame> Parser::find_matching_frames(vector<Frame> left_frames, vector<Frame> right_frames)
 {

@@ -60,10 +60,34 @@ void GrammarReader::read_syntax_entry()
         vector<PatternElement> pattern_elements;
         set<string> features;
         set<string> feature_groups;
+
+        PredicateFormationRules formation_rule;
         for (int pattern_element_index = 0; pattern_element_index < split_tokens.size(); pattern_element_index++)
         {
             PatternNecessity necessity;
             string match_string = split_tokens[pattern_element_index];
+
+            // for now, the < predicateFromationRule * > is the final portion of the syntax entry
+            if (match_string[0] == '<')
+            {
+                string combined_string = "";
+                for (int i = pattern_element_index; i < split_tokens.size(); i++)
+                {
+                    string pred_form_rule_str = split_tokens[i];
+                    if (i == pattern_element_index)
+                        pred_form_rule_str = pred_form_rule_str.substr(1);
+
+                    combined_string += pred_form_rule_str + " ";
+                }
+                auto rule_reader = PredicateRuleReader(predicate_handler);
+                printf("predicate rule reader pointer: %p\n", &rule_reader);
+                printf("predicate handler pointer: %p\n", predicate_handler);
+
+                string trimmed_combined_string = combined_string.substr(0, combined_string.size()-2);
+
+                if (rule_reader.TryReadpredicateRule(trimmed_combined_string, &formation_rule))
+                    break;
+            }
 
             // check for - prefix indicating this being a feature
             if (match_string[0] == '-')
@@ -146,7 +170,8 @@ void GrammarReader::read_syntax_entry()
             pattern_nickname,
             pattern_elements,
             features,
-            feature_groups);
+            feature_groups,
+            formation_rule);
 
         grammar->syntax_frames.push_back(new_pattern_frame);
     }
@@ -222,8 +247,22 @@ void GrammarReader::read_word_entry()
     }
 }
 
-GrammarReader::GrammarReader(Grammar *grammar_ptr)
-    : grammar(grammar_ptr)
+void GrammarReader::read_predicate_template_entry()
+{
+    string predicate_name = split_tokens[0];
+
+    vector<string> param_names(split_tokens.begin() + 1, split_tokens.end());
+
+    PredicateTemplate predicate_template = PredicateTemplate(predicate_name, param_names);
+
+    predicate_template_handler->add_entry(predicate_template);
+}
+
+GrammarReader::GrammarReader(
+    Grammar *grammar_ptr,
+    PredicateHandler *predicate_handler_ptr,
+    PredicateTemplateHandler *predicate_template_handler)
+    : grammar(grammar_ptr), predicate_handler(predicate_handler_ptr), predicate_template_handler(predicate_template_handler)
 {
     state = GrammarReaderState::ReadingWords;
 }
@@ -271,8 +310,13 @@ void GrammarReader::read_grammar(string fileName)
                 state = GrammarReaderState::ReadingFeatureGroups;
                 continue;
             }
+            if (equals(current_line, "Predicates:"))
+            {
+                state = GrammarReaderState::ReadingPredicateTemplates;
+            }
             if (equals(current_line, "Frames:"))
             {
+                predicate_handler->predicate_template_handler = predicate_template_handler;
                 state = GrammarReaderState::ReadingSyntax;
             }
 
@@ -296,6 +340,9 @@ void GrammarReader::read_grammar(string fileName)
                     break;
                 case GrammarReaderState::ReadingFeatureGroups:
                     read_feature_group_entry();
+                    break;
+                case GrammarReaderState::ReadingPredicateTemplates:
+                    read_predicate_template_entry();
                     break;
                 }
             }

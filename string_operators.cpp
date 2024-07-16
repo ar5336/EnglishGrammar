@@ -69,3 +69,8 @@ vector<string> split_spaces(string str)
 {
 	return split_character(str, " ");
 }
+
+bool find_in_string(string field, string target)
+{
+	return field.find(target) != string::npos;
+}

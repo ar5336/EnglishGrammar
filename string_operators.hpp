@@ -24,4 +24,6 @@ vector<string> split_character(string str, string split);
 
 vector<string> split_spaces(string str);
 
+bool find_in_string(string field, string target);
+
 #endif
