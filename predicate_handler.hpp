@@ -64,6 +64,25 @@ public:
     int PredIntFromString(string type);
 
     Predicate PredFromString(string input);
+
+    PredicateTemplate GetPredicateTemplate(string predicate_string);
+};
+
+class PredicateTemplateReader
+{
+private:
+    map<string, PredicateTemplate> predicate_templates;
+
+public:
+    PredicateTemplateReader(string predicates_file_name);
+
+    PredicateTemplate GetPredicateTemplate(string predicate_string);
+};
+
+class PredicateTemplate
+{
+    string predicate;
+    vector<string> parameter_names;
 };
 
 #endif
