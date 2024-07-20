@@ -21,10 +21,9 @@
 
 const string predicateTypeNames[]
 {
-    "IS_SUBSET_OF",
     "IS_INSTANCE_OF",
     "HAS_PROPERTY",
-    "CAN_DO",
+    "PREPOSITION",
     "ACTION"
     "NONE",
 };

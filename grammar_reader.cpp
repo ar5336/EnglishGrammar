@@ -61,7 +61,8 @@ void GrammarReader::read_syntax_entry()
         set<string> features;
         set<string> feature_groups;
 
-        PredicateFormationRules formation_rule;
+        PredicateFormationRules formation_rule = PredicateFormationRules();
+        printf("formation rules: %d + %d\n", (int)formation_rule.predicate_creators.size(), (int)formation_rule.predicate_modifiers.size());
         for (int pattern_element_index = 0; pattern_element_index < split_tokens.size(); pattern_element_index++)
         {
             PatternNecessity necessity;
@@ -75,18 +76,19 @@ void GrammarReader::read_syntax_entry()
                 {
                     string pred_form_rule_str = split_tokens[i];
                     if (i == pattern_element_index)
+                    {
                         pred_form_rule_str = pred_form_rule_str.substr(1);
+
+                    }
 
                     combined_string += pred_form_rule_str + " ";
                 }
                 auto rule_reader = PredicateRuleReader(predicate_handler);
-                printf("predicate rule reader pointer: %p\n", &rule_reader);
-                printf("predicate handler pointer: %p\n", predicate_handler);
 
                 string trimmed_combined_string = combined_string.substr(0, combined_string.size()-2);
 
-                if (rule_reader.TryReadpredicateRule(trimmed_combined_string, &formation_rule))
-                    break;
+                rule_reader.TryReadpredicateRule(trimmed_combined_string, &formation_rule);
+                break;
             }
 
             // check for - prefix indicating this being a feature
@@ -138,7 +140,7 @@ void GrammarReader::read_syntax_entry()
                         feature_name = feature_name.substr(1, feature_name.size() - 1);
                         if (grammar->feature_group_set.count(feature_name) != 0)
                         {
-                            throw invalid_argument("feature groups are not allowed to be inverted yet.\n");
+                            throw runtime_error("feature groups are not allowed to be inverted yet.\n");
                         }
 
                         feature_tags.push_back(FeatureTag(feature_name, FeatureTagType::Prohibited));
@@ -254,6 +256,13 @@ void GrammarReader::read_predicate_template_entry()
     vector<string> param_names(split_tokens.begin() + 1, split_tokens.end());
 
     PredicateTemplate predicate_template = PredicateTemplate(predicate_name, param_names);
+
+    printf("adding predicate of name %s", predicate_name.c_str());
+    for ( string param_name : param_names)
+    {
+        printf(", %s", param_name.c_str());
+    }
+    printf("\n");
 
     predicate_template_handler->add_entry(predicate_template);
 }

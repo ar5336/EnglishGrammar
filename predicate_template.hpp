@@ -18,6 +18,8 @@ public:
     PredicateTemplate();
 
     PredicateTemplate(string predicate_name, vector<string> parameter_names);
+
+    void Replace(PredicateTemplate other);
 };
 
 class PredicateTemplateHandler
@@ -33,7 +35,7 @@ public:
 
     void add_entry(PredicateTemplate predicate_template);
 
-    PredicateTemplate GetPredicateTemplate(string predicate_name);
+    bool try_get_predicate_template(string predicate_name, PredicateTemplate* predicate_template);
 
     int GetPredicateIndex(string predicate_name);
 };

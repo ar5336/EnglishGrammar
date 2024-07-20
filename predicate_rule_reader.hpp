@@ -25,16 +25,17 @@ public:
     // string access_parameter(pair<Frame, Frame> frames, string frame_name);
 };
 
-class WordFrameAccessor
-{
-public:
-    WordFrameAccessor(PredicateHandler *handler, string token);
+// class WordFrameAccessor
+// {
+// public:
+//     WordFrameAccessor(string token);
 
-    PredicateTemplate predicate_template;
-    string accessed_parameter;
+//     // PredicateTemplate predicate_template;
+//     string frame_type_name;
+//     // string accessed_parameter;
 
-    // Frame access_word_frame(Expression expression);
-};
+//     // Frame access_word_frame(Expression expression);
+// };
 
 
 class PredicateModifier
@@ -46,6 +47,8 @@ public:
     //PrepPhrase->PREPOSITION.action=VerbPhrase->IS_INSTANCE_OF.object
     //SyntaxFrame->PREDICATE_NAME.parameterName=SyntaxFrame->PREDICATE_NAME.parameterName
     //PredicateAccessor=PredicateAccessor
+    PredicateModifier();
+
     PredicateModifier(PredicateHandler* handler, string input_string);
 
     Expression modify_expression(Expression expression);
@@ -58,9 +61,10 @@ public:
     PredicateTemplate predicate;
     vector<ParameterCreationType> parameter_creation_types;
 
-    vector<WordFrameAccessor> word_frame_accessors;
+    vector<string> word_frame_accessors;
     vector<PatternElementPredicateAccessor> pattern_predicate_accessors;
 
+    PredicateCreator();
     PredicateCreator(PredicateHandler *handler_ptr, vector<string> creation_tokens);
 
     // Predicate create_predicate(vector<Predicate> pattern_element_accessor_fodder, vector<Frame> word_frame_accessor_fodder);

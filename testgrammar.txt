@@ -38,7 +38,8 @@ Frames:
     NounPhrase "NP"
         Determiner Noun[NUMBER] -NUMBER
 
-        Determiner AdjectivePhrase[NUMBER] -NUMBER
+        Determiner AdjectivePhrase[NUMBER] -NUMBER 
+        # <AdjectivePhrase->IS_INSTANCE_OF.object=
         # the quick brown fox
         # a lazy dog
 
@@ -58,5 +59,5 @@ Frames:
         # brown fox
         # lazy dog
 
-        Adjective AdjectivePhrase[NUMBER] -NUMBER <HAS_PROPERTY object:AdjectivePhrase.IS_INSTANCE_OF.subject peroperty:Adjective>
+        Adjective AdjectivePhrase[NUMBER] -NUMBER <HAS_PROPERTY object:AdjectivePhrase->IS_INSTANCE_OF.object property:Adjective>
         # quick brown fox

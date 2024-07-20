@@ -91,7 +91,7 @@ public:
 
     Predicate PredFromString(string input);
 
-    PredicateTemplate GetPredicateTemplate(string predicate_name);
+    bool try_get_predicate_template(string predicate_name, PredicateTemplate *predicate_template);
 
     Predicate ConstructPredicate(string predicate_name, vector<string> predicate_arguments);
 };

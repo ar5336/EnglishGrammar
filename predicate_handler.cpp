@@ -143,19 +143,22 @@ Predicate PredicateHandler::PredFromString(string input)
 
 Predicate PredicateHandler::ConstructPredicate(string predicate_name, vector<string> predicate_arguments)
 {
-    PredicateTemplate predicate_template = predicate_template_handler->GetPredicateTemplate(predicate_name);
+    PredicateTemplate predicate_template = PredicateTemplate();
+    printf("predicate template handler: %p\n", predicate_template_handler);
+    if (!predicate_template_handler->try_get_predicate_template(predicate_name, &predicate_template))
+        throw runtime_error("predicate name '" + predicate_name + "' is wrong");
 
     if (predicate_arguments.size() != predicate_template.parameter_names.size())
-        throw "this predicate is malformed";
+        throw runtime_error("this predicate is malformed");
 
     int type_index = predicate_template_handler->GetPredicateIndex(predicate_name);
     
     return Predicate(type_index, predicate_arguments);
 }
 
-PredicateTemplate PredicateHandler::GetPredicateTemplate(string predicate_name)
+bool PredicateHandler::try_get_predicate_template(string predicate_name, PredicateTemplate *predicate_template)
 {
-    return predicate_template_handler->GetPredicateTemplate(predicate_name);
+    return predicate_template_handler->try_get_predicate_template(predicate_name, predicate_template);
 }
 
 bool operator<(const Expression& lhs, const Expression& rhs)

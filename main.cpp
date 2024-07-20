@@ -24,7 +24,7 @@
 using namespace std;
 using namespace cv;
 
-string current_utterance = "the quick brown fox";
+string current_utterance = "the fox";
 
 Parser parser;
 
@@ -129,13 +129,16 @@ bool check_keypress(char cr)
 
 			auto base_frame = Frame();
 			if (parser.try_get_top_interpretation(base_frame)
-				&& (equals(base_frame.frame_name, "Sentence")
-				|| equals(base_frame.frame_name, "Question"))){
+				// && (equals(base_frame.frame_name, "Sentence")
+				// || equals(base_frame.frame_name, "Question"))
+				){
 				auto interp_handler = InterpretationHandler(&parser, base_frame);
 
 				auto expression = Expression();
 				if (interp_handler.TryConstructExpression(expression))
 				{
+					printf("expression created\n");
+					printf("expression string: \n\n%s\n", expression.stringify().c_str());
 					predicate_handler.tell(expression);
 					predicate_handler.InferExpressions();
 					// if (predicate.speech_act == SpeechActs::QUESTION) {
@@ -194,10 +197,23 @@ int main(int argc, char **argv)
 	// translate the read frames into cnf frames
 	grammar.binarize_grammar();
 
+	printf("h\n");
+
 	parser = Parser(grammar);
 
+	printf("hi1\n");
+
+	predicate_handler.predicate_template_handler = &predicate_template_handler;
+	printf("hi2\n");
+
+	parser.predicate_handler = &predicate_handler;
+	printf("hi3\n");
+
 	displayer.init(&parser, &predicate_handler);
+	printf("hi4\n");
     setMouseCallback(displayer.screen_name, mouse_callback_function, NULL);
+
+	printf("hi5\n");
 
 	parser.update_parse_grid(current_utterance);
 

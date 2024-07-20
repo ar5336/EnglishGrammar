@@ -15,6 +15,7 @@ class VariableNamer
 private: 
     string alphabet = "abcdefghijklmnopqrstuvwxyz";
     int current_index;
+    int prestige;
 
 public:
     set<string> existing_names;
@@ -22,6 +23,8 @@ public:
     VariableNamer();
 
     string generate_name();
+
+    void reset();
 };
 
 class Parser
@@ -31,8 +34,6 @@ private:
 
     FrameCoordinates left_frame_coordinates;
     FrameCoordinates right_frame_coordinates;
-
-    PredicateHandler* predicate_handler;
 
     VariableNamer variable_namer;
 
@@ -51,8 +52,6 @@ private:
     Expression apply_formation_rules_on_expression(PredicateFormationRules formation_rule, Frame left_frame, Frame right_frame);
 
     Expression apply_predicate_creation_rule(PredicateCreator creator);
-
-    Frame apply_word_frame_accessor(WordFrameAccessor word_frame_accessor);
 
     string get_argument_accessor(Frame left_frame, Frame right_frame, PatternElementPredicateAccessor pattern_predicate_accessor);
 
@@ -76,6 +75,8 @@ public:
     //  A   N    V
     // the dog barked
     vector<vector<vector<Frame>>> parse_grid;
+
+    PredicateHandler* predicate_handler;
 
     string current_utterance;
 
