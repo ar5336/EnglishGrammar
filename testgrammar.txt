@@ -32,7 +32,7 @@ Predicates:
     IS_INSTANCE_OF object nounClass
     HAS_PROPERTY object property
     PREPOSITION action preposition subject
-    ACTION actionVariable actor action
+    ACTION action actor action_type
 
 Frames:
     NounPhrase "NP"
@@ -44,14 +44,14 @@ Frames:
         # a lazy dog
 
     VerbPhrase "VP"
-        NounPhrase Verb <ACTION actionVariable:! actor:NounPhrase->IS_INSTANCE_OF.object action:Verb>
+        NounPhrase Verb <ACTION action:! actor:NounPhrase->IS_INSTANCE_OF.object action_type:Verb>
         # the quick brown fox jumps
 
-        VerbPhrase PrepPhrase <PrepPhrase->PREPOSITION.action=VerbPhrase->IS_INSTANCE_OF.object>
+        VerbPhrase PrepPhrase <PrepPhrase->PREPOSITION.action=VerbPhrase->ACTION.action>
         # the quick brown fox jumps over the lazy dog
 
     PrepPhrase "PP"
-        Preposition NounPhrase <PREPOSITION action:! preposition:Preposition subject:NounPhrase.IS_INSTANCE_OF.object>
+        Preposition NounPhrase <PREPOSITION action:! preposition:Preposition subject:NounPhrase->IS_INSTANCE_OF.object>
         # over the lazy dog
 
     AdjectivePhrase "AP"

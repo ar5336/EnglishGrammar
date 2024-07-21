@@ -21,19 +21,9 @@ PredicateCreator::PredicateCreator(PredicateHandler *handler, vector<string> cre
 {
     string predicate_name = creation_tokens[0];
 
-    // printf("CREATION TOKENS: ");
-    // for (string creation_token : creation_tokens)
-    // {
-    //     printf("%s ", creation_token.c_str());
-    // }
-    // printf("\n");
-
-    // printf("handler pointer: %p\n", handler);
     PredicateTemplate predicate_template;
     if (!handler->try_get_predicate_template(predicate_name, &predicate_template))
         throw runtime_error("could not find predicate template for name");
-
-    printf("THE PREDICATE NAME IS: %s\n", predicate_template.predicate.c_str());
 
     auto parameter_tokens = vector<string>(creation_tokens.begin() + 1, creation_tokens.end());    
 
@@ -68,13 +58,10 @@ PredicateCreator::PredicateCreator(PredicateHandler *handler, vector<string> cre
             pattern_predicate_accessors.push_back(PatternElementPredicateAccessor(handler, argument));
             continue;
         }
-        // if (handler->PredIntFromString(argument) != -1)
         else
         {
-            // printf("argument: %s\n", argument.c_str());
             parameter_creation_types.push_back(ParameterCreationType::WORD_FRAME);
             word_frame_accessors.push_back(argument);
-            // printf("word frame accessor created at index %d / %d\n", i, (int)parameter_tokens.size());
             continue;
         }
 
@@ -89,12 +76,9 @@ PatternElementPredicateAccessor::PatternElementPredicateAccessor(PredicateHandle
     vector<string> parts = split_character(token, "->");
     // verify that the split is correct 
 
-    // printf("token: %s\n", token.c_str());
-
     assert(parts.size() == 2);
 
     syntax_frame_name = parts[0];
-    // printf("SYNTAX FRAME NAME: %s=====================================\n", syntax_frame_name.c_str());
     // verify that predicate is actual pedicate
     // handler->try_get_predicate_template(predicate_name);
 
@@ -114,11 +98,7 @@ PredicateModifier::PredicateModifier()
 
 PredicateModifier::PredicateModifier(PredicateHandler* handler, string token)
 {
-    printf("test\n");
     auto left_and_right = split_character(token, "=");
-
-    printf("left: %s\n", left_and_right[0].c_str());
-    printf("right: %s\n", left_and_right[1].c_str());
 
     left_equal = PatternElementPredicateAccessor(handler, left_and_right[0]);
     right_equal = PatternElementPredicateAccessor(handler, left_and_right[1]);
@@ -164,7 +144,6 @@ bool PredicateRuleReader::TryReadpredicateRule(string predicate_rule, PredicateF
 // WordFrameAccessor::WordFrameAccessor(string token) : frame_type_name(token)
 // {
 //     // frame_type_name = token;
-//     // printf("that for which we look: %s\n", token.c_str());
 //     // if(!handler->(token, &predicate_template))
 //     // {
 

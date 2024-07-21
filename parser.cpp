@@ -15,7 +15,6 @@ string VariableNamer::generate_name()
     }
 
     char result = alphabet[current_index];
-    printf("the result is: %c\n", result);
 
     string result_string = string(1,  result); 
 
@@ -163,12 +162,10 @@ bool Parser::get_matched_frames(
 
             if (does_frame_have_features(left_consumer_frame, true, candidate_frame) && does_frame_have_features(right_consumer_frame, false, candidate_frame))
             {
-                printf("before\n");
                 Expression new_expression = apply_formation_rules_on_expression(
                                             candidate_frame.predicate_formation_rules,
                                             left_consumer_frame,
                                             right_consumer_frame) ;
-                printf("after\n");
                 matched_frames.push_back(
                     candidate_frame.with_links(
                         left_frame_coordinates,
@@ -207,7 +204,6 @@ bool try_get_word_frame(string accessor, Frame left_frame, Frame right_frame, Fr
         word_frame = identified_frame;
         return true;
     }
-    printf("not a word frame\n");
 
     word_frame = Frame();
     return false;
@@ -222,12 +218,8 @@ Expression Parser::apply_formation_rules_on_expression(PredicateFormationRules f
           throw runtime_error("both frames should be matched during predicate formation");
 
     // first, combine the two expressions
-    printf("test\n");
     Expression combined_expression = Expression::combine_expressions(left_frame.accumulated_expression, right_frame.accumulated_expression);
     // auto expression_predicates = combined_expressions.predicates;
-
-    printf("FLAG0\n");
-
 
     // apply the modification rules before the formation rules. note - not hard decision may be changed
     // vector<Predicate> modified_predicates;
@@ -249,7 +241,6 @@ Expression Parser::apply_formation_rules_on_expression(PredicateFormationRules f
     // TODO - create a PredicateFormationContext to keep track of variable names that have already been used
     vector<Predicate> created_predicates;
     string wildcard_value = variable_namer.generate_name();
-    printf("wildcard value: %s\n", wildcard_value.c_str());
     for (int i = 0; i < formation_rule.predicate_creators.size(); i++)
     {
         PredicateCreator creator = formation_rule.predicate_creators[i];
@@ -293,7 +284,6 @@ Expression Parser::apply_formation_rules_on_expression(PredicateFormationRules f
             }
         }
 
-        printf("predicate template: %s, argument 1: %s\n", predicate_template.predicate.c_str(), calculated_arguments[0].c_str());
         created_predicates.push_back(predicate_handler->ConstructPredicate(predicate_template.predicate, calculated_arguments));
     }
 
@@ -316,8 +306,6 @@ bool try_get_predicate(Frame left_frame, Frame right_frame, PatternElementPredic
     }
     else 
     {
-        printf("left_frame_name = %s\n", left_frame.frame_name.c_str());
-        printf("desired frame name = %s\n", frame_name.c_str());
         printf("disaster: neither of the identified frames could be matched to\n");
         return false;
     }
@@ -389,7 +377,6 @@ vector<Frame> Parser::find_matching_frames(vector<Frame> left_frames, vector<Fra
                 {
                     matching_frames.push_back(matched_frames.at(match_index));
                 }
-                // printf("found %ld matchs\n", matched_frames.size());
             }
         }
     }
@@ -448,7 +435,6 @@ void Parser::update_parse_grid(string new_utterance)
         return;
 
     // perform cyk algo
-    // printf("parsing utterance\n");
     for (int row = 1; row < token_count; row++)
     {
         for (int col = 0; col < token_count - row; col++)

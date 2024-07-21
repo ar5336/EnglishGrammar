@@ -8,8 +8,8 @@ Predicate::Predicate()
     predicate_template = PredicateTemplate();
 }
 
-Predicate::Predicate(int type_id, vector<string> arguments)
-    : type_id(type_id), arguments(arguments) {}
+Predicate::Predicate(int type_id, vector<string> arguments, PredicateTemplate predicate_template)
+    : type_id(type_id), arguments(arguments), predicate_template(predicate_template) {}
 
 Predicate::Predicate(int type_id, vector<string> arguments, SpeechActs speechAct)
     : type_id(type_id), arguments(arguments) {}
@@ -17,12 +17,11 @@ Predicate::Predicate(int type_id, vector<string> arguments, SpeechActs speechAct
 string Predicate::stringify()
 {
     string result;
-    // if (speech_act == SpeechActs::QUESTION) {
-    //     result += "Q|";
-    // }
     result += PredicateUtil::TypeToString(type_id);
-    for (string arg : arguments) {
-        result += (" " + arg);
+    for (int argument_index = 0; argument_index < arguments.size(); argument_index++) {
+        string arg = arguments[argument_index];
+        string arg_name = predicate_template.parameter_names[argument_index];
+        result += ( " " + arg_name + ":" + arg);
     }
     return result;
 }
@@ -57,7 +56,7 @@ Predicate Predicate::with_modified_argument(string parameter_name, string new_va
     int param_index = predicate_template.parameter_index_map[parameter_name];
     vector<string> modified_arguments = arguments;
     modified_arguments[param_index] = new_value;
-    return Predicate(type_id, modified_arguments); 
+    return Predicate(type_id, modified_arguments, predicate_template); 
 }
 
 bool operator<(const Predicate& lhs, const Predicate& rhs)

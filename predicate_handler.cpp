@@ -133,18 +133,19 @@ Predicate PredicateHandler::PredFromString(string input)
     auto tokens = split_spaces(input);
 
     int type_id = PredicateUtil::StringToTypeId(tokens[0]);
+    PredicateTemplate input_template;
+    predicate_template_handler->try_get_predicate_template(input, &input_template);
     if (type_id != -1)
     {
         auto arguments = vector<string>(tokens.begin()+1, tokens.end());
-        return Predicate(type_id, arguments);
+        return Predicate(type_id, arguments, input_template);
     }
-    return Predicate(type_id, vector<string>());
+    return Predicate(type_id, vector<string>(), input_template);
 }
 
 Predicate PredicateHandler::ConstructPredicate(string predicate_name, vector<string> predicate_arguments)
 {
     PredicateTemplate predicate_template = PredicateTemplate();
-    printf("predicate template handler: %p\n", predicate_template_handler);
     if (!predicate_template_handler->try_get_predicate_template(predicate_name, &predicate_template))
         throw runtime_error("predicate name '" + predicate_name + "' is wrong");
 
@@ -152,8 +153,8 @@ Predicate PredicateHandler::ConstructPredicate(string predicate_name, vector<str
         throw runtime_error("this predicate is malformed");
 
     int type_index = predicate_template_handler->GetPredicateIndex(predicate_name);
-    
-    return Predicate(type_index, predicate_arguments);
+
+    return Predicate(type_index, predicate_arguments, predicate_template);
 }
 
 bool PredicateHandler::try_get_predicate_template(string predicate_name, PredicateTemplate *predicate_template)

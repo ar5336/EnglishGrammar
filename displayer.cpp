@@ -32,7 +32,7 @@ Size Displayer::measure_text(string text, float font_scale = 1.0)
 Displayer::Displayer(string screen_name)
     : screen_name(screen_name)
     {
-        image = Mat(512, 1024, CV_8UC3, cv::Scalar(0));
+        image = Mat(512, 1800, CV_8UC3, cv::Scalar(0));
         start_text_corner = Point(10, image.rows * 3 / 4);
         start_grid_corner = start_text_corner + Point(0, -60);
         start_predicate_corner = Point(image.cols *6/10, image.rows * 1/4);
@@ -48,7 +48,7 @@ void Displayer::init(
     // set the callback function for any mouse event
 
 
-    resizeWindow(screen_name, 1024, 512);
+    resizeWindow(screen_name, 1800, 512);
     
     parser = parser_ptr;
     predicate_handler = predicate_handler_ptr;
@@ -193,21 +193,27 @@ void Displayer::display()
 
     cv::line(image, cursor_top, cursor_bottom, CV_RGB(200, 20, 20), 2, cv::LINE_4, 0);
 
-    // display predicate handler
+    // display expression handler
 
     Point predicate_ticker_corner = start_predicate_corner + Point(0, scroll);
+    Point new_line = Point(0,25);
     if (predicate_handler->expressions.size() > 0) {
         for (auto expression_of_type : predicate_handler->expressions) {
             auto expression = expression_of_type.second;
             auto expr_type = expression_of_type.first;
-            if (expr_type == KnowledgeType::GIVEN) {
-                display_text(image, predicate_ticker_corner, expression.stringify(), CV_RGB(255, 10, 10), 0.6f);
-
-            } else {
-                display_text(image, predicate_ticker_corner, expression.stringify(), CV_RGB(255, 140, 0), 0.6f);
-
+            // if (expr_type == KnowledgeType::GIVEN) {
+            vector<string> result_predicates = split_character(expression.stringify(), "\n");
+            for (string result_predicate : result_predicates)
+            {
+                display_text(image, predicate_ticker_corner, result_predicate, CV_RGB(255, 10, 10), 0.6f);
+                predicate_ticker_corner += new_line;
             }
-            predicate_ticker_corner += Point(0, 40);
+
+            // } else {
+            //     display_text(image, predicate_ticker_corner, expression.stringify(), CV_RGB(255, 140, 0), 0.6f);
+
+            // }
+            predicate_ticker_corner += new_line;
         }
     }
 

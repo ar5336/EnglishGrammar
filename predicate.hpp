@@ -24,8 +24,7 @@ const string predicateTypeNames[]
     "IS_INSTANCE_OF",
     "HAS_PROPERTY",
     "PREPOSITION",
-    "ACTION"
-    "NONE",
+    "ACTION",
 };
 
 enum SpeechActs
@@ -53,7 +52,7 @@ public:
 
     Predicate();
 
-    Predicate(int type_id, vector<string> arguments);
+    Predicate(int type_id, vector<string> arguments, PredicateTemplate predicate_template);
 
     Predicate(int type_id, vector<string> arguments, SpeechActs speechAct);
 

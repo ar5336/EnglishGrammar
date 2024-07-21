@@ -62,7 +62,6 @@ void GrammarReader::read_syntax_entry()
         set<string> feature_groups;
 
         PredicateFormationRules formation_rule = PredicateFormationRules();
-        printf("formation rules: %d + %d\n", (int)formation_rule.predicate_creators.size(), (int)formation_rule.predicate_modifiers.size());
         for (int pattern_element_index = 0; pattern_element_index < split_tokens.size(); pattern_element_index++)
         {
             PatternNecessity necessity;
@@ -256,13 +255,6 @@ void GrammarReader::read_predicate_template_entry()
     vector<string> param_names(split_tokens.begin() + 1, split_tokens.end());
 
     PredicateTemplate predicate_template = PredicateTemplate(predicate_name, param_names);
-
-    printf("adding predicate of name %s", predicate_name.c_str());
-    for ( string param_name : param_names)
-    {
-        printf(", %s", param_name.c_str());
-    }
-    printf("\n");
 
     predicate_template_handler->add_entry(predicate_template);
 }
