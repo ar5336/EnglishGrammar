@@ -5,6 +5,7 @@ Words:
             horse horses
             cat cats
             fox foxes
+            bridge bridges
     Verb:
         MainVerb:
             Transitive: # simple continuous perfect 3PPresent (pastPart)
@@ -13,6 +14,7 @@ Words:
             Intransitive: # simple continuous perfect 3PPresent (pastPart)
                 jump jumping jumped jumps
     Adjective:
+        slimy
         quick
         brown
         lazy
@@ -23,6 +25,7 @@ Words:
     Determiner:
         the
         a
+        an
 
 FeatureGroups:
     NUMBER= singular plural
@@ -36,7 +39,7 @@ Predicates:
 
 Frames:
     NounPhrase "NP"
-        Determiner Noun[NUMBER] -NUMBER
+        Determiner Noun[NUMBER] -NUMBER <IS_INSTANCE_OF object:! nounClass:Noun>
 
         Determiner AdjectivePhrase[NUMBER] -NUMBER 
         # <AdjectivePhrase->IS_INSTANCE_OF.object=

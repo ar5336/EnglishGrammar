@@ -44,13 +44,15 @@ Displayer::Displayer(string screen_name)
 
 void Displayer::init(
     Parser *parser_ptr,
-    PredicateHandler *predicate_handler_ptr) {
+    Mind* mind_ptr,
+    PredicateHandler* predicate_handler_ptr) {
     // set the callback function for any mouse event
 
 
     resizeWindow(screen_name, 1800, 512);
     
     parser = parser_ptr;
+    mind = mind_ptr;
     predicate_handler = predicate_handler_ptr;
 }
 
@@ -197,12 +199,12 @@ void Displayer::display()
 
     Point predicate_ticker_corner = start_predicate_corner + Point(0, scroll);
     Point new_line = Point(0,25);
-    if (predicate_handler->expressions.size() > 0) {
-        for (auto expression_of_type : predicate_handler->expressions) {
+    if (mind->expressions.size() > 0) {
+        for (auto expression_of_type : mind->expressions) {
             auto expression = expression_of_type.second;
-            auto expr_type = expression_of_type.first;
+            // auto expr_type = expression_of_type.first;
             // if (expr_type == KnowledgeType::GIVEN) {
-            vector<string> result_predicates = split_character(expression.stringify(), "\n");
+            vector<string> result_predicates = split_character(predicate_handler->stringify_expression(expression), "\n");
             for (string result_predicate : result_predicates)
             {
                 display_text(image, predicate_ticker_corner, result_predicate, CV_RGB(255, 10, 10), 0.6f);

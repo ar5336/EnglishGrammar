@@ -8,6 +8,7 @@ PredicateTemplate::PredicateTemplate(string predicate_name, vector<string> param
 
 void PredicateTemplateHandler::add_entry(PredicateTemplate predicate_template)
 {
+    predicate_types.push_back(predicate_template.predicate);
     predicate_templates.emplace(predicate_template.predicate, predicate_template);
     predicate_index_map.emplace(predicate_template.predicate, running_index);
     running_index++;
@@ -20,7 +21,9 @@ void PredicateTemplate::Replace(PredicateTemplate other)
     parameter_index_map = other.parameter_index_map;
 }
 
-PredicateTemplateHandler::PredicateTemplateHandler() {}
+PredicateTemplateHandler::PredicateTemplateHandler() {
+    predicate_types = vector<string>();
+}
 
 bool PredicateTemplateHandler::try_get_predicate_template(string predicate_name, PredicateTemplate* predicate_template)
 {

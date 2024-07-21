@@ -12,13 +12,14 @@
 #include <unistd.h>
 
 #include "grammar_reader.hpp"
-#include "frames.hpp"
+// #include "frames.hpp"
 #include "grammar.hpp"
-#include "string_operators.hpp"
-#include "parser.hpp"
+// #include "string_operators.hpp"
+// #include "parser.hpp"
 #include "displayer.hpp"
 #include "interpretation.hpp"
-#include "predicate_handler.hpp"
+// #include "predicate_handler.hpp"
+#include "mind.hpp"
 #include "test.hpp"
 
 using namespace std;
@@ -35,6 +36,8 @@ Displayer displayer = Displayer("reader");
 PredicateTemplateHandler predicate_template_handler = PredicateTemplateHandler();
 
 PredicateHandler predicate_handler = PredicateHandler(&predicate_template_handler);
+
+Mind mind = Mind();
 
 bool is_shift_pressed = false;
 
@@ -137,9 +140,9 @@ bool check_keypress(char cr)
 				auto expression = Expression();
 				if (interp_handler.TryConstructExpression(expression))
 				{
-					printf("expression string: \n\n%s\n", expression.stringify().c_str());
-					predicate_handler.tell(expression);
-					predicate_handler.InferExpressions();
+					// printf("expression string: \n\n%s\n", expression.stringify().c_str());
+					mind.tell(expression);
+					// predicate_handler.InferExpressions();
 					// if (predicate.speech_act == SpeechActs::QUESTION) {
 					// 	auto response = predicate_handler.DetermineResponse(predicate);
 					// 	if (response == ResponseType::YES) {
@@ -191,7 +194,7 @@ int main(int argc, char **argv)
 
 	// read the grammar
 	GrammarReader reader = GrammarReader(&grammar, &predicate_handler, &predicate_template_handler);
-	reader.read_grammar("testgrammar.txt");
+	reader.read_grammar("grammar.txt");
 
 	// translate the read frames into cnf frames
 	grammar.binarize_grammar();
@@ -202,7 +205,9 @@ int main(int argc, char **argv)
 
 	parser.predicate_handler = &predicate_handler;
 
-	displayer.init(&parser, &predicate_handler);
+	predicate_handler.init_stringification();
+
+	displayer.init(&parser, &mind, &predicate_handler);
     setMouseCallback(displayer.screen_name, mouse_callback_function, NULL);
 
 	parser.update_parse_grid(current_utterance);

@@ -2,7 +2,6 @@
 #define PREDICATE_RULE_READER
 
 #include "predicate_handler.hpp"
-#include "string_operators.hpp"
 // #include "frames.hpp"
 
 enum ParameterCreationType

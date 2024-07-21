@@ -1,44 +1,44 @@
 #include "test.hpp"
 
 
-#define TEST_ASSERT(condition) \
-    do { \
-        if (!(condition)) { \
-            std::cerr << "Assertion failed: " #condition << " in " << __FILE__ \
-                      << " line " << __LINE__ << std::endl; \
-            return false; \
-        } \
-    } while (false)
+// #define TEST_ASSERT(condition) \
+//     do { \
+//         if (!(condition)) { \
+//             std::cerr << "Assertion failed: " #condition << " in " << __FILE__ \
+//                       << " line " << __LINE__ << std::endl; \
+//             return false; \
+//         } \
+//     } while (false)
 
-#define RUN_TEST(testFunc) \
-    do { \
-        std::cout << "Running test: " #testFunc << std::endl; \
-        if (testFunc()) { \
-            std::cout << "\033[1;32mPASS\033[0m" << std::endl; \
-            passed++; \
-        } else { \
-            std::cout << "\033[1;31mFAIL\033[0m" << std::endl; \
-            failed++; \
-        } \
-        total++; \
-    } while (false)
+// #define RUN_TEST(testFunc) \
+//     do { \
+//         std::cout << "Running test: " #testFunc << std::endl; \
+//         if (testFunc()) { \
+//             std::cout << "\033[1;32mPASS\033[0m" << std::endl; \
+//             passed++; \
+//         } else { \
+//             std::cout << "\033[1;31mFAIL\033[0m" << std::endl; \
+//             failed++; \
+//         } \
+//         total++; \
+//     } while (false)
 
-int total = 0;
-int passed = 0;
-int failed = 0;
+// int total = 0;
+// int passed = 0;
+// int failed = 0;
 
-vector<Predicate> parse_utterance(string utterance)
-{
+// vector<Predicate> parse_utterance(string utterance)
+// {
 
-}
+// }
 
-bool parse_check(string utterance, vector<Predicate> expected_predicates)
-{
-    // auto result_redicates = parse_utterance(utterance);
+// bool parse_check(string utterance, vector<Predicate> expected_predicates)
+// {
+//     // auto result_redicates = parse_utterance(utterance);
 
-    // if (expectedResults.size() != result_pre)
-    // for (int i = 0; i < expec)
-}
+//     // if (expectedResults.size() != result_pre)
+//     // for (int i = 0; i < expec)
+// }
 
 
 bool TestParsing() {

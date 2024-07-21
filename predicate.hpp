@@ -10,36 +10,11 @@
 #include "string_operators.hpp"
 #include "predicate_template.hpp"
 
-// enum PredicateType
-// {
-//     IS_SUBSET_OF,
-//     IS_INSTANCE_OF,
-//     HAS_PROPERTY,
-//     CAN_DO,
-//     NONE,
-// };
-
-const string predicateTypeNames[]
-{
-    "IS_INSTANCE_OF",
-    "HAS_PROPERTY",
-    "PREPOSITION",
-    "ACTION",
-};
-
 enum SpeechActs
 {
     STATEMENT,
     QUESTION,
     DEMAND
-};
-
-class PredicateUtil
-{
-public:
-    static string TypeToString(int type_id);
-
-    static int StringToTypeId(string string);
 };
 
 class Predicate
@@ -55,8 +30,6 @@ public:
     Predicate(int type_id, vector<string> arguments, PredicateTemplate predicate_template);
 
     Predicate(int type_id, vector<string> arguments, SpeechActs speechAct);
-
-    string stringify();
 
     string get_argument(string parameter_name);
 

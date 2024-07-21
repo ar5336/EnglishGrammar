@@ -4,7 +4,7 @@ VariableNamer::VariableNamer() {}
 
 string VariableNamer::generate_name()
 {
-    if (current_index < 26)
+    if (current_index < 25)
     {
 
         current_index++;
@@ -19,9 +19,9 @@ string VariableNamer::generate_name()
     string result_string = string(1,  result); 
 
     if (prestige >= 1){
-        return result_string;
-    } else {
         return result_string + to_string(prestige);
+    } else {
+        return result_string;
     }
 
     // throw runtime_error("failed to generate name");

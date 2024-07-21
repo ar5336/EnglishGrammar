@@ -305,9 +305,16 @@ FeatureGroups:
     MODE= advice obligation offer futureProbability ability permission
     TENSE=  simple continous perfect 3PPresent pastPart
 
+Predicates:
+    IS_INSTANCE_OF object nounClass
+    HAS_PROPERTY object property
+    PREPOSITION action preposition subject
+    ACTION action actor action_type
+    ACTION_2 action actor action_type subject
+
 Frames:
     NounPhrase "NP"
-        Determiner Noun[NUMBER] -NUMBER -determined
+        Determiner Noun[NUMBER] -NUMBER -determined <IS_INSTANCE_OF object:! nounClass:Noun>
 
         Determiner AdjectivePhrase[NUMBER] -NUMBER -determined
         NounPhrase[determined] PrepPhrase
@@ -334,7 +341,7 @@ Frames:
         Verb Adverb
         Adverb Verb
 
-        VerbPhrase[TENSE,NUMBER] PrepPhrase -TENSE -NUMBER
+        VerbPhrase[TENSE,NUMBER] PrepPhrase -TENSE -NUMBER 
         Verb[MainVerb,TENSE] PrepPhrase -TENSE
 
         Verb[!perfect] Noun[MassNoun] -singular
@@ -344,8 +351,8 @@ Frames:
         Noun[plural] Verb[MainVerb,simple] -plural
         Noun[singular] Verb[MainVerb,!simple,!continuous,!3PPresent] -singular
 
-        NounPhrase[plural] Verb[MainVerb,!3PPresent] -plural
-        NounPhrase[singular] Verb[MainVerb,!simple] -singular
+        NounPhrase[plural] Verb[MainVerb,!3PPresent] -plural <ACTION action:! actor:NounPhrase->IS_INSTANCE_OF.object action_type:Verb>
+        NounPhrase[singular] Verb[MainVerb,!simple] -singular <ACTION action:! actor:NounPhrase->IS_INSTANCE_OF.object action_type:Verb>
 
         Noun[Pronoun,singular,GENDER,3rdPerson] Verb[3PPresent] -GENDER
             # he runs, she runs
@@ -361,8 +368,10 @@ Frames:
             # the dogs have run
     PrepPhrase "PP"
         Preposition Noun
-        Preposition NounPhrase
-        Preposition VerbPhrase
+        Preposition NounPhrase[NUMBER] -NUMBER <PREPOSITION action:! preposition:Preposition subject:NounPhrase->IS_INSTANCE_OF.object>
+            # under the bridge
+        Preposition[Time] VerbPhrase
+            # after running in the race
     Sentence "S"
         PreIndicativePhrase[plural] Noun[plural] -plural
             # horses are mammals
@@ -388,14 +397,14 @@ Frames:
         Noun[plural] ModalPhrase[MODE] -MODE
             # dogs can run, !dog can run
         NounPhrase ModalPhrase[MODE] -MODE
-            # dogs can run
+            # a dog can run
 
         PreIndicativePhrase Noun[Pronoun,possessive]
             # that cat is mine
 
-        VerbPhrase NounPhrase
+        VerbPhrase NounPhrase <ACTION_2 action:VerbPhrase->ACTION.action actor:VerbPhrase->IS_INSTANCE_OF.oobject action_type:VerbPhrase->ACTION.action_type subject:NounPhrase->IS_INSTANCE_OF.object>
         NounPhrase[NUMBER] VerbPhrase[NUMBER]
-        VerbPhrase AdjectivePhrase
+        VerbPhrase PrepPhrase <PrepPhrase->PREPOSITION.action=VerbPhrase->ACTION.action>
         Sentence PrepPhrase
         Noun[Pronoun,plural] VerbPhrase
 
@@ -454,4 +463,5 @@ Frames:
             # you can
             # he can
     AdjectivePhrase "AP"
-        Adjective Noun[NUMBER] -NUMBER
+        Adjective Noun[NUMBER] -NUMBER <IS_INSTANCE_OF object:! nounClass:Noun | HAS_PROPERTY object:! property:Adjective>
+        Adjective AdjectivePhrase[NUMBER] -NUMBER <HAS_PROPERTY object:AdjectivePhrase->IS_INSTANCE_OF.object property:Adjective>

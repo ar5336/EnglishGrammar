@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+// #include "predicate.hpp"
+
 using namespace std;
 
 class PredicateTemplate
@@ -31,6 +33,8 @@ private:
     int running_index = 0;
 
 public:
+    vector<string> predicate_types;
+
     PredicateTemplateHandler();
 
     void add_entry(PredicateTemplate predicate_template);

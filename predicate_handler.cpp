@@ -1,125 +1,16 @@
 #include "predicate_handler.hpp"
-void PredicateHandler::UpdateInheritanceMap()
-{
-    // for (auto pred_of_type : expressions)
-    // {
-    //     if (pred_of_type.first == KnowledgeType::INFERRED)
-    //         continue;
-        
-    //     auto pred = pred_of_type.second;
-
-    //     // is a given predicate
-    //     if (pred.type == PredicateType::IS_SUBSET_OF) {
-    //         inheritance_map.emplace(pred.arguments[0], pred.arguments[1]);
-    //     }
-
-    //     for (string arg : pred.arguments)
-    //     {
-    //         entity_set.emplace(arg);
-    //     }
-
-    //     // populate the first_arg_to_predicate_map
-    //     string first_arg = pred.arguments[0];
-
-    //     if (first_arg_to_predicate_map.count(first_arg) != 0)
-    //     {
-    //         first_arg_to_predicate_map.at(first_arg).push_back(pred);
-    //     } else {
-    //         vector<Predicate> preds = {pred};
-    //         first_arg_to_predicate_map.emplace(first_arg, preds);
-    //     }
-    // }
-}
-
-ResponseType PredicateHandler::DetermineResponse(Expression query_expression)
-{
-    // simple yes/no as of now
-    // auto asStatement = Predicate(queryPredicate.type_id, queryPredicate.arguments);
-
-    auto is_given = given_expressions.count(query_expression) != 0;
-    auto is_inferred = inferred_expressions.count(query_expression) != 0;
-
-    if (is_given || is_inferred)
-    {
-        return ResponseType::YES;
-    }
-
-    return ResponseType::NO;
-}
-
-vector<string> PredicateHandler::IdentifyAllParents(string entity_name)
-{
-    // TODO - update inheritance_map to be <string> => vector<string>
-    // so you can have multiple inheritance
-    vector<string> parent_stack;
-
-    set<string> visited_entities;
-    string current_entity_name = entity_name;
-    while (inheritance_map.count(current_entity_name) != 0
-        && visited_entities.count(current_entity_name) == 0)
-    {
-        string parent = inheritance_map.at(current_entity_name);
-        parent_stack.push_back(parent);
-        visited_entities.emplace(current_entity_name);
-        current_entity_name = parent;
-        
-    }
-    return parent_stack;
-}
-
-void PredicateHandler::tell(Expression expression)
-{
-    if ((given_expressions.emplace(expression)).second)
-    {
-        expressions.push_back(pair(KnowledgeType::GIVEN, expression));
-    }
-}
 
 PredicateHandler::PredicateHandler(PredicateTemplateHandler *predicate_template_reader){
     // first_arg_to_predicate_map = map<string, vector<Predicate>>();
     
-    predicate_template_reader = predicate_template_reader;
+    predicate_template_handler = predicate_template_reader;
 
     // tell(ConstructPredicate("IS_SUBSET_OF", vector<string> {"horse", "mammal"}));
     // tell(ConstructPredicate("IS_SUBSET_OF", vector<string> {"bird", "animal"}));
     // tell(ConstructPredicate("IS_SUBSET_OF", vector<string> {"raven", "bird"}));
     // tell(ConstructPredicate("CAN_DO", vector<string> {"bird", "fly"}));
     
-    InferExpressions();
-}
-
-void PredicateHandler::InferExpressions(){
-    // first pass, build inheritance map
-    UpdateInheritanceMap();
-
-    // for(string entity : entity_set)
-    // {
-    //     auto parent_list = IdentifyAllParents(entity);
-        
-    //     for (string parent : parent_list) {
-    //         if (first_arg_to_predicate_map.count(parent) != 0)
-    //         {
-    //             auto parent_predicates = first_arg_to_predicate_map.at(parent);
-
-    //             for (auto parent_predicate : parent_predicates)
-    //             {
-    //                 auto new_tupe = parent_predicate.type;
-    //                 auto changed_args = parent_predicate.arguments;
-    //                 changed_args[0] = entity;
-
-    //                 // TODO - find a more efficient way of not inferring certain already-inferred things
-    //                 auto new_pred = Predicate(new_tupe, changed_args);
-    //                 if (inferred_predicates.count(new_pred) == 0) {
-    //                     // seemingly, the order here matters for some reason
-    //                     auto was_inserted = inferred_predicates.insert(new_pred);
-    //                     if (was_inserted.second) {
-    //                         predicates.push_back(pair(KnowledgeType::INFERRED, new_pred));
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
+    // InferExpressions();
 }
 
 int PredicateHandler::PredIntFromString(string type)
@@ -132,7 +23,7 @@ Predicate PredicateHandler::PredFromString(string input)
 {
     auto tokens = split_spaces(input);
 
-    int type_id = PredicateUtil::StringToTypeId(tokens[0]);
+    int type_id = StringToTypeId(tokens[0]);
     PredicateTemplate input_template;
     predicate_template_handler->try_get_predicate_template(input, &input_template);
     if (type_id != -1)
@@ -222,15 +113,63 @@ Predicate Expression::extract_predicate(Predicate original)
     return Predicate();
 }
 
-string Expression::stringify()
+string PredicateHandler::stringify_expression(Expression expression)
 {
     string accumulated_string = "";
 
-    for (auto predicate : predicates)
+    for (auto predicate : expression.predicates)
     {
-        accumulated_string += predicate.stringify();
+        accumulated_string += stringify_predicate(predicate);
         accumulated_string += "\n";
     }
 
     return accumulated_string;
 }
+
+void PredicateHandler::init_stringification(){
+    predicate_type_names = vector<string>(predicate_template_handler->predicate_types.begin(), predicate_template_handler->predicate_types.end());
+}
+
+
+string PredicateHandler::TypeToString(int type_id)
+{
+    if (type_id < 0)
+        throw runtime_error("index "+to_string(type_id)+" out of range.");
+    return predicate_type_names[type_id];
+}
+
+int PredicateHandler::StringToTypeId(string string)
+{
+    for (int i = 0; i < predicate_type_names.size(); i++)
+    {
+        if (equals(string, predicate_type_names[i]))
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+string PredicateHandler::stringify_predicate(Predicate predicate)
+{
+    string result;
+    result += predicate_type_names.at(predicate.type_id);
+    for (int argument_index = 0; argument_index < predicate.arguments.size(); argument_index++) {
+        string arg = predicate.arguments[argument_index];
+        string arg_name = predicate.predicate_template.parameter_names[argument_index];
+        result += ( " " + arg_name + ":" + arg);
+    }
+    return result;
+}
+
+// string PredicateHandler::StringifyPredicate(Predicate predicate)
+// {
+//     string result;
+//     result += TypeToString(predicate.type_id);
+//     for (int argument_index = 0; argument_index < predicate.arguments.size(); argument_index++) {
+//         string arg = predicate.arguments[argument_index];
+//         string arg_name = predicate.predicate_template.parameter_names[argument_index];
+//         result += ( " " + arg_name + ":" + arg);
+//     }
+//     return result;
+// }
