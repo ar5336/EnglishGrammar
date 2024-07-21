@@ -3,7 +3,7 @@
 InterpretationHandler::InterpretationHandler(Parser* parser, Frame base_frame)
     : base_frame(base_frame), parser(parser) { }
 
-bool InterpretationHandler::TryConstructExpression(Expression& expression)
+bool InterpretationHandler::try_construct_expression(Expression& expression)
 {
     // go thru predicate's predicate formation rules
 

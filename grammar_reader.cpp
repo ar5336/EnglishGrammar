@@ -86,7 +86,7 @@ void GrammarReader::read_syntax_entry()
 
                 string trimmed_combined_string = combined_string.substr(0, combined_string.size()-2);
 
-                rule_reader.TryReadpredicateRule(trimmed_combined_string, &formation_rule);
+                rule_reader.try_read_predicate_rule(trimmed_combined_string, &formation_rule);
                 break;
             }
 

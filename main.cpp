@@ -138,7 +138,7 @@ bool check_keypress(char cr)
 				auto interp_handler = InterpretationHandler(&parser, base_frame);
 
 				auto expression = Expression();
-				if (interp_handler.TryConstructExpression(expression))
+				if (interp_handler.try_construct_expression(expression))
 				{
 					// printf("expression string: \n\n%s\n", expression.stringify().c_str());
 					mind.tell(expression);

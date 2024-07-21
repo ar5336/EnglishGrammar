@@ -41,23 +41,19 @@ private:
 public:
     PredicateTemplateHandler *predicate_template_handler;
 
-    string TypeToString(int type_id);
-
-    int StringToTypeId(string string);
-
     PredicateHandler(PredicateTemplateHandler *predicate_template_reader);
 
-    // void AddPredicate(string type, vector<string> arguments);
+    string type_to_string(int type_id);
 
-    int PredIntFromString(string type);
+    int string_to_type_id(string string);
 
-    Predicate PredFromString(string input);
+    int pred_int_from_string(string type);
+
+    Predicate pred_from_string(string input);
 
     bool try_get_predicate_template(string predicate_name, PredicateTemplate *predicate_template);
 
-    Predicate ConstructPredicate(string predicate_name, vector<string> predicate_arguments);
-
-    // string StringifyPredicate(Predicate predicate);
+    Predicate construct_predicate(string predicate_name, vector<string> predicate_arguments);
 
     void init_stringification();
 

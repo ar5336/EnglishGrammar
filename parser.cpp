@@ -284,7 +284,7 @@ Expression Parser::apply_formation_rules_on_expression(PredicateFormationRules f
             }
         }
 
-        created_predicates.push_back(predicate_handler->ConstructPredicate(predicate_template.predicate, calculated_arguments));
+        created_predicates.push_back(predicate_handler->construct_predicate(predicate_template.predicate, calculated_arguments));
     }
 
     // add the created predicates to the expression

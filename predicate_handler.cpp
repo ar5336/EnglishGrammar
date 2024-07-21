@@ -5,25 +5,25 @@ PredicateHandler::PredicateHandler(PredicateTemplateHandler *predicate_template_
     
     predicate_template_handler = predicate_template_reader;
 
-    // tell(ConstructPredicate("IS_SUBSET_OF", vector<string> {"horse", "mammal"}));
-    // tell(ConstructPredicate("IS_SUBSET_OF", vector<string> {"bird", "animal"}));
-    // tell(ConstructPredicate("IS_SUBSET_OF", vector<string> {"raven", "bird"}));
-    // tell(ConstructPredicate("CAN_DO", vector<string> {"bird", "fly"}));
+    // tell(construct_predicate("IS_SUBSET_OF", vector<string> {"horse", "mammal"}));
+    // tell(construct_predicate("IS_SUBSET_OF", vector<string> {"bird", "animal"}));
+    // tell(construct_predicate("IS_SUBSET_OF", vector<string> {"raven", "bird"}));
+    // tell(construct_predicate("CAN_DO", vector<string> {"bird", "fly"}));
     
     // InferExpressions();
 }
 
-int PredicateHandler::PredIntFromString(string type)
+int PredicateHandler::pred_int_from_string(string type)
 {
-    return predicate_template_handler->GetPredicateIndex(type);
+    return predicate_template_handler->get_predicate_index(type);
 }
 
 
-Predicate PredicateHandler::PredFromString(string input)
+Predicate PredicateHandler::pred_from_string(string input)
 {
     auto tokens = split_spaces(input);
 
-    int type_id = StringToTypeId(tokens[0]);
+    int type_id = string_to_type_id(tokens[0]);
     PredicateTemplate input_template;
     predicate_template_handler->try_get_predicate_template(input, &input_template);
     if (type_id != -1)
@@ -34,7 +34,7 @@ Predicate PredicateHandler::PredFromString(string input)
     return Predicate(type_id, vector<string>(), input_template);
 }
 
-Predicate PredicateHandler::ConstructPredicate(string predicate_name, vector<string> predicate_arguments)
+Predicate PredicateHandler::construct_predicate(string predicate_name, vector<string> predicate_arguments)
 {
     PredicateTemplate predicate_template = PredicateTemplate();
     if (!predicate_template_handler->try_get_predicate_template(predicate_name, &predicate_template))
@@ -43,7 +43,7 @@ Predicate PredicateHandler::ConstructPredicate(string predicate_name, vector<str
     if (predicate_arguments.size() != predicate_template.parameter_names.size())
         throw runtime_error("this predicate is malformed");
 
-    int type_index = predicate_template_handler->GetPredicateIndex(predicate_name);
+    int type_index = predicate_template_handler->get_predicate_index(predicate_name);
 
     return Predicate(type_index, predicate_arguments, predicate_template);
 }
@@ -131,14 +131,14 @@ void PredicateHandler::init_stringification(){
 }
 
 
-string PredicateHandler::TypeToString(int type_id)
+string PredicateHandler::type_to_string(int type_id)
 {
     if (type_id < 0)
         throw runtime_error("index "+to_string(type_id)+" out of range.");
     return predicate_type_names[type_id];
 }
 
-int PredicateHandler::StringToTypeId(string string)
+int PredicateHandler::string_to_type_id(string string)
 {
     for (int i = 0; i < predicate_type_names.size(); i++)
     {
@@ -161,15 +161,3 @@ string PredicateHandler::stringify_predicate(Predicate predicate)
     }
     return result;
 }
-
-// string PredicateHandler::StringifyPredicate(Predicate predicate)
-// {
-//     string result;
-//     result += TypeToString(predicate.type_id);
-//     for (int argument_index = 0; argument_index < predicate.arguments.size(); argument_index++) {
-//         string arg = predicate.arguments[argument_index];
-//         string arg_name = predicate.predicate_template.parameter_names[argument_index];
-//         result += ( " " + arg_name + ":" + arg);
-//     }
-//     return result;
-// }

@@ -14,7 +14,7 @@ void PredicateTemplateHandler::add_entry(PredicateTemplate predicate_template)
     running_index++;
 }
 
-void PredicateTemplate::Replace(PredicateTemplate other)
+void PredicateTemplate::replace(PredicateTemplate other)
 {
     predicate = other.predicate;
     parameter_names = other.parameter_names;
@@ -29,18 +29,18 @@ bool PredicateTemplateHandler::try_get_predicate_template(string predicate_name,
 {
     if (predicate_templates.count(predicate_name) != 0)
     {
-        predicate_template->Replace(predicate_templates.at(predicate_name));
+        predicate_template->replace(predicate_templates.at(predicate_name));
         return true;
     }
     // printf("predicate_templates size: %d\n", (int)predicate_templates.size());
     // printf("predicate_templates 0: %s\n", predicate_templates[0].c_str());
     // printf("predicate_templates 1: %s\n", predicate_templates[1].c_str());
     printf("disaster: fetching failed\n");
-    predicate_template->Replace(PredicateTemplate());
+    predicate_template->replace(PredicateTemplate());
     return false;
 }
 
-int PredicateTemplateHandler::GetPredicateIndex(string predicate_name)
+int PredicateTemplateHandler::get_predicate_index(string predicate_name)
 {
     if (predicate_index_map.count(predicate_name) != 0)
     {

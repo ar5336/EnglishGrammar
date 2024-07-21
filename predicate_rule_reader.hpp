@@ -86,7 +86,7 @@ private:
 public:
     PredicateRuleReader(PredicateHandler *handler_ptr);
 
-    bool TryReadpredicateRule(string predicate_rule, PredicateFormationRules *formation_rule);
+    bool try_read_predicate_rule(string predicate_rule, PredicateFormationRules *formation_rule);
     
 };
 

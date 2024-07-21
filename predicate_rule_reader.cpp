@@ -104,7 +104,7 @@ PredicateModifier::PredicateModifier(PredicateHandler* handler, string token)
     right_equal = PatternElementPredicateAccessor(handler, left_and_right[1]);
 }
 
-bool PredicateRuleReader::TryReadpredicateRule(string predicate_rule, PredicateFormationRules* formation_rules)
+bool PredicateRuleReader::try_read_predicate_rule(string predicate_rule, PredicateFormationRules* formation_rules)
 {
     auto predicate_creators = vector<PredicateCreator>();
     auto predicate_modifiers = vector<PredicateModifier>();

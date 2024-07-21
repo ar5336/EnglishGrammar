@@ -5,8 +5,6 @@
 #include <string>
 #include <vector>
 
-// #include "predicate.hpp"
-
 using namespace std;
 
 class PredicateTemplate
@@ -21,7 +19,7 @@ public:
 
     PredicateTemplate(string predicate_name, vector<string> parameter_names);
 
-    void Replace(PredicateTemplate other);
+    void replace(PredicateTemplate other);
 };
 
 class PredicateTemplateHandler
@@ -41,7 +39,7 @@ public:
 
     bool try_get_predicate_template(string predicate_name, PredicateTemplate* predicate_template);
 
-    int GetPredicateIndex(string predicate_name);
+    int get_predicate_index(string predicate_name);
 };
 
 #endif

@@ -21,7 +21,7 @@ public:
 
     InterpretationHandler(Parser* parser, Frame base_frame);
 
-    bool TryConstructExpression(Expression& expression);
+    bool try_construct_expression(Expression& expression);
 };
 
 #endif
