@@ -25,7 +25,7 @@
 using namespace std;
 using namespace cv;
 
-string current_utterance = "the quick brown fox jumps";
+string current_utterance = "";
 
 Parser parser;
 
@@ -43,10 +43,8 @@ bool is_shift_pressed = false;
 
 void mouse_callback_function(int event, int x, int y, int flags, void *userdata)
 {
-	// still doesn't work
 	if (event == EVENT_LBUTTONDOWN)
 	{
-		cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
 		bool highlight_found = false;
 		for (int row = 0; row < parser.parse_grid.size() && !highlight_found; row++)
 		{
@@ -208,14 +206,16 @@ int main(int argc, char **argv)
 	predicate_handler.init_stringification();
 
 	displayer.init(&parser, &mind, &predicate_handler);
+	displayer.display();
     setMouseCallback(displayer.screen_name, mouse_callback_function, NULL);
 
 	parser.update_parse_grid(current_utterance);
 
-	displayer.display();
+	// displayer.display();
 
 	while (1)
 	{
+		displayer.display();
 		if (check_keypress((char)waitKey(0)))
 		{
 			break;

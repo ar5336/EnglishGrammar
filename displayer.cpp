@@ -8,9 +8,9 @@ bool Displayer::is_in_bounds(Point point, pair<Point, Point> bounds)
     return point.x >= top_left.x && point.x <= bottom_right.x && point.y >= top_left.y && point.y <= bottom_right.y;
 }
 
-void Displayer::display_text(Mat img, Point pos, string text, Scalar color, float font_scale = 1.0)
+void Displayer::display_text(Point pos, string text, Scalar color, float font_scale = 1.0)
 {
-    putText(img,  // target image
+    putText(image,
             text, // text
             pos,
             cv::FONT_HERSHEY_TRIPLEX,
@@ -24,7 +24,7 @@ Size Displayer::measure_text(string text, float font_scale = 1.0)
     int was_found;
     return getTextSize(text,
                     cv::FONT_HERSHEY_TRIPLEX,
-                    1.0,
+                    font_scale,
                     2,
                     &was_found);
 }
@@ -32,12 +32,27 @@ Size Displayer::measure_text(string text, float font_scale = 1.0)
 Displayer::Displayer(string screen_name)
     : screen_name(screen_name)
     {
-        image = Mat(512, 1800, CV_8UC3, cv::Scalar(0));
+        IMAGE_SIZE = Point(1800, 800);
+
+        image = Mat(IMAGE_SIZE, CV_8UC3, cv::Scalar(0));
         start_text_corner = Point(10, image.rows * 3 / 4);
         start_grid_corner = start_text_corner + Point(0, -60);
         start_predicate_corner = Point(image.cols *6/10, image.rows * 1/4);
 
         HIGHLIGHTER_YELLOW = CV_RGB(50, 25, 0);
+        BACKGROUND = CV_RGB(13,5,7);
+        GRID_BOXES = CV_RGB(210,200,215);
+        WORD_TEXT_MATCHED = CV_RGB(18,163,76);
+        WORD_TEXT_UNMATCHED = CV_RGB(99,18,6);
+        WORD_FRAME = CV_RGB(69, 79, 89);
+        SYNTAX_FRAME = CV_RGB(70, 89, 69);
+
+        PREDICATE_FONT_SCALE = 0.6f;
+        PREDICATE_TYPE = CV_RGB(156, 96, 8);
+        PREDICATE_PARAMETER = CV_RGB(66, 66, 66);
+        PREDICATE_ARGUMENT = CV_RGB(125, 6, 40);
+        PREDICATE_COLON = CV_RGB(117, 116, 116);
+        PREDICATE_SPECIAL_ARGUMENT = CV_RGB(24, 34, 84);
 
         scroll = 0;
     };
@@ -48,8 +63,9 @@ void Displayer::init(
     PredicateHandler* predicate_handler_ptr) {
     // set the callback function for any mouse event
 
+    
 
-    resizeWindow(screen_name, 1800, 512);
+    resizeWindow(screen_name, IMAGE_SIZE);
     
     parser = parser_ptr;
     mind = mind_ptr;
@@ -117,11 +133,11 @@ void Displayer::display()
                 }
                 else
                 {
-                    rectangle(image, top_left, bottom_right, CV_RGB(0, 0, 0), cv::FILLED);
+                    // rectangle(image, top_left, bottom_right, CV_RGB(0, 0, 0), cv::FILLED);
                 }
 
                 // draw rectangle
-                rectangle(image, top_left, bottom_right, CV_RGB(255, 255, 255));
+                rectangle(image, top_left, bottom_right, GRID_BOXES);
 
                 vector<Frame> frames_in_cell = parser->parse_grid.at(row).at(col);
 
@@ -137,13 +153,13 @@ void Displayer::display()
                     if (row == 0)
                     {
                         cell_text = frame.get_part_of_speech();
-                        display_text(image, ticker_cell_text, cell_text, CV_RGB(100, 100, 200), cell_font_scale);
+                        display_text(ticker_cell_text, cell_text, WORD_FRAME, cell_font_scale);
                     }
                     else
                     {
                         // display frame
                         cell_text = frame.frame_nickname;
-                        display_text(image, ticker_cell_text, cell_text, CV_RGB(100, 200, 100), cell_font_scale);
+                        display_text(ticker_cell_text, cell_text, SYNTAX_FRAME, cell_font_scale);
                     }
                     ticker_cell_text += Point(measure_text(cell_text, cell_font_scale).width, 0);
                 }
@@ -174,11 +190,11 @@ void Displayer::display()
         if (!does_match)
         {
             // not present
-            display_text(image, ticker_text_corner, token, CV_RGB(255, 10, 10));
+            display_text(ticker_text_corner, token, WORD_TEXT_UNMATCHED);
         }
         else
         {
-            display_text(image, ticker_text_corner, token, CV_RGB(118, 185, 0)); // draw token in green
+            display_text(ticker_text_corner, token, WORD_TEXT_MATCHED);
         }
 
         // update text_corner position
@@ -193,29 +209,55 @@ void Displayer::display()
     Point cursor_top = start_text_corner + Point(total_tokenized_width, 0);
     Point cursor_bottom = cursor_top + Point(0, -text_size.height);
 
-    cv::line(image, cursor_top, cursor_bottom, CV_RGB(200, 20, 20), 2, cv::LINE_4, 0);
+    cv::line(image, cursor_top, cursor_bottom, WORD_TEXT_MATCHED, 2, cv::LINE_4, 0);
 
     // display expression handler
 
-    Point predicate_ticker_corner = start_predicate_corner + Point(0, scroll);
+    Point expression_ticker_corner = start_predicate_corner + Point(0, scroll);
     Point new_line = Point(0,25);
+
     if (mind->expressions.size() > 0) {
         for (auto expression_of_type : mind->expressions) {
             auto expression = expression_of_type.second;
             // auto expr_type = expression_of_type.first;
             // if (expr_type == KnowledgeType::GIVEN) {
             vector<string> result_predicates = split_character(predicate_handler->stringify_expression(expression), "\n");
-            for (string result_predicate : result_predicates)
+            
+            for (Predicate predicate : expression.predicates)
             {
-                display_text(image, predicate_ticker_corner, result_predicate, CV_RGB(255, 10, 10), 0.6f);
-                predicate_ticker_corner += new_line;
+                auto predicate_ticker_corner = expression_ticker_corner;
+
+                string predicate_name = predicate.predicate_template.predicate;
+                // first display the predicate name
+                staple_text_on(&predicate_ticker_corner, predicate_name + " ", PREDICATE_TYPE, PREDICATE_FONT_SCALE);
+
+                vector<string> param_names = predicate.predicate_template.parameter_names;
+                vector<string> pred_args = predicate.arguments;
+                for (int i = 0; i < param_names.size(); i++)
+                {
+                    string param_name = param_names[i];
+                    string pred_arg = pred_args[i];
+
+                    staple_text_on(&predicate_ticker_corner, param_name, PREDICATE_PARAMETER, PREDICATE_FONT_SCALE);
+                    staple_text_on(&predicate_ticker_corner, ":", PREDICATE_COLON, PREDICATE_FONT_SCALE);
+                    if (equals(pred_arg, "unknown"))
+                    {
+                        staple_text_on(&predicate_ticker_corner, pred_arg + " ", PREDICATE_SPECIAL_ARGUMENT, PREDICATE_FONT_SCALE);
+                    } else {
+                        staple_text_on(&predicate_ticker_corner, pred_arg + " ", PREDICATE_ARGUMENT, PREDICATE_FONT_SCALE);
+                    }
+
+                }
+
+                // display_text(expression_ticker_corner, result_predicate, PREDICATE_TYPE, 0.6f);
+                expression_ticker_corner += new_line;
             }
 
             // } else {
-            //     display_text(image, predicate_ticker_corner, expression.stringify(), CV_RGB(255, 140, 0), 0.6f);
+            //     display_text(image, expression_ticker_corner, expression.stringify(), CV_RGB(255, 140, 0), 0.6f);
 
             // }
-            predicate_ticker_corner += new_line;
+            expression_ticker_corner += new_line;
         }
     }
 
@@ -223,10 +265,18 @@ void Displayer::display()
     // Point response_corner = Point(image.cols * 8 / 10, image.rows / 8);
     Point response_corner = Point(30, 30);
     if (response_string.size() != 0) {
-        display_text(image, response_corner, response_string, CV_RGB(255, 30, 200), 1.2f);
+        display_text(response_corner, response_string, CV_RGB(255, 30, 200), 1.2f);
     }
 
     cv::imshow(screen_name, image);
+}
+
+void Displayer::staple_text_on(Point *pos, string text, Scalar color, float font_scale)
+{
+    display_text(Point(pos->x, pos->y), text, color, font_scale);
+    float text_width = measure_text(text, font_scale).width;
+    pos->x += text_width;
+
 }
 
 pair<Point, Point> Displayer::get_cell_bounds(int row, int col)

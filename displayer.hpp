@@ -24,7 +24,22 @@ private:
     Point start_grid_corner;
     Point start_predicate_corner;
 
+    Point IMAGE_SIZE;
+
     Scalar HIGHLIGHTER_YELLOW;
+    Scalar BACKGROUND;
+    Scalar GRID_BOXES; // off white
+    Scalar WORD_TEXT_MATCHED; // teal
+    Scalar WORD_TEXT_UNMATCHED; // burgundy
+    Scalar WORD_FRAME; // grey sea
+    Scalar SYNTAX_FRAME; // muted olive
+
+    float PREDICATE_FONT_SCALE;
+    Scalar PREDICATE_TYPE; // golden orange
+    Scalar PREDICATE_PARAMETER; // middling grey
+    Scalar PREDICATE_ARGUMENT; // fuscia-red
+    Scalar PREDICATE_COLON; // a light grey
+    Scalar PREDICATE_SPECIAL_ARGUMENT; // a navy blue
 
     Parser *parser;
 
@@ -32,7 +47,9 @@ private:
 
     PredicateHandler *predicate_handler;
 
-    void display_text(Mat img, Point pos, string text, Scalar color, float font_scale);
+    void display_text(Point pos, string text, Scalar color, float font_scale);
+
+    void staple_text_on(Point *pos, string text, Scalar color, float font_scale);
 
     Size measure_text(string text, float font_scale);
 
