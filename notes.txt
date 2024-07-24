@@ -1,6 +1,6 @@
 Notes:
 
-[ ] display and operate on nicknames
+[X] display and operate on nicknames
 
 [ ] implement actual polymorphism for Frames
     Frame
@@ -44,8 +44,6 @@ Notes:
 
 [X] clicking on a cell to highlight all the terms that correspond to it in yellow - BROKE
 
-[ ] a frame inherits the features of the wordFrames it matches to
-
 [X] Pattern tag system
 
         // VP > Noun[singular] Verb[3PPresent]
@@ -63,7 +61,7 @@ Notes:
 
     this will become necessary for good predicate production. consider an 'if this then that' type statement
 
-[ ] add transitive and intransitive verbs
+[X] add transitive and intransitive verbs
     (can't  think of verbs that can't be made intransitive. I guess that's why "i just was" requires the 'just')
 
 [X] add some type group data structure. perhaps I should start splitting the grammar into multiple text files
@@ -100,7 +98,7 @@ Notes:
 
 [ ] the cell you have selected, show a tree for it.
 
-[ ] get highlighting back online
+[X] get highlighting back online
 
 ------ brainstorm
 
@@ -535,3 +533,33 @@ oh and a small upgrade to this would be for class heirarchies for verbs.
     > ravens can glide
 
 create a Noun class, so that 
+
+
+kind of insane idea, predicate features.
+independent of the predicate and its arguments
+
+allows for referencing of any predicate with a feature
+
+a feature should guarantee that 
+
+ENTITY COMPONENT SYSTEM
+
+a component has features
+a predicate can have * components
+
+
+ [ ]    a new type of accessor PredicateTypeParameterAccessor
+        parameter:[ParameterType].parameter
+        object:[parameter_type:Identifier].object
+
+ [ ]  as well as yet another accessor for Features 
+        parameter:{featureName}
+
+        and FeatureGroups
+        parameter:{FEATURE_GROUP_NAME}
+
+ [X]   as well as just plain strings
+        noun_class:"human"
+    
+
+# todo - "all dogs can run"

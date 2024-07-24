@@ -22,7 +22,9 @@ string Predicate::get_argument(string parameter_name)
 
 Predicate Predicate::with_modified_argument(string parameter_name, string new_value)
 {
-    // for(string argument_nam)
+    if (predicate_template.parameter_index_map.count(parameter_name) == 0)
+        throw runtime_error("bad parameter name for predicate template "+predicate_template.predicate);
+
     int param_index = predicate_template.parameter_index_map[parameter_name];
     vector<string> modified_arguments = arguments;
     modified_arguments[param_index] = new_value;

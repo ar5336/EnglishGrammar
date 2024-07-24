@@ -58,6 +58,7 @@ Words:
             eagle eagles
             raven ravens
             wheel wheels
+            hill hills
             MassNoun:
                 grease
                 pollen
@@ -181,29 +182,19 @@ Words:
             am -singular -1stPerson -present
             is -3rdPerson -singular -masculine -present
             is -3rdPerson -singular -feminine -present
-            are -plural -3rdPerson -present
-            are -plural -3rdPerson -neuter -present
+            are -plural -3rdPerson -2ndPerson -1stPerson -present -neuter -masculine -feminine
             are -singular -2ndPerson -present
-            are -plural -2ndPerson -present
-            are -plural -1stPerson -present
             be 
             been
             being
             did
-            do -singular -present -1stPerson
-            do -plural -present -1stPerson
-            do -singular -present -2ndPerson
-            do -plural -present -2ndPerson
+            do -singular -plural -present -1stPerson -2ndPerson
             do -plural -present -3rdPerson
-            does -singular -present -2ndPerson
-            does -singular -present -3rdPerson
+            does -singular -present -2ndPerson -3rdPerson
             had -perfect
-            have -1stPerson -pastPart -singular
-            have -2ndPerson -pastPart -singular
+            have -1stPerson -2ndPerson -pastPart -singular
             has -3rdPerson -pastPart -singular
-            have -1stPerson -pastPart -plural
-            have -2ndPerson -pastPart -plural
-            have -3rdPerson -pastPart -plural
+            have -1stPerson -2ndPerson -3rdPerson -pastPart -plural
             was
             were
     Adjective:
@@ -220,6 +211,8 @@ Words:
                 alive
                 hungry
             Comparable: # absolute comparative superlative
+                new newer newest
+                old older oldest
                 angry angrier angriest
                 happy happier happiest
                 funny funnier funniest
@@ -261,13 +254,13 @@ Words:
             this these
             that those
         Quantifiers:
-            much
-            some
-            any
-            all
-            most
-            enough
-            several
+            any -irregular -amount:0.0
+            some -amount:0.2
+            several -amount:0.3
+            enough -amount:0.5
+            much -amount:0.7
+            most -amount:0.8
+            all -amount:1.0
     Preposition:
         for
         of
@@ -306,24 +299,30 @@ FeatureGroups:
     TENSE=  simple continous perfect 3PPresent pastPart
 
 Predicates:
-    IS_INSTANCE_OF object nounClass
+    IS object object_count noun_class
     HAS_PROPERTY object property
     PREPOSITION action preposition subject
     ACTION action actor action_type
     ACTION_2 action actor action_type subject
+    CAN_DO action_type actor
+    SPECIFIER object person number
+    CONTAINS container containee
 
 Frames:
     NounPhrase "NP"
-        Determiner Noun[NUMBER] -NUMBER -determined <IS_INSTANCE_OF object:! nounClass:Noun>
+        Determiner Noun[NUMBER] -NUMBER -determined <IS object:! object_count:"1" noun_class:Noun>
 
         Determiner AdjectivePhrase[NUMBER] -NUMBER -determined
         NounPhrase[determined] PrepPhrase
 
         Adjective[PossessiveAdjective] Noun -determined
             # my cat, his cat, her cat
-        Adjective[MainAdjective] Noun[NUMBER] -NUMBER
+        # Adjective[MainAdjective] Noun[NUMBER] -NUMBER
+
 
         Noun Conjunction Noun -plural
+            # cats and dogs
+            # cat and fish
 
         Noun[Pronoun,possessive] NounPhrase[!determined,NUMBER] -determined -NUMBER
             # my cat, *my the cat ... bad examples
@@ -338,7 +337,7 @@ Frames:
             # land animals, sea animals
     VerbPhrase "VP"
         Verb[MainVerb,TENSE] NounPhrase -TENSE
-        Verb Adverb
+        Verb Adverb <ACTION action:! actor:"unknown" action_type:Verb | HAS_PROPERTY object:! property:Adverb>
         Adverb Verb
 
         VerbPhrase[TENSE,NUMBER] PrepPhrase -TENSE -NUMBER 
@@ -351,8 +350,8 @@ Frames:
         Noun[plural] Verb[MainVerb,simple] -plural
         Noun[singular] Verb[MainVerb,!simple,!continuous,!3PPresent] -singular
 
-        NounPhrase[plural] Verb[MainVerb,!3PPresent] -plural <ACTION action:! actor:NounPhrase->IS_INSTANCE_OF.object action_type:Verb>
-        NounPhrase[singular] Verb[MainVerb,!simple] -singular <ACTION action:! actor:NounPhrase->IS_INSTANCE_OF.object action_type:Verb>
+        NounPhrase[plural] Verb[MainVerb,!3PPresent] -plural <ACTION action:! actor:NounPhrase->IS.object action_type:Verb>
+        NounPhrase[singular] Verb[MainVerb,!simple] -singular <ACTION action:! actor:NounPhrase->IS.object action_type:Verb>
 
         Noun[Pronoun,singular,GENDER,3rdPerson] Verb[3PPresent] -GENDER
             # he runs, she runs
@@ -368,18 +367,19 @@ Frames:
             # the dogs have run
     PrepPhrase "PP"
         Preposition Noun
-        Preposition NounPhrase[NUMBER] -NUMBER <PREPOSITION action:! preposition:Preposition subject:NounPhrase->IS_INSTANCE_OF.object>
+        Preposition NounPhrase[NUMBER] -NUMBER <PREPOSITION action:! preposition:Preposition subject:NounPhrase->IS.object>
             # under the bridge
         Preposition[Time] VerbPhrase
             # after running in the race
     Sentence "S"
-        PreIndicativePhrase[plural] Noun[plural] -plural
+        PreIndicativePhrase[plural] Noun[plural] -plural <IS object:! object_count:"3" noun_class:Noun | CONTAINS container:! containee:PreIndicativePhrase->IS.object>
+            # TODO - finish: <IS_SUBSET_OF set:PreIndicativePhrase-> noun_class:Noun>
             # horses are mammals
         PreIndicativePhrase Adjective[Comparable,absolute]
             # i am happy
         PreIndicativePhrase Adjective[NonComparable]
             # i am rancorous
-        PreIndicativePhrase Verb[MainVerb,continuous] -continuous
+        # PreIndicativePhrase Verb[MainVerb,continuous] -continuous
             # the dog is running
         HabilitivePhrase Verb[MainVerb,simple]
             # he can run
@@ -394,7 +394,7 @@ Frames:
             # waters are rising
             # horse is running
 
-        Noun[plural] ModalPhrase[MODE] -MODE
+        Noun[plural] ModalPhrase[MODE] -MODE <IS object:! object_count:"3" noun_class:Noun | ModalPhrase->CAN_DO.actor=!>
             # dogs can run, !dog can run
         NounPhrase ModalPhrase[MODE] -MODE
             # a dog can run
@@ -402,7 +402,7 @@ Frames:
         PreIndicativePhrase Noun[Pronoun,possessive]
             # that cat is mine
 
-        VerbPhrase NounPhrase <ACTION_2 action:VerbPhrase->ACTION.action actor:VerbPhrase->IS_INSTANCE_OF.oobject action_type:VerbPhrase->ACTION.action_type subject:NounPhrase->IS_INSTANCE_OF.object>
+        VerbPhrase NounPhrase <ACTION_2 action:VerbPhrase->ACTION.action actor:VerbPhrase->IS.object action_type:VerbPhrase->ACTION.action_type subject:NounPhrase->IS.object>
         NounPhrase[NUMBER] VerbPhrase[NUMBER]
         VerbPhrase PrepPhrase <PrepPhrase->PREPOSITION.action=VerbPhrase->ACTION.action>
         Sentence PrepPhrase
@@ -415,12 +415,12 @@ Frames:
             # will i run
             # might i run
 
-        InterrogativeClause[NUMBER,MODE] VerbPhrase[simple] -NUMBER -MODE
+        InterrogativeClause[NUMBER,MODE] VerbPhrase[simple] -NUMBER -MODE 
             # can a fish live in the house
-        InterrogativeClause[MODE] Verb[MainVerb,simple] -MODE
+        InterrogativeClause[MODE] Verb[MainVerb,simple] -MODE <CAN_DO action_type:Verb actor:InterrogativeClause->IS.object | ACTION action:! actor:InterrogativeClause->IS.object action_type:Verb>
             # can a fish run
     InterrogativeClause "IntC"
-        Verb[ModalVerb,MODE] Noun[Pronoun,NUMBER] -NUMBER -MODE -habilitive
+        Verb[ModalVerb,MODE] Noun[Pronoun,NUMBER] -NUMBER -MODE -habilitive 
             # can you, can i
             # should i, might i
 
@@ -442,26 +442,29 @@ Frames:
             # are rising
             # is rising
     ModalPhrase "MP"
-        Verb[ModalVerb,MODE] Verb[MainVerb] -MODE
+        Verb[ModalVerb,MODE] Verb[MainVerb] -MODE <CAN_DO action_type:Verb#2 actor:"unknown">
             # can run -habilitive
             # may run -futureProbability
     ComparativeObject "CO"
         PreIndicativePhrase Adjective[comparative]
             # i am happier
     PreIndicativePhrase "prIP"
-        Noun[Pronoun,NUMBER,PERSON]  Verb[LinkingVerb,NUMBER,PERSON] -NUMBER
+        Noun[Pronoun,NUMBER,PERSON]  Verb[LinkingVerb,NUMBER,PERSON] -NUMBER <SPECIFIER object:! person:Noun number:Noun | IS object:! object_count:"1" noun_class:"human">
             # i am
             # you are
         NounPhrase[NUMBER]  Verb[LinkingVerb,NUMBER] -NUMBER
             # the dog is
             # my dogs are
-        Noun[plural]  Verb[LinkingVerb,plural] -plural
+        Noun[plural] Verb[LinkingVerb,plural] -plural <IS object:! object_count:"3" noun_class:Noun>
             # dogs are
             # horses are
     HabilitivePhrase "HP"
-        Noun[Pronoun,NUMBER] Verb[ModalVerb,ability] -NUMBER
+        Noun[Pronoun,NUMBER,PERSON] Verb[ModalVerb,ability] -NUMBER <SPECIFIER object:! person:Noun number:Noun | CAN_DO action_type:"unknown" actor:!>
+            # TODO - add ability to access Frame features + feature group evaluation results.
             # you can
             # he can
     AdjectivePhrase "AP"
-        Adjective Noun[NUMBER] -NUMBER <IS_INSTANCE_OF object:! nounClass:Noun | HAS_PROPERTY object:! property:Adjective>
-        Adjective AdjectivePhrase[NUMBER] -NUMBER <HAS_PROPERTY object:AdjectivePhrase->IS_INSTANCE_OF.object property:Adjective>
+        Adjective Noun[NUMBER] -NUMBER <IS object:! object_count:"1" noun_class:Noun | HAS_PROPERTY object:! property:Adjective>
+            # ugly dog
+            # ugly dogs
+        Adjective AdjectivePhrase[NUMBER] -NUMBER <HAS_PROPERTY object:AdjectivePhrase->IS.object property:Adjective>

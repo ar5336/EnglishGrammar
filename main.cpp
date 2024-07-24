@@ -25,7 +25,7 @@
 using namespace std;
 using namespace cv;
 
-string current_utterance = "";
+string current_utterance = "dogs can run";
 
 Parser parser;
 

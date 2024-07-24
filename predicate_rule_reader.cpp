@@ -1,5 +1,27 @@
 #include "predicate_rule_reader.hpp"
 
+ParameterCreationType determine_type(string argument)
+{
+    if (argument.at(0) == '"' && argument.at(argument.size()-1) == '"')
+    {
+        return ParameterCreationType::STRING;
+    }
+    if (argument == "!")
+    {
+        return ParameterCreationType::WILDCARD;
+    }
+    else if (find_in_string(argument, (string)"->"))
+    {
+        return ParameterCreationType::FRAME_PREDICATE_PROPERTY;
+    }
+    else
+    {
+        return ParameterCreationType::WORD_FRAME;
+    }
+
+    throw runtime_error("bad type of parameter assignment");
+}
+
 PredicateRuleReader::PredicateRuleReader(PredicateHandler *predicate_handler) : predicate_handler(predicate_handler)
 {
     // the predicate handler will definitely need to know the predicate classes, and as such should be assigned the taks of reading off predicate.txt
@@ -21,16 +43,34 @@ PredicateCreator::PredicateCreator(PredicateHandler *handler, vector<string> cre
 {
     string predicate_name = creation_tokens[0];
 
+    auto parameter_tokens = vector<string>(creation_tokens.begin() + 1, creation_tokens.end());    
+
     PredicateTemplate predicate_template;
     if (!handler->try_get_predicate_template(predicate_name, &predicate_template))
         throw runtime_error("could not find predicate template for name");
+    
+    int template_size = predicate_template.parameter_names.size(); 
+    int token_size = parameter_tokens.size(); 
+    if (template_size != token_size)
+    {
+        // if (template_size > token_size){
+        //     string extra_param = predicate_template.parameter_names[template_size];
+        //     throw runtime_error("template parameter size "+to_string(template_size)+" does not match parameter token size "+to_string(token_size)+" for predicate "+predicate_name+". First extra parameter is:"+extra_param);
 
-    auto parameter_tokens = vector<string>(creation_tokens.begin() + 1, creation_tokens.end());    
+        // } else {
+        //     if (template_size > token_size){
+        //     string extra_param = par[template_size];
+        //     throw runtime_error("template parameter size "+to_string(template_size)+" does not match parameter token size "+to_string(token_size)+" for predicate "+predicate_name+". First extra parameter is:"+extra_param);
+        // }
+        // }
+        throw runtime_error("template parameter size "+to_string(template_size)+" does not match parameter token size "+to_string(token_size)+" for predicate "+predicate_name+".");
+    }
 
     if (predicate_template.parameter_names.size() != parameter_tokens.size())
         throw runtime_error("wrong size of parameter tokens");
 
     predicate = predicate_template;
+    int template_parameter_index = 0;
     parameter_creation_types = vector<ParameterCreationType>();
     for (int i = 0; i < parameter_tokens.size(); i++)
     {
@@ -44,29 +84,44 @@ PredicateCreator::PredicateCreator(PredicateHandler *handler, vector<string> cre
 
         string parameter_name = parameter_split_colon[0];
 
+        string corresponding_template_param = predicate.parameter_names[i];
+
+        if (!equals(parameter_name, corresponding_template_param))
+            throw runtime_error("parameter name "+parameter_name+" does not match corresponding '"+corresponding_template_param+"' template parameter name");
+
         if (parameter_name != predicate_template.parameter_names[i])
             throw runtime_error("parameter name in predicate creation rule is named wrong");
 
-        if (argument == "!")
-        {
-            parameter_creation_types.push_back(ParameterCreationType::WILDCARD);
-            continue;
-        }
-        else if (find_in_string(argument, (string)"->"))
-        {
-            parameter_creation_types.push_back(ParameterCreationType::FRAME_PREDICATE_PROPERTY);
-            pattern_predicate_accessors.push_back(PatternElementPredicateAccessor(handler, argument));
-            continue;
-        }
-        else
-        {
-            parameter_creation_types.push_back(ParameterCreationType::WORD_FRAME);
-            word_frame_accessors.push_back(argument);
-            continue;
-        }
+        auto param_creation_type = determine_type(argument);
+        
+        parameter_creation_types.push_back(param_creation_type);
 
-        // throw invalid_argument("predicate rule string does not match a defined type of predicateFormer's parameter type");
+        bool matched = false;
+        // store parameter contents
+        switch(param_creation_type)
+        {
+            case WILDCARD:
+                matched = true;
+                break;
+            case WORD_FRAME:
+                matched = true;
+                word_frame_accessors.push_back(argument);
+                break;
+            case FRAME_PREDICATE_PROPERTY:
+                matched = true;
+                pattern_predicate_accessors.push_back(PatternElementPredicateAccessor(handler, argument));
+                break;
+            case STRING:
+                matched = true;
+                param_strings.push_back(trim_front_and_back(argument));
+                break;
+        }
+        if (!matched)
+            throw runtime_error("predicate rule string does not match a defined type of predicateFormer's parameter type");
     }
+
+    if (parameter_creation_types.size() != token_size)
+        throw runtime_error("parameter creation does not match");
 }
 
 PatternElementPredicateAccessor::PatternElementPredicateAccessor() {}
@@ -101,7 +156,22 @@ PredicateModifier::PredicateModifier(PredicateHandler* handler, string token)
     auto left_and_right = split_character(token, "=");
 
     left_equal = PatternElementPredicateAccessor(handler, left_and_right[0]);
-    right_equal = PatternElementPredicateAccessor(handler, left_and_right[1]);
+    string right_string = left_and_right[1];
+    right_type = determine_type(right_string);
+
+    switch(right_type)
+    {
+        case FRAME_PREDICATE_PROPERTY:
+            right_frame_predicate_property = PatternElementPredicateAccessor(handler, right_string);
+            break;
+        case WORD_FRAME:
+        case WILDCARD:
+            right_equal_string = right_string;
+            break;
+        case STRING:
+            right_equal_string = trim_front_and_back(right_string);
+            break;
+    }
 }
 
 bool PredicateRuleReader::try_read_predicate_rule(string predicate_rule, PredicateFormationRules* formation_rules)
@@ -109,7 +179,7 @@ bool PredicateRuleReader::try_read_predicate_rule(string predicate_rule, Predica
     auto predicate_creators = vector<PredicateCreator>();
     auto predicate_modifiers = vector<PredicateModifier>();
     vector<string> predicate_formation_strings = split_character(predicate_rule, "|");
-    
+
     for (int i = 0; i < predicate_formation_strings.size(); i++)
     {
         string predicate_formation_string = predicate_formation_strings[i];

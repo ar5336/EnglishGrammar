@@ -8,9 +8,11 @@ enum ParameterCreationType
 {
     WILDCARD = 0,
     WORD_FRAME = 1,
-    FRAME_PREDICATE_PROPERTY = 2
+    FRAME_PREDICATE_PROPERTY = 2,
+    STRING = 3,
 };
 
+ParameterCreationType determine_type(string argument);
 class PatternElementPredicateAccessor
 {
 public:
@@ -41,7 +43,10 @@ class PredicateModifier
 {
 public:
     PatternElementPredicateAccessor left_equal;
-    PatternElementPredicateAccessor right_equal;
+    PatternElementPredicateAccessor right_frame_predicate_property;
+    string right_equal_string;
+
+    ParameterCreationType right_type;
 
     //PrepPhrase->PREPOSITION.action=VerbPhrase->IS_INSTANCE_OF.object
     //SyntaxFrame->PREDICATE_NAME.parameterName=SyntaxFrame->PREDICATE_NAME.parameterName
@@ -61,6 +66,7 @@ public:
     vector<ParameterCreationType> parameter_creation_types;
 
     vector<string> word_frame_accessors;
+    vector<string> param_strings;
     vector<PatternElementPredicateAccessor> pattern_predicate_accessors;
 
     PredicateCreator();

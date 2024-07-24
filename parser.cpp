@@ -221,6 +221,8 @@ Expression Parser::apply_formation_rules_on_expression(PredicateFormationRules f
     Expression combined_expression = Expression::combine_expressions(left_frame.accumulated_expression, right_frame.accumulated_expression);
     // auto expression_predicates = combined_expressions.predicates;
 
+    string wildcard_value = variable_namer.generate_name();
+
     // apply the modification rules before the formation rules. note - not hard decision may be changed
     // vector<Predicate> modified_predicates;
     for (int i = 0; i < formation_rule.predicate_modifiers.size(); i++)
@@ -228,19 +230,31 @@ Expression Parser::apply_formation_rules_on_expression(PredicateFormationRules f
         PredicateModifier modifier = formation_rule.predicate_modifiers[i];
 
         PatternElementPredicateAccessor assignee = modifier.left_equal;
-        string assignee_frame = assignee.syntax_frame_name;
 
-        PatternElementPredicateAccessor operand = modifier.right_equal;
+        ParameterCreationType operand_type = modifier.right_type;
+        string operand_variable = "retrieval_failed";
 
-        // first get the operand's value
-        string operand_variable = get_argument_accessor(left_frame, right_frame, operand);
+        switch(operand_type)
+        {
+            case WILDCARD:
+                operand_variable = wildcard_value;
+                break;
+            case STRING:
+            case WORD_FRAME:
+                operand_variable = modifier.right_equal_string;
+                break;
+            case FRAME_PREDICATE_PROPERTY:
+                PatternElementPredicateAccessor operand = modifier.right_frame_predicate_property;
+                operand_variable = get_argument_accessor(left_frame, right_frame, operand);
+                break;
+        }
+
 
         combined_expression = set_argument_accessor(combined_expression, left_frame, right_frame, assignee, operand_variable);
     }
 
     // TODO - create a PredicateFormationContext to keep track of variable names that have already been used
     vector<Predicate> created_predicates;
-    string wildcard_value = variable_namer.generate_name();
     for (int i = 0; i < formation_rule.predicate_creators.size(); i++)
     {
         PredicateCreator creator = formation_rule.predicate_creators[i];
@@ -253,23 +267,59 @@ Expression Parser::apply_formation_rules_on_expression(PredicateFormationRules f
         int pattern_predicate_index = 0;
         auto pattern_predicate_acessors = creator.pattern_predicate_accessors;
 
+        int parameter_string_index = 0;
+        auto parameter_strings = creator.param_strings;
+
         vector<string> calculated_arguments = vector<string>();
 
         for (auto creation_type : creator.parameter_creation_types)
         {
-            if (creation_type == ParameterCreationType::WORD_FRAME)
+            if (creation_type == ParameterCreationType::STRING)
+            {
+                calculated_arguments.push_back(parameter_strings[parameter_string_index]);
+                parameter_string_index++;
+                continue;
+            }
+            else if (creation_type == ParameterCreationType::WORD_FRAME)
             {
                 string word_frame_accessor = word_frame_accessors[word_frame_index];
 
-                Frame word_frame = Frame();
-                if (try_get_word_frame(word_frame_accessor, left_frame, right_frame, word_frame))
+                if (find_in_string(word_frame_accessor, "#"))
                 {
-                    calculated_arguments.push_back(word_frame.frame_name);
-                } else {
-                    calculated_arguments.push_back("retrieval_failed");
-                }
+                    // check if Verb#2 is present or something like that
+                    auto left_and_right = split_character(word_frame_accessor, "#");
+                    if (left_and_right.size() != 2)
+                    {
+                        throw runtime_error("place number after '#' when indicating non-first PatternElement");
+                    }
 
-                word_frame_index++;
+                    int right_int = stoi(left_and_right[1]);
+
+                    if (right_int >= 0){
+                        // TODO - support more indeces, but this will require De-Binarization.
+                        // And as such can be replaced by parenthetical nicknames when the time comes.
+                        calculated_arguments.push_back(right_frame.frame_name);
+                        word_frame_index++;
+                    } else
+                    {
+                        throw runtime_error("unsupported pattern element index '" + to_string(right_int) + "'");
+                    }
+
+                }
+                else 
+                {
+                    Frame word_frame = Frame();
+                    if (try_get_word_frame(word_frame_accessor, left_frame, right_frame, word_frame))
+                    {
+                        calculated_arguments.push_back(word_frame.frame_name);
+                    } else {
+                        calculated_arguments.push_back("retrieval_failed");
+                    }
+
+                    word_frame_index++;
+                }
+                
+                continue;
             }
             else if (creation_type == ParameterCreationType::FRAME_PREDICATE_PROPERTY)
             {
@@ -277,10 +327,12 @@ Expression Parser::apply_formation_rules_on_expression(PredicateFormationRules f
 
                 calculated_arguments.push_back(get_argument_accessor(left_frame, right_frame, pattern_argument_accessor));
                 pattern_predicate_index++;
+                continue;
             }
             else if (creation_type == ParameterCreationType::WILDCARD)
             {
                 calculated_arguments.push_back(wildcard_value);
+                continue;
             }
         }
 
@@ -321,7 +373,7 @@ string Parser::get_argument_accessor(Frame left_frame, Frame right_frame, Patter
     Predicate original_predicate;
     if (!try_get_predicate(left_frame, right_frame, accessor, original_predicate))
     {
-        return "borked";
+        throw runtime_error("failed to access argument");
     }
 
     string accessor_paramter_name = accessor.parameter_name;

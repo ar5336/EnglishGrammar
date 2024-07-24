@@ -19,6 +19,8 @@ public:
 
     PredicateTemplate(string predicate_name, vector<string> parameter_names);
 
+    bool contains_parameter_name(string parameter_name);
+
     void replace(PredicateTemplate other);
 };
 

@@ -3,7 +3,18 @@
 PredicateTemplate::PredicateTemplate() {}
 
 PredicateTemplate::PredicateTemplate(string predicate_name, vector<string> parameter_names)
-    : predicate(predicate_name), parameter_names(parameter_names) {}
+    : predicate(predicate_name), parameter_names(parameter_names) {
+        for (int param_index = 0; param_index < parameter_names.size(); param_index++)
+        {
+            string param_name = parameter_names[param_index];
+            parameter_index_map.emplace(param_name, param_index);
+        }
+    }
+
+bool PredicateTemplate::contains_parameter_name(string parameter_name)
+{
+    return parameter_index_map.count(parameter_name) != 0;
+}
 
 
 void PredicateTemplateHandler::add_entry(PredicateTemplate predicate_template)
