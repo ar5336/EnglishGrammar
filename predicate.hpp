@@ -33,6 +33,8 @@ public:
 
     string get_argument(string parameter_name);
 
+    bool has_argument(string parameter_name);
+
     Predicate with_modified_argument(string paramenter_name, string new_value);
 };
 

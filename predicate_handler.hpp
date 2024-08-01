@@ -19,6 +19,7 @@ private:
     map<string, vector<int>> prids_by_type;
     // instead of a map of variables to variables. A map of predicate to predicate by way of argument name.
     map<int, map<int, tuple<string, string>>> prid_to_prid_by_arg;
+
     // map<string, map<string, vector<int>>> variable_by_prid_connection_map;
 
     void make_connections();
@@ -28,6 +29,7 @@ private:
     tuple<bool, vector<tuple<int, int>>> has_connection(string pred_1, string arg_1, string pred_2, string arg_2);
 
 public:
+    set<string> noun_set;
 
     vector<Predicate> predicates;
 

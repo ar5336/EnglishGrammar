@@ -9,6 +9,17 @@ void Mind::init(PredicateHandler *predicate_handler)
 
 void Mind::tell(Expression expression)
 {
+    vector<string> union_set_vec(expression.noun_set.size() + noun_set.size()); 
+    // update noun set
+    set_union(
+        expression.noun_set.begin(),
+        expression.noun_set.end(),
+        noun_set.begin(),
+        noun_set.end(),
+        union_set_vec.begin());
+
+    noun_set = set<string>(union_set_vec.begin(), union_set_vec.end());
+
     if ((given_expressions.emplace(expression)).second)
     {
         expressions.push_back(pair<KnowledgeType, Expression>(KnowledgeType::GIVEN, expression));
@@ -33,21 +44,30 @@ vector<string> Mind::identify_all_parents(string entity_name)
         current_entity_name = parent;
         
     }
+
+    if (DEBUGGING && parent_stack.size() > 1)
+        printf("found parents for child '%s' count: %ld\n", entity_name.c_str(), parent_stack.size());
+
     return parent_stack;
 }
 
 void Mind::make_inferences(Expression new_expression){
     // first pass, build inheritance map
     update_conceptual_maps(new_expression);
-    return;
 
+    if (DEBUGGING)
+        printf("making inferences\n");
+
+    printf("noun set size: %ld\n", noun_set.size());
     for(string noun : noun_set)
     {
         auto parent_list = identify_all_parents(noun);
         
         // if any of the parents has an ability, then the noun has an ability
         for (string parent : parent_list) {
-            printf("making inference on parent: %s", parent.c_str());
+            if (DEBUGGING)
+                printf("making inference on parent: '%s' of noun '%s'\n", parent.c_str(), noun.c_str());
+
             if (ability_map.count(parent) != 0)
             {
                 auto inherited_abilities = ability_map.at(parent);
@@ -94,6 +114,9 @@ ResponseType Mind::ask(Expression expression)
 {
     // simple yes/no as of now
     // auto asStatement = Predicate(queryPredicate.type_id, queryPredicate.arguments);
+
+
+    // can't do a simple hash comparison now. need to check connection equivalence between expression
 
     auto is_given = given_expressions.count(expression) != 0;
     auto is_inferred = inferred_expressions.count(expression) != 0;
@@ -148,13 +171,15 @@ void Mind::apply_inheritance_rule(Expression expression)
         
         for (auto second_connection_pair : second_connection_pairs)
         {
-            Predicate other_is_predicate = second_connection_pair.first;
+            Predicate other_is_predicate = second_connection_pair.second;
 
-            string child = is_predicate.get_argument("noun_class");
-            string parent = other_is_predicate.get_argument("noun_class");
+            string parent = is_predicate.get_argument("noun_class");
+            string child = other_is_predicate.get_argument("noun_class");
 
             // add the map connections
             child_to_parent_map.emplace(child, parent);
+            if (DEBUGGING)
+                printf("new inheritance added from child:'%s' to parent:'%s'\n", child.c_str(), parent.c_str());
             // child_to_parent.emplace(child, parent);
             // parent_child_pairs.push_back(make_tuple(parent, child));
         }
@@ -266,7 +291,9 @@ void Mind::apply_ability_rule(Expression expression)
 
 void Mind::update_conceptual_maps(Expression new_expression)
 {
-    printf("updating conceptual maps\n");
+    if (DEBUGGING)
+        printf("updating conceptual maps\n");
+    
     apply_inheritance_rule(new_expression);
     apply_ability_rule(new_expression);
 

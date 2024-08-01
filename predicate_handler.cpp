@@ -36,6 +36,15 @@ Predicate PredicateHandler::pred_from_string(string input)
 
 Predicate PredicateHandler::construct_predicate(string predicate_name, vector<string> predicate_arguments)
 {
+    if (DEBUGGING)
+    {
+        printf("creating predicate: %s", predicate_name.c_str());
+        for(string argument : predicate_arguments)
+        {
+            printf(" %s", argument.c_str());
+        }
+        printf("\n");
+    }
     PredicateTemplate predicate_template = PredicateTemplate();
     if (!predicate_template_handler->try_get_predicate_template(predicate_name, &predicate_template))
         throw runtime_error("predicate name '" + predicate_name + "' is wrong");
@@ -65,7 +74,15 @@ Expression::Expression() {
 
 Expression::Expression(vector<Predicate> predicates) : predicates(predicates) {
     prid_to_prid_by_arg = map<int, map<int, tuple<string, string>>>();
-
+    // construct noun set
+    noun_set = set<string>();
+    for (auto predicate : predicates)
+    {
+        if (predicate.has_argument("noun_class"))
+        {
+            noun_set.emplace(predicate.get_argument("noun_class"));
+        }
+    }
     make_connections();
 }
 
@@ -199,6 +216,16 @@ Predicate Expression::operator [](int i) const
 
 tuple<bool, vector<tuple<int, int>>> Expression::has_connection(string pred_1, string arg_1, string pred_2, string arg_2)
 {
+    // if (DEBUGGING)
+    //     printf("getting connections from\n\tpred:'%s' arg:'%s' to\n\tpred:'%s' arg:'%s'\n",
+    //     source_predicate_type.c_str(),
+    //     source_argument.c_str(),
+    //     target_predicate_type.c_str(),
+    //     target_argument.c_str());
+
+    if (prids_by_type.count(pred_1) == 0 || prids_by_type.count(pred_2) == 0)
+        return make_tuple(false, vector<tuple<int, int>>());
+
     vector<int> candidate_prid_1s = prids_by_type.at(pred_1);
     vector<int> candidate_prid_2s = prids_by_type.at(pred_2);
 

@@ -15,9 +15,18 @@ Predicate::Predicate(int type_id, vector<string> arguments, SpeechActs speechAct
 
 string Predicate::get_argument(string parameter_name)
 {
+    if (predicate_template.parameter_index_map.count(parameter_name) == 0)
+    {
+        throw runtime_error("can not find parameter name '"+parameter_name+"' in predicate of type '"+predicate_template.predicate+"'\n");
+    }
     int param_index = predicate_template.parameter_index_map[parameter_name];
 
     return arguments[param_index];
+}
+
+bool Predicate::has_argument(string parameter_name)
+{
+    return predicate_template.parameter_index_map.count(parameter_name) != 0;
 }
 
 Predicate Predicate::with_modified_argument(string parameter_name, string new_value)
