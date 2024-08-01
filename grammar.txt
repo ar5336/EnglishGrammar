@@ -209,8 +209,9 @@ Words:
                 afraid
                 confused
                 alive
-                hungry
+                hit
             Comparable: # absolute comparative superlative
+                hungry hungrier hungriest
                 new newer newest
                 old older oldest
                 angry angrier angriest
@@ -372,6 +373,9 @@ Frames:
         Preposition[Time] VerbPhrase
             # after running in the race
     Sentence "S"
+        AdjectivePhrase[plural] Verb[MainVerb, simple] <ACTION action:! actor:AdjectivePhrase->IS.object action_type:Verb>
+            # quick dogs run
+            # hit dogs holler
         PreIndicativePhrase[plural] Noun[plural] -plural <IS object:! object_count:"3" noun_class:Noun | CONTAINS container:! containee:PreIndicativePhrase->IS.object>
             # TODO - finish: <IS_SUBSET_OF set:PreIndicativePhrase-> noun_class:Noun>
             # horses are mammals
@@ -396,7 +400,7 @@ Frames:
 
         Noun[plural] ModalPhrase[MODE] -MODE <IS object:! object_count:"3" noun_class:Noun | ModalPhrase->CAN_DO.actor=!>
             # dogs can run, !dog can run
-        NounPhrase ModalPhrase[MODE] -MODE
+        NounPhrase ModalPhrase[MODE] -MODE <ModalPhrase->CAN_DO.actor=!>
             # a dog can run
 
         PreIndicativePhrase Noun[Pronoun,possessive]

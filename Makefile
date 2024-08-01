@@ -6,7 +6,7 @@ CFLAGS =  -I /usr/include/opencv4 -I /usr/include/boost_1_84_0
 LDFLAGS = `pkg-config --cflags --libs opencv4` 
 
 SOURCES = $(wildcard *.cpp)
-EXECUTABLE = myprogram
+EXECUTABLE = parser
 BIN = bin
 OBJECTS = $(SOURCES:%.cpp=$(BIN)/%.o)
 

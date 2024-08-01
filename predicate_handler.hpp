@@ -8,23 +8,53 @@
 
 #include "predicate.hpp"
 #include "string_operators.hpp"
+#include "global.hpp"
 
 class Expression
 {
+private:
+    //prids: predicate ids
+    vector<string> mentioned_variables;
+
+    map<string, vector<int>> prids_by_type;
+    // instead of a map of variables to variables. A map of predicate to predicate by way of argument name.
+    map<int, map<int, tuple<string, string>>> prid_to_prid_by_arg;
+    // map<string, map<string, vector<int>>> variable_by_prid_connection_map;
+
+    void make_connections();
+
+    void add_connection(int prid_1, string var_1, int prid_2, string var_2);
+
+    tuple<bool, vector<tuple<int, int>>> has_connection(string pred_1, string arg_1, string pred_2, string arg_2);
+
 public:
+
     vector<Predicate> predicates;
 
     Expression();
 
-    Expression(vector<Predicate> predicates); 
+    Expression(vector<Predicate> predicates);
+
+    vector<Predicate> get_predicates();
+
+    // void add_predicate(Predicate predicate);
+
+    // removes the predicate from the original expression
+    Predicate extract_predicate(Predicate original);
+
+    vector<pair<Predicate, Predicate>> get_connections(
+        string source_predicate_type,
+        string source_argument,
+        string target_predicate_type,
+        string target_argument);
 
     static Expression combine_expressions(Expression expression1, Expression expression2);
 
     static Predicate get_predicate_by_name(Expression expression, string predicate_name);
 
-    // removes the predicate from the original expression
-    Predicate extract_predicate(Predicate original);
+    Predicate operator [](int i) const;
 };
+
 
 bool operator<(const Expression& lhs, const Expression& rhs);
 

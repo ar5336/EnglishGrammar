@@ -21,6 +21,7 @@
 // #include "predicate_handler.hpp"
 #include "mind.hpp"
 #include "test.hpp"
+#include "global.hpp"
 
 using namespace std;
 using namespace cv;
@@ -139,21 +140,22 @@ bool check_keypress(char cr)
 				if (interp_handler.try_construct_expression(expression))
 				{
 					// printf("expression string: \n\n%s\n", expression.stringify().c_str());
-					mind.tell(expression);
-					// predicate_handler.InferExpressions();
-					// if (predicate.speech_act == SpeechActs::QUESTION) {
-					// 	auto response = predicate_handler.DetermineResponse(predicate);
-					// 	if (response == ResponseType::YES) {
-					// 		displayer.response_string = "Yes";
-					// 	}
-					// 	if (response == ResponseType::NO) {
 
-					// 		displayer.response_string = "No";
-					// 	}
-					// } else {
-					// 	predicate_handler.tell(predicate);
-					// 	predicate_handler.InferPredicates();
-					// }
+					if (equals(base_frame.frame_name, "Sentence"))
+					{
+						mind.tell(expression);
+					}
+					if (equals(base_frame.frame_name, "Question"))
+					{
+						auto response = mind.ask(expression);
+						if (response == ResponseType::YES) {
+							displayer.response_string = "Yes";
+						}
+						if (response == ResponseType::NO) {
+
+							displayer.response_string = "No";
+						}
+					}
 				}
 				displayer.display();
 			}
@@ -188,6 +190,12 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	set<string> debug_alternatives = {"--debug", "-d"};
+	if (argc > 1 && (debug_alternatives.count((string)argv[1]) != 0))
+	{
+		DEBUGGING = true;
+	}
+
 	signal(11, handler);   // install our handler
 
 	// read the grammar
@@ -208,6 +216,8 @@ int main(int argc, char **argv)
 	displayer.init(&parser, &mind, &predicate_handler);
 	displayer.display();
     setMouseCallback(displayer.screen_name, mouse_callback_function, NULL);
+
+	mind.init(&predicate_handler);
 
 	parser.update_parse_grid(current_utterance);
 

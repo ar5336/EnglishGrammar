@@ -562,4 +562,52 @@ a predicate can have * components
         noun_class:"human"
     
 
-# todo - "all dogs can run"
+ [ ] ACTION implies CAN_DO
+
+ [ ] CONTAINS is transitive when the containee IS of object_count 3 (all)
+
+
+ACTION [actor|object] IS > CAN_DO action_type:ACTION.action_type actor:IS.object
+CONTAINS [containee|object] IS(A) & A.object_count > anything attached to CONTAINS container applies to containee
+
+can't rule it up :(   yet >:)
+
+need to determine how to properly index an expression for identifying connections
+
+first create a
+map<string, tupe<index, string>> var_to_index_n_arg
+
+
+so I need a rundown on the big picture.
+
+how am i gonna run inferences.
+have expression indeces.
+
+first, for every expression, identify the Noun -> Noun relationship
+the quick brown fox jumped over the lazy dog
+
+turn predicate->predicate thru variable graph into a 
+
+noun to noun thru predicate graph
+
+FOX -> HAS_PROPERTY brown
+FOX -> HAS_PROPERTY quick
+
+FOX -> 
+
+we are interested in the IS predicates
+and the predicates that are connected to them
+
+assuming there's no islands. But why not. There can always be them in a sentence if its weird
+
+ok we can later verify that all the predicates are connected.
+
+not the rules are such that 
+
+yeah so all you just need is a predicate to predicate by arguments map, and then take it out into mind.cpp, then apply the rules
+
+
+so you go through each incoming expression, and update the noun-noun-inheritance graph
+and also the can-do graph along with it
+
+but mvp is inheritance

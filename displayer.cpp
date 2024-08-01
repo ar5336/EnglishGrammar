@@ -48,7 +48,8 @@ Displayer::Displayer(string screen_name)
         SYNTAX_FRAME = CV_RGB(70, 89, 69);
 
         PREDICATE_FONT_SCALE = 0.6f;
-        PREDICATE_TYPE = CV_RGB(156, 96, 8);
+        PREDICATE_TYPE_GIVEN = CV_RGB(166, 42, 8);
+        PREDICATE_TYPE_INFERRED = CV_RGB(156, 96, 8);
         PREDICATE_PARAMETER = CV_RGB(66, 66, 66);
         PREDICATE_ARGUMENT = CV_RGB(125, 6, 40);
         PREDICATE_COLON = CV_RGB(117, 116, 116);
@@ -70,6 +71,33 @@ void Displayer::init(
     parser = parser_ptr;
     mind = mind_ptr;
     predicate_handler = predicate_handler_ptr;
+}
+
+void Displayer::display_predicate(Point *pos, bool is_given, Predicate predicate)
+{
+    auto pred_color = is_given ? PREDICATE_TYPE_GIVEN : PREDICATE_TYPE_INFERRED;
+
+    string predicate_name = predicate.predicate_template.predicate;
+    // first display the predicate name
+    staple_text_on(pos, predicate_name + " ", pred_color, PREDICATE_FONT_SCALE);
+
+    vector<string> param_names = predicate.predicate_template.parameter_names;
+    vector<string> pred_args = predicate.arguments;
+    for (int i = 0; i < param_names.size(); i++)
+    {
+        string param_name = param_names[i];
+        string pred_arg = pred_args[i];
+
+        staple_text_on(pos, param_name, PREDICATE_PARAMETER, PREDICATE_FONT_SCALE);
+        staple_text_on(pos, ":", PREDICATE_COLON, PREDICATE_FONT_SCALE);
+        if (equals(pred_arg, "unknown"))
+        {
+            staple_text_on(pos, pred_arg + " ", PREDICATE_SPECIAL_ARGUMENT, PREDICATE_FONT_SCALE);
+        } else {
+            staple_text_on(pos, pred_arg + " ", PREDICATE_ARGUMENT, PREDICATE_FONT_SCALE);
+        }
+
+    }
 }
 
 void Displayer::display()
@@ -219,7 +247,7 @@ void Displayer::display()
     if (mind->expressions.size() > 0) {
         for (auto expression_of_type : mind->expressions) {
             auto expression = expression_of_type.second;
-            // auto expr_type = expression_of_type.first;
+            auto expr_type = expression_of_type.first;
             // if (expr_type == KnowledgeType::GIVEN) {
             vector<string> result_predicates = split_character(predicate_handler->stringify_expression(expression), "\n");
             
@@ -227,27 +255,8 @@ void Displayer::display()
             {
                 auto predicate_ticker_corner = expression_ticker_corner;
 
-                string predicate_name = predicate.predicate_template.predicate;
-                // first display the predicate name
-                staple_text_on(&predicate_ticker_corner, predicate_name + " ", PREDICATE_TYPE, PREDICATE_FONT_SCALE);
-
-                vector<string> param_names = predicate.predicate_template.parameter_names;
-                vector<string> pred_args = predicate.arguments;
-                for (int i = 0; i < param_names.size(); i++)
-                {
-                    string param_name = param_names[i];
-                    string pred_arg = pred_args[i];
-
-                    staple_text_on(&predicate_ticker_corner, param_name, PREDICATE_PARAMETER, PREDICATE_FONT_SCALE);
-                    staple_text_on(&predicate_ticker_corner, ":", PREDICATE_COLON, PREDICATE_FONT_SCALE);
-                    if (equals(pred_arg, "unknown"))
-                    {
-                        staple_text_on(&predicate_ticker_corner, pred_arg + " ", PREDICATE_SPECIAL_ARGUMENT, PREDICATE_FONT_SCALE);
-                    } else {
-                        staple_text_on(&predicate_ticker_corner, pred_arg + " ", PREDICATE_ARGUMENT, PREDICATE_FONT_SCALE);
-                    }
-
-                }
+                if (expr_type == KnowledgeType::GIVEN)
+                    display_predicate(&predicate_ticker_corner, true, predicate);
 
                 // display_text(expression_ticker_corner, result_predicate, PREDICATE_TYPE, 0.6f);
                 expression_ticker_corner += new_line;

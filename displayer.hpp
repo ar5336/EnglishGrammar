@@ -35,7 +35,8 @@ private:
     Scalar SYNTAX_FRAME; // muted olive
 
     float PREDICATE_FONT_SCALE;
-    Scalar PREDICATE_TYPE; // golden orange
+    Scalar PREDICATE_TYPE_GIVEN; // blood orange
+    Scalar PREDICATE_TYPE_INFERRED; // golden orange
     Scalar PREDICATE_PARAMETER; // middling grey
     Scalar PREDICATE_ARGUMENT; // fuscia-red
     Scalar PREDICATE_COLON; // a light grey
@@ -52,6 +53,8 @@ private:
     void staple_text_on(Point *pos, string text, Scalar color, float font_scale);
 
     Size measure_text(string text, float font_scale);
+
+    void display_predicate(Point *pos, bool is_given, Predicate predicate);
 
 public:
     string screen_name;
