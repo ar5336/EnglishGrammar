@@ -343,7 +343,7 @@ Expression Parser::apply_formation_rules_on_expression(PredicateFormationRules f
     return Expression::combine_expressions(combined_expression, Expression(created_predicates));
 }
 
-bool try_get_predicate(Frame left_frame, Frame right_frame, PatternElementPredicateAccessor accessor, Predicate& result_predicate)
+bool Parser::try_get_predicate(Frame left_frame, Frame right_frame, PatternElementPredicateAccessor accessor, Predicate& result_predicate)
 {
     string frame_name = accessor.syntax_frame_name;
 
@@ -358,25 +358,41 @@ bool try_get_predicate(Frame left_frame, Frame right_frame, PatternElementPredic
     }
     else 
     {
-        throw runtime_error("neither frame '"+left_frame.frame_name+"' nor frame '"+right_frame.frame_name+"' match accessor frame '"+frame_name+"'");
+        // throw runtime_error("neither frame '"+left_frame.frame_name+"' nor frame '"+right_frame.frame_name+"' match accessor frame '"+frame_name+"'");
+        return false;
     }
 
     string predicate_name = accessor.predicate_name;
 
-    result_predicate = Expression::get_predicate_by_name(identified_frame.accumulated_expression, predicate_name);
-    return true;
+    Predicate result_pred = Predicate();
+    if (Expression::try_get_predicate_by_name(identified_frame.accumulated_expression, predicate_name, result_pred))
+    {
+        result_predicate = result_pred;
+        return true;
+    }
+
+    if (DEBUGGING)
+        printf("failed to find match for accessor %s->%s.%s in expression : %s\n", 
+        accessor.syntax_frame_name.c_str(), accessor.predicate_name.c_str(), accessor.parameter_name.c_str(),
+        predicate_handler->stringify_expression(identified_frame.accumulated_expression).c_str());
+    return false;
 }
 
 string Parser::get_argument_accessor(Frame left_frame, Frame right_frame, PatternElementPredicateAccessor accessor)
 {
-    Predicate original_predicate;
+    Predicate original_predicate = Predicate();
     if (!try_get_predicate(left_frame, right_frame, accessor, original_predicate))
     {
-        throw runtime_error("failed to access argument");
+        // throw runtime_error("failed to fetch predicate for accessor '"+accessor.syntax_frame_name+"->"+accessor.predicate_name+"'");
+        return "unknown";
     }
 
     string accessor_paramter_name = accessor.parameter_name;
 
+    if (DEBUGGING)
+    {
+        printf("accessing parameter '%s' in predicate '%s'\n", accessor_paramter_name.c_str(), original_predicate.predicate_template.predicate.c_str());
+    }
     string argument = original_predicate.get_argument(accessor_paramter_name);
 
     return argument;

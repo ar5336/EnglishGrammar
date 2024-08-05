@@ -52,7 +52,7 @@ public:
 
     static Expression combine_expressions(Expression expression1, Expression expression2);
 
-    static Predicate get_predicate_by_name(Expression expression, string predicate_name);
+    static bool try_get_predicate_by_name(Expression expression, string predicate_name, Predicate& result_predicate);
 
     Predicate operator [](int i) const;
 };

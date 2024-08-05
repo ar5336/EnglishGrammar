@@ -62,6 +62,8 @@ private:
         PatternElementPredicateAccessor argument_accessor,
         string operand_variable);
 
+    bool try_get_predicate(Frame left_frame, Frame right_frame, PatternElementPredicateAccessor accessor, Predicate& result_predicate);
+
 public:
     // rows of columns of lists of frames
     //  r3  X

@@ -22,7 +22,7 @@
 using namespace std;
 using namespace cv;
 
-string current_utterance = "dogs are mammals";
+string current_utterance = "the ugly dog jumps over the hors";
 
 Parser parser;
 
@@ -139,16 +139,19 @@ bool check_keypress(char cr)
 				{
 					// printf("expression string: \n\n%s\n", expression.stringify().c_str());
 
-					if (equals(base_frame.frame_name, "Sentence"))
-					{
-						mind.tell(expression);
-					}
+					// if (equals(base_frame.frame_name, "Sentence"))
+					// {
+					// }
 					if (equals(base_frame.frame_name, "Question"))
 					{
 						auto response = mind.ask(expression);
 
 						displayer.response_string = response;
+					} else {
+						mind.tell(expression);
 					}
+				} else {
+					printf("failed to construct expression\n");
 				}
 				displayer.display();
 			}

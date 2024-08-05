@@ -82,9 +82,6 @@ Expression::Expression(vector<Predicate> predicates) : predicates(predicates) {
         {
             string noun = predicate.get_argument("noun_class");
             noun_set.insert(noun);
-
-            if (DEBUGGING)
-                printf("inserting argument '%s' as noun\n", noun.c_str());
         }
     }
     make_connections();
@@ -94,16 +91,6 @@ vector<Predicate> Expression::get_predicates()
 {
     return predicates;
 }
-
-// vector<Predicate> Expression::add_predicate(Predicate predicate)
-// {
-//     predicates.push_back(predicate);
-//     for (int i = 0; i < 0; i < predicates.size(); i++)
-//     {
-//         for (int i = 0; )
-//         make_connection()
-//     }
-// }
 
 void Expression::make_connections()
 {
@@ -176,20 +163,6 @@ void Expression::make_connections()
 
 void Expression::add_connection(int prid_1, string arg_1, int prid_2, string arg_2)
 {
-    // string var_1 = predicates[prid_1].get_argument(arg_1);
-    // string var_2 = predicates[prid_2].get_argument(arg_2);
-
-    // if (!equals(var_1, var_2))
-    //     throw runtime_error("predicate ids '"+to_string(prid_1)+"' and '"+to_string(prid_2)+"' are bad");
-
-    // if (prid_to_prid_by_arg.count(prid_1) == 0)
-    // {
-    //     prid_to_prid_by_arg.emplace(prid_1, tuple<int, string, string>(prid_2, arg_1, arg_2));
-    // }
-    // else {
-    //     printf("failed to add connection");
-    // }
-
     if (prid_to_prid_by_arg.count(prid_1) == 0)
     {
         // must create new connection + map
@@ -202,7 +175,16 @@ void Expression::add_connection(int prid_1, string arg_1, int prid_2, string arg
         auto to_map = prid_to_prid_by_arg.at(prid_1);
 
         if (to_map.count(prid_2) != 0)
-            throw runtime_error("connection between these predicates already exists");
+        {
+            if (DEBUGGING)
+            {
+                printf("connection between predicate '%s' and predicate '%s' already exists\n",
+                    predicates[prid_1].predicate_template.predicate.c_str(),
+                    predicates[prid_2].predicate_template.predicate.c_str());
+            }
+
+            return;
+        }
 
         to_map.emplace(prid_2, make_tuple(arg_1, arg_2));
 
@@ -280,14 +262,17 @@ Expression Expression::combine_expressions(Expression expression1, Expression ex
     return Expression(total_predicates);
 }
 
-Predicate Expression::get_predicate_by_name(Expression expression, string predicate_name)
+bool Expression::try_get_predicate_by_name(Expression expression, string predicate_name, Predicate &result_predicate)
 {
     for (Predicate pred : expression.predicates)
     {
-        if (pred.predicate_template.predicate == predicate_name)
-            return pred;
+        if (equals(pred.predicate_template.predicate, predicate_name))
+        {
+            result_predicate = pred;
+            return true;
+        }
     }
-    return Predicate();
+    return false;
 }
 
 Predicate Expression::extract_predicate(Predicate original)

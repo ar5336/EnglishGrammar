@@ -233,8 +233,6 @@ Words:
             their -3rdPerson -plural -neuter -possessive
             his -3rdPerson -singular -masculine -possessive
             hers -3rdPerson -singular -masculine -possessive
-        over
-        under
     Adverb:
         Descriptive:
             quickly
@@ -245,6 +243,7 @@ Words:
             bit
         often
         over
+        under
         not
     Determiner:
         Article:
@@ -400,7 +399,7 @@ Frames:
 
         Noun[plural] ModalPhrase[MODE] -MODE <IS object:! object_count:"3" noun_class:Noun | ModalPhrase->CAN_DO.actor=!>
             # dogs can run, !dog can run
-        NounPhrase ModalPhrase[MODE] -MODE <ModalPhrase->CAN_DO.actor=!>
+        NounPhrase ModalPhrase[MODE] -MODE <ModalPhrase->CAN_DO.actor=NounPhrase->IS.object>
             # a dog can run
 
         PreIndicativePhrase Noun[Pronoun,possessive]

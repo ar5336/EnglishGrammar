@@ -47,7 +47,7 @@ PredicateCreator::PredicateCreator(PredicateHandler *handler, vector<string> cre
 
     PredicateTemplate predicate_template;
     if (!handler->try_get_predicate_template(predicate_name, &predicate_template))
-        throw runtime_error("could not find predicate template for name");
+        throw runtime_error("could not find predicate template for name '"+predicate_name+"'");
     
     int template_size = predicate_template.parameter_names.size(); 
     int token_size = parameter_tokens.size(); 
