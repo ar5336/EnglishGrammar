@@ -12,13 +12,9 @@
 #include <unistd.h>
 
 #include "grammar_reader.hpp"
-// #include "frames.hpp"
 #include "grammar.hpp"
-// #include "string_operators.hpp"
-// #include "parser.hpp"
 #include "displayer.hpp"
 #include "interpretation.hpp"
-// #include "predicate_handler.hpp"
 #include "mind.hpp"
 #include "test.hpp"
 #include "global.hpp"
@@ -26,7 +22,7 @@
 using namespace std;
 using namespace cv;
 
-string current_utterance = "dogs can run";
+string current_utterance = "dogs are mammals";
 
 Parser parser;
 
@@ -38,7 +34,9 @@ PredicateTemplateHandler predicate_template_handler = PredicateTemplateHandler()
 
 PredicateHandler predicate_handler = PredicateHandler(&predicate_template_handler);
 
-Mind mind = Mind();
+ConceptualSchema conceptual_schema = ConceptualSchema();
+
+Mind mind = Mind(&predicate_handler, &conceptual_schema);
 
 bool is_shift_pressed = false;
 
@@ -148,13 +146,8 @@ bool check_keypress(char cr)
 					if (equals(base_frame.frame_name, "Question"))
 					{
 						auto response = mind.ask(expression);
-						if (response == ResponseType::YES) {
-							displayer.response_string = "Yes";
-						}
-						if (response == ResponseType::NO) {
 
-							displayer.response_string = "No";
-						}
+						displayer.response_string = response;
 					}
 				}
 				displayer.display();
@@ -216,8 +209,6 @@ int main(int argc, char **argv)
 	displayer.init(&parser, &mind, &predicate_handler);
 	displayer.display();
     setMouseCallback(displayer.screen_name, mouse_callback_function, NULL);
-
-	mind.init(&predicate_handler);
 
 	parser.update_parse_grid(current_utterance);
 

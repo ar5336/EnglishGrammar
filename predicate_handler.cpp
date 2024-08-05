@@ -80,7 +80,11 @@ Expression::Expression(vector<Predicate> predicates) : predicates(predicates) {
     {
         if (predicate.has_argument("noun_class"))
         {
-            noun_set.emplace(predicate.get_argument("noun_class"));
+            string noun = predicate.get_argument("noun_class");
+            noun_set.insert(noun);
+
+            if (DEBUGGING)
+                printf("inserting argument '%s' as noun\n", noun.c_str());
         }
     }
     make_connections();

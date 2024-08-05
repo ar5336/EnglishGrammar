@@ -423,6 +423,8 @@ Frames:
             # can a fish live in the house
         InterrogativeClause[MODE] Verb[MainVerb,simple] -MODE <CAN_DO action_type:Verb actor:InterrogativeClause->IS.object | ACTION action:! actor:InterrogativeClause->IS.object action_type:Verb>
             # can a fish run
+        InterrogativeClause[categorical] Noun[plural] <CONTAINS container:! containee:InterrogativeClause->IS.object | IS object:! object_count:"3" noun_class:Noun>
+            # are dogs animals
     InterrogativeClause "IntC"
         Verb[ModalVerb,MODE] Noun[Pronoun,NUMBER] -NUMBER -MODE -habilitive 
             # can you, can i
@@ -434,6 +436,9 @@ Frames:
         Verb[LinkingVerb,PERSON,NUMBER] Noun[Pronoun,PERSON,NUMBER,!possessive,!subjective] -PERSON -NUMBER -existential
             # am i
             # are we
+
+        Verb[LinkingVerb,3rdPerson,plural] Noun[plural] -plural -categorical <IS object:! object_count:"3" noun_class:Noun>
+            # are dogs
 
         Verb[LinkingVerb,NUMBER,PERSON] Noun[Pronoun,NUMBER,PERSON] -PERSON -NUMBER -existential
             # have you

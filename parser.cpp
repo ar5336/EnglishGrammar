@@ -358,8 +358,7 @@ bool try_get_predicate(Frame left_frame, Frame right_frame, PatternElementPredic
     }
     else 
     {
-        printf("disaster: neither of the identified frames could be matched to\n");
-        return false;
+        throw runtime_error("neither frame '"+left_frame.frame_name+"' nor frame '"+right_frame.frame_name+"' match accessor frame '"+frame_name+"'");
     }
 
     string predicate_name = accessor.predicate_name;

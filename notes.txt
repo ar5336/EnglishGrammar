@@ -611,3 +611,22 @@ so you go through each incoming expression, and update the noun-noun-inheritance
 and also the can-do graph along with it
 
 but mvp is inheritance
+
+update noun inheritance graph based on the basis of the IS -> CONTAINS -> IS connection
+
+
+===========================
+
+ok so a relationshional dataset is not feasable to store as predicate logic.
+Instead it should be stored as a connection graph, and resolved into such.
+
+So it goes
+Frames > Predicates > Connections/Conditions
+(ouh conditions will be so sick to implement)
+
+but for now it will be like
+
+General:
+    dog IS mammal
+
+mind should have a predicate_to_relation transform of some sort, to check "are dogs mammals
