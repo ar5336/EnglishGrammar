@@ -39,14 +39,13 @@ private:
     Scalar PREDICATE_TYPE_INFERRED; // golden orange
     Scalar PREDICATE_PARAMETER; // middling grey
     Scalar PREDICATE_ARGUMENT; // fuscia-red
-    Scalar PREDICATE_COLON; // a light grey
-    Scalar PREDICATE_SPECIAL_ARGUMENT; // a navy blue
+    Scalar PREDICATE_COLON; // light grey
+    Scalar PREDICATE_SPECIAL_ARGUMENT; // navy blue
 
     Parser *parser;
-
     Mind *mind;
-
     PredicateHandler *predicate_handler;
+    ConceptualSchema *conceptual_schema;
 
     void display_text(Point pos, string text, Scalar color, float font_scale);
 
@@ -56,6 +55,8 @@ private:
 
     void display_predicate(Point *pos, bool is_given, Predicate predicate);
 
+    map<string, Point> noun_to_pos;
+
 public:
     string screen_name;
     int scroll;
@@ -64,7 +65,11 @@ public:
 
     Displayer(string screen_name);
 
-    void init(Parser *parser_ptr, Mind* mind_ptr, PredicateHandler* predicate_template_handler_ptr);
+    void init(
+        Parser *parser_ptr,
+        Mind* mind_ptr,
+        PredicateHandler* predicate_template_handler_ptr,
+        ConceptualSchema *conceptual_schema_ptr);
 
     void display();
 

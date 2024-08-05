@@ -61,16 +61,16 @@ Displayer::Displayer(string screen_name)
 void Displayer::init(
     Parser *parser_ptr,
     Mind* mind_ptr,
-    PredicateHandler* predicate_handler_ptr) {
+    PredicateHandler* predicate_handler_ptr,
+    ConceptualSchema* conceptual_schema_ptr) {
     // set the callback function for any mouse event
-
-    
 
     resizeWindow(screen_name, IMAGE_SIZE);
     
     parser = parser_ptr;
     mind = mind_ptr;
     predicate_handler = predicate_handler_ptr;
+    conceptual_schema = conceptual_schema_ptr;
 }
 
 void Displayer::display_predicate(Point *pos, bool is_given, Predicate predicate)
@@ -272,9 +272,40 @@ void Displayer::display()
 
     // display the response string
     // Point response_corner = Point(image.cols * 8 / 10, image.rows / 8);
-    Point response_corner = Point(30, 30);
+    Point response_corner = Point(30, image.rows - 30);
     if (response_string.size() != 0) {
         display_text(response_corner, response_string, CV_RGB(255, 30, 200), 1.2f);
+    }
+
+    // display the conceptual schema
+    // TODO - refactor this out into a ConceptualSchemaDisplayer
+    auto conceptual_nouns = conceptual_schema->noun_set;
+
+    Point conschem_corner = Point(30, 30);
+    Point conschem_other_corner = conschem_corner + Point(100, 60);
+
+    Scalar CHERRY_RED = CV_RGB(225, 25, 15);
+
+    Point conschem_ticker = conschem_corner;
+    for (string conceptual_noun : conceptual_nouns)
+    {
+        noun_to_pos.emplace(conceptual_noun, conschem_ticker);
+        staple_text_on(&conschem_ticker, conceptual_noun, CHERRY_RED, 0.5f);
+        conschem_ticker += Point(10, 0);
+    }
+
+    for (auto connection_pair : conceptual_schema->child_to_parents_map)
+    {
+        string child = connection_pair.first;
+        set<string> parents = connection_pair.second;
+
+        for (string parent : parents)
+        {
+            auto child_pos = noun_to_pos.at(child);
+            auto parent_pos = noun_to_pos.at(parent);
+
+            line(image, child_pos, parent_pos, CHERRY_RED, LineTypes::LINE_4);
+        }
     }
 
     cv::imshow(screen_name, image);

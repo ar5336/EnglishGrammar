@@ -226,6 +226,7 @@ Words:
                 dark darker darkest
                 mad madder maddest
                 squeaky squeakier squeakiest
+                small smaller smallest
         PossessiveAdjective:
             my -1stPerson -singular -possessive
             our -1stPerson -plural -possessive

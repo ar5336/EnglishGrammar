@@ -22,7 +22,7 @@
 using namespace std;
 using namespace cv;
 
-string current_utterance = "the ugly dog jumps over the hors";
+string current_utterance = "horses are animals";
 
 Parser parser;
 
@@ -209,7 +209,7 @@ int main(int argc, char **argv)
 
 	predicate_handler.init_stringification();
 
-	displayer.init(&parser, &mind, &predicate_handler);
+	displayer.init(&parser, &mind, &predicate_handler, &conceptual_schema);
 	displayer.display();
     setMouseCallback(displayer.screen_name, mouse_callback_function, NULL);
 
