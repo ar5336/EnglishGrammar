@@ -15,6 +15,38 @@
 using namespace std;
 using namespace cv;
 
+Size measure_text(string text, float font_scale);
+
+// class SchemaDisplayer
+// {
+// private:
+//     Mat image;
+    
+//     ConceptualSchema *schema;
+
+//     map<string, Point2f> noun_to_pos;
+//     map<string, Size> noun_to_size;
+//     vector<string> nouns;
+
+//     float FONT_SCALE;
+//     float PUSH_FACTOR;
+
+//     Scalar CHERRY_RED;
+
+//     bool is_connection_present(string noun_1, string noun_2);
+
+//     void display_nouns();
+
+//     void display_inheritances();
+
+// public:
+//     SchemaDisplayer();
+//     SchemaDisplayer(ConceptualSchema *schema);
+
+//     void drift_positions();
+
+//     void display();
+// };
 
 class Displayer
 {
@@ -47,16 +79,15 @@ private:
     PredicateHandler *predicate_handler;
     ConceptualSchema *conceptual_schema;
 
+    // SchemaDisplayer schema_displayer;
+
+    bool IS_INITIATED;
+
     void display_text(Point pos, string text, Scalar color, float font_scale);
 
     void staple_text_on(Point *pos, string text, Scalar color, float font_scale);
 
-    Size measure_text(string text, float font_scale);
-
     void display_predicate(Point *pos, bool is_given, Predicate predicate);
-
-    map<string, Point> noun_to_pos;
-
 public:
     string screen_name;
     int scroll;
@@ -72,6 +103,8 @@ public:
         ConceptualSchema *conceptual_schema_ptr);
 
     void display();
+
+    // void drift();
 
     bool is_in_bounds(Point point, pair<Point, Point> bounds);
 

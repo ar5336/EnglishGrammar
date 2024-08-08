@@ -22,7 +22,7 @@
 using namespace std;
 using namespace cv;
 
-string current_utterance = "horses are animals";
+string current_utterance = "dogs are mammals";
 
 Parser parser;
 
@@ -220,6 +220,7 @@ int main(int argc, char **argv)
 	while (1)
 	{
 		displayer.display();
+		// displayer.drift();
 		if (check_keypress((char)waitKey(0)))
 		{
 			break;

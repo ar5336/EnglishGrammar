@@ -1,5 +1,200 @@
 #include "displayer.hpp"
 
+Size measure_text(string text, float font_scale = 1.0)
+{
+    int was_found;
+    return getTextSize(text,
+                    cv::FONT_HERSHEY_TRIPLEX,
+                    font_scale,
+                    2,
+                    &was_found);
+}
+
+// void SchemaDisplayer::display_nouns()
+// {
+//     vector<string> new_nouns = vector<string>();
+
+//     for (auto noun_and_pos : noun_to_pos)
+//     {
+//         string noun = noun_and_pos.first;
+//         new_nouns.push_back(noun);
+//         Point pos = noun_and_pos.second;
+//         Size size = noun_to_size.at(noun);
+
+//         // display a black box behind the noun, the size of the noun
+//         // auto text_size = Point(measure_text(noun, FONT_SCALE));
+
+//         Point half_size = Point(size.width/2, size.height/2);
+//         Point top_left = pos - half_size;
+//         Point top_right = pos + half_size;
+
+//         rectangle(image, Rect(top_left, top_right), CV_RGB(0,0,0), -1);
+
+//         Point bottom_left = top_left + Point(0, size.height);
+
+//         // then draw the noun
+//         printf("displaying noun %s\n", noun.c_str());
+//         putText(image,
+//                 noun, // text
+//                 bottom_left,
+//                 cv::FONT_HERSHEY_TRIPLEX,
+//                 FONT_SCALE,
+//                 CHERRY_RED, // font color
+//                 1);
+//     }
+    
+//     nouns = new_nouns;
+// }
+
+// bool SchemaDisplayer::is_connection_present(string noun_1, string noun_2)
+// {
+//     auto connection_map = schema->child_to_parents_map;
+//     if (connection_map.count(noun_1) != 0 &&
+//         connection_map.at(noun_1).count(noun_2) != 0)
+//         return true;
+//     return false;
+// }
+
+
+// void SchemaDisplayer::drift_positions()
+// {
+//     map<string, Point2f> displacement_map = map<string, Point2f>();
+//     for (string noun : nouns)
+//     {
+//         displacement_map.emplace(noun, Point(0, 0));
+//     }
+
+//     // for each noun
+//     for (int i = 0; i < int(nouns.size())-1; i++)
+//     {
+//         // for every other noun
+//         for (int j = i + 1; j < int(nouns.size()); j++)
+//         {
+//             // printf("hello\n");
+
+//             if (i == j)
+//                 throw runtime_error("i and j should not equal");
+            
+//             string noun_1 = nouns[i];
+//             string noun_2 = nouns[j];
+            
+//             Point2f pos_1 = noun_to_pos.at(noun_1);
+//             Point2f pos_2 = noun_to_pos.at(noun_2);
+
+//             double dist = sqrt(pow(pos_1.x - pos_2.x, 2) + pow(pos_2.y - pos_2.y, 2));
+
+//             Point2f displacement_1 = Point(0,0);
+//             Point2f displacement_2 = Point(0,0);
+
+//             Point2f from_1_to_2 = pos_2 - pos_1;
+//             Point2f from_2_to_1 = pos_1 - pos_2;
+//             // if they're too close (<30 units), push apart
+
+//             if (dist < 50.0f)
+//             {
+//                 displacement_1 += from_2_to_1 * PUSH_FACTOR;
+//                 displacement_2 += from_1_to_2 * PUSH_FACTOR;
+//                 printf("displacement1 x:%f y:%f\n", displacement_1.x, displacement_1.y);
+//             }
+
+//             // if they're connected, and >50 units apart, push together
+
+//             if (is_connection_present(noun_1, noun_2) ||
+//                 is_connection_present(noun_2, noun_1))
+//             {
+//                 if (dist > 100.0f)
+//                 {
+//                     displacement_1 += from_1_to_2 * PUSH_FACTOR;
+//                     displacement_2 += from_2_to_1 * PUSH_FACTOR;
+//                 }
+//             }
+
+//             displacement_map.at(noun_1) += displacement_1;
+
+
+//             displacement_map.at(noun_2) += displacement_2;
+//         }
+//     }
+
+//     // apply displacements
+//     for (string noun : nouns)
+//     {
+//         if (displacement_map.count(noun) != 0)
+//             noun_to_pos.at(noun) += displacement_map.at(noun);
+//     }
+// }
+
+// void SchemaDisplayer::display_inheritances()
+// {
+//     for (auto connection_pair : schema->child_to_parents_map)
+//     {
+//         string child = connection_pair.first;
+//         set<string> parents = connection_pair.second;
+
+//         for (string parent : parents)
+//         {
+//             auto child_pos = noun_to_pos.at(child);
+//             auto parent_pos = noun_to_pos.at(parent);
+//             line(image, child_pos, parent_pos, CHERRY_RED, LineTypes::LINE_4);
+//         }
+//     }
+// }
+
+// void SchemaDisplayer::display()
+// {
+//     // first, make sure to add any new nouns
+//     image.setTo(Scalar(0, 0, 0));
+//     int noun_count = 0;
+//     for (string noun : schema->noun_set)
+//     {
+//         if (noun_to_pos.count(noun) == 0)
+//         {
+//             noun_to_pos.emplace(noun, Point(60 + noun_count * 4, 60 + noun_count * 4));
+//             noun_to_size.emplace(noun, measure_text(noun, FONT_SCALE));
+//             noun_count++;
+//         }
+//         nouns.push_back(noun);
+//     }
+
+//     display_inheritances();
+//     drift_positions();
+//     display_nouns();
+
+//     // overlay the image over the original image
+
+//     // Point display_position = Point(30, 30);
+//     // // overlay the schema image on the original image at display_position
+
+
+//     // Point other_point = Point(image.size().width, image.size().height) + display_position;
+//     // Rect ROI = Rect(display_position, other_point);
+
+//     // Mat cloned_image = original_image.clone();
+
+//     imshow("schema", image);
+
+//     // auto RegionOfInterest = Mat(original_image, ROI);
+//     // printf("image size width:%d, height:%d\n", image.size().width, image.size().height);
+
+//     // printf("RegionOfInterest width:%d, height:%d\n", RegionOfInterest.size().width, RegionOfInterest.size().height);
+
+//     // image.copyTo(Mat(cloned_image, ROI));
+//     // // resize(RegionOfInterest, RegionOfInterest, original_image.size());
+//     // // RegionOfInterest.copyTo(original_image);
+//     // return cloned_image;
+// }
+
+// SchemaDisplayer::SchemaDisplayer(ConceptualSchema *schema) : schema(schema)
+// {
+//     image = Mat(Point(800, 500), CV_8UC3, cv::Scalar(0));
+//     PUSH_FACTOR = 0.1f;
+//     CHERRY_RED = CV_RGB(200, 25, 25);
+//     FONT_SCALE = 0.5f;
+// }
+
+// SchemaDisplayer::SchemaDisplayer(){}
+
+
 bool Displayer::is_in_bounds(Point point, pair<Point, Point> bounds)
 {
     Point top_left = bounds.first;
@@ -17,16 +212,6 @@ void Displayer::display_text(Point pos, string text, Scalar color, float font_sc
             font_scale,
             color, // font color
             1);
-}
-
-Size Displayer::measure_text(string text, float font_scale = 1.0)
-{
-    int was_found;
-    return getTextSize(text,
-                    cv::FONT_HERSHEY_TRIPLEX,
-                    font_scale,
-                    2,
-                    &was_found);
 }
 
 Displayer::Displayer(string screen_name)
@@ -55,6 +240,8 @@ Displayer::Displayer(string screen_name)
         PREDICATE_COLON = CV_RGB(117, 116, 116);
         PREDICATE_SPECIAL_ARGUMENT = CV_RGB(24, 34, 84);
 
+        IS_INITIATED = false;
+
         scroll = 0;
     };
 
@@ -71,6 +258,9 @@ void Displayer::init(
     mind = mind_ptr;
     predicate_handler = predicate_handler_ptr;
     conceptual_schema = conceptual_schema_ptr;
+
+    // schema_displayer = SchemaDisplayer(conceptual_schema_ptr);
+    IS_INITIATED = true;
 }
 
 void Displayer::display_predicate(Point *pos, bool is_given, Predicate predicate)
@@ -286,30 +476,26 @@ void Displayer::display()
 
     Scalar CHERRY_RED = CV_RGB(225, 25, 15);
 
-    Point conschem_ticker = conschem_corner;
-    for (string conceptual_noun : conceptual_nouns)
+    // for (string conceptual_noun : conceptual_nouns)
+    // {
+    //     noun_to_pos.emplace(conceptual_noun, conschem_ticker);
+    //     staple_text_on(&conschem_ticker, conceptual_noun, CHERRY_RED, 0.5f);
+    //     conschem_ticker += Point(10, 0);
+    // }
+
+
+    if (IS_INITIATED)
     {
-        noun_to_pos.emplace(conceptual_noun, conschem_ticker);
-        staple_text_on(&conschem_ticker, conceptual_noun, CHERRY_RED, 0.5f);
-        conschem_ticker += Point(10, 0);
-    }
-
-    for (auto connection_pair : conceptual_schema->child_to_parents_map)
-    {
-        string child = connection_pair.first;
-        set<string> parents = connection_pair.second;
-
-        for (string parent : parents)
-        {
-            auto child_pos = noun_to_pos.at(child);
-            auto parent_pos = noun_to_pos.at(parent);
-
-            line(image, child_pos, parent_pos, CHERRY_RED, LineTypes::LINE_4);
-        }
+        // schema_displayer.display();
     }
 
     cv::imshow(screen_name, image);
 }
+
+// void Displayer::drift()
+// {
+//     schema_displayer.drift_positions();
+// }
 
 void Displayer::staple_text_on(Point *pos, string text, Scalar color, float font_scale)
 {
