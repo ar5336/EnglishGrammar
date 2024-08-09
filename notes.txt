@@ -630,3 +630,14 @@ General:
     dog IS mammal
 
 mind should have a predicate_to_relation transform of some sort, to check "are dogs mammals
+
+
+conceptual schema
+cncptl schm
+cpl_sm
+conschem
+
+not just nouns have to be given conceptual grouping.
+
+but so shoudl adjectives and def verbs
+

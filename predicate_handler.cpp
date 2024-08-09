@@ -324,8 +324,12 @@ vector<pair<Predicate, Predicate>> Expression::get_connections(
             target_argument);
     
     bool has_connection = get<0>(has_connection_and_connection_ids);
-    if (!has_connection)
+    if (!has_connection){
         return vector<pair<Predicate, Predicate>>();
+        
+        if (DEBUGGING)
+            printf("no connections found\n");
+    }
     
     auto predicate_index_pairs = get<1>(has_connection_and_connection_ids);
 

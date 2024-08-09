@@ -239,37 +239,7 @@ void ConceptualSchema::update_conceptual_maps(Expression new_expression)
         printf("updating conceptual maps\n");
     
     apply_inheritance_rule(new_expression);
-    // apply_ability_rule(new_expression);
-
-
-    // for (auto pred_of_type : expressions)
-    // {
-    //     if (pred_of_type.first == KnowledgeType::INFERRED)
-    //         continue;
-        
-    //     auto pred = pred_of_type.second;
-
-    //     // is a given predicate
-    //     if (pred.type == PredicateType::IS_SUBSET_OF) {
-    //         inheritance_map.emplace(pred.arguments[0], pred.arguments[1]);
-    //     }
-
-    //     for (string arg : pred.arguments)
-    //     {
-    //         entity_set.emplace(arg);
-    //     }
-
-    //     // populate the first_arg_to_predicate_map
-    //     string first_arg = pred.arguments[0];
-
-    //     if (first_arg_to_predicate_map.count(first_arg) != 0)
-    //     {
-    //         first_arg_to_predicate_map.at(first_arg).push_back(pred);
-    //     } else {
-    //         vector<Predicate> preds = {pred};
-    //         first_arg_to_predicate_map.emplace(first_arg, preds);
-    //     }
-    // }
+    apply_ability_rule(new_expression);
 }
 
 // returns bool is_resolved and a string message
@@ -312,27 +282,52 @@ pair<bool, string> ConceptualSchema::try_resolve_expression(Expression expressio
     }
 
     // build the response string as you consider each of the indicated inheritances
-    for (auto inheritance : inheritances)
+    if (inheritances.size() != 0)
     {
-        string child = inheritance.first;
-        string parent = inheritance.second;
-
-        if (child_to_parents_map.count(child) == 0)
+        for (auto inheritance : inheritances)
         {
-            constructed_bool &= false;
-            constructed_response += ("no, "+child+" does not inherit from "+parent+".");
-            continue;
+            string child = inheritance.first;
+            string parent = inheritance.second;
+
+            if (child_to_parents_map.count(child) == 0)
+            {
+                constructed_bool &= false;
+                constructed_response += ("no, "+child+" does not inherit from "+parent+".");
+                continue;
+            }
+            set<string> potential_parent_matches = child_to_parents_map.at(child);
+
+            if (potential_parent_matches.find(parent) != potential_parent_matches.end())
+            {
+                constructed_response += ("yes, "+child+" inherits from "+parent+".");
+            } else {
+
+                constructed_response += ("no, "+child+" does not inherit from "+parent+".");
+            }
         }
-        set<string> potential_parent_matches = child_to_parents_map.at(child);
+        return make_pair(true, constructed_response);
+    }
+    
 
-        if (potential_parent_matches.find(parent) != potential_parent_matches.end())
+    vector<pair<string, string>> abilities = extract_abilities(expression);
+
+    if (abilities.size() > 0)
+    {
+        for (auto ability_pair : abilities)
         {
-            constructed_response += ("yes, "+child+" inherits from "+parent+".");
-        } else {
+            string noun = ability_pair.first;
+            string ability = ability_pair.second;
 
-            constructed_response += ("no, "+child+" does not inherit from "+parent+".");
+            // if (parent_to_children_map.count(noun) == 0)
+            printf("checking if %s can do  ability:'%s'", noun.c_str(), ability.c_str());
+
+            if (can_do(noun, ability))
+            {
+                return make_pair(true, "yes, "+noun+" can "+ability+".");
+            }
         }
     }
+ 
 
     printf("resolved response: %s\n", constructed_response.c_str());
     return make_pair(true, constructed_response);
@@ -404,33 +399,75 @@ void ConceptualSchema::consider_expression(Expression expression)
     // make_inferences(expression);
 }
 
-// void ConceptualSchema::apply_ability_rule(Expression expression)
-// {
-//     if (DEBUGGING)
-//         printf("applying ability rule\n");
+void ConceptualSchema::apply_ability_rule(Expression expression)
+{
+    if (DEBUGGING)
+        printf("applying ability rule\n");
 
-//     auto actor_ability_pairs = expression.get_connections(
-//         "IS", "object",
-//         "CAN_DO", "actor");
+    auto noun_ability_pairs = extract_abilities(expression);
 
-//     for (auto actor_ability_pair : actor_ability_pairs)
-//     {
-//         Predicate actor_predicate = actor_ability_pair.first;
-//         Predicate ability_predicate = actor_ability_pair.second;
+    if (DEBUGGING && noun_ability_pairs.size() > 0)
+        printf("%d abilities found in expression\n", (int)noun_ability_pairs.size());
 
-//         string actor_arg = actor_predicate.get_argument("noun_class");
-//         string ability_arg = ability_predicate.get_argument("action_type");
-//         if (ability_map.count(actor_arg) == 0)
-//         {
-//             ability_map.emplace(
-//                 actor_arg,
-//                 vector<string>{ability_arg});
-//         }
-//         else {
-//             ability_map.at(actor_arg).push_back(ability_arg);
-//         }
-//     }
-// }
+    for (auto noun_ability_pair : noun_ability_pairs)
+    {
+        string actor_arg = noun_ability_pair.first;
+        string ability_arg = noun_ability_pair.second;
+
+        if (ability_map.count(actor_arg) == 0)
+        {
+            add_ability(actor_arg, ability_arg);
+
+            update_abilities(actor_arg, ability_arg);
+        }
+        else {
+            set<string> current_abilities = ability_map.at(actor_arg);
+            if (current_abilities.count(ability_arg) == 0)
+            {
+                add_ability(actor_arg, ability_arg);
+                ability_map.at(actor_arg).emplace(ability_arg);
+                update_abilities(actor_arg, ability_arg);
+            }
+            // can already do ability
+        }
+
+    }
+
+}
+
+void ConceptualSchema::add_ability(string noun, string action)
+{
+    if (ability_map.count(noun) == 0)
+    {
+        ability_map.emplace(noun, set<string>{action});
+    } else {
+        ability_map.at(noun).emplace(action);
+    }
+}
+
+
+vector<pair<string, string>> ConceptualSchema::extract_abilities(Expression expression)
+{
+    auto actor_ability_pairs = expression.get_connections(
+        "IS", "object",
+        "CAN_DO", "actor");
+
+    vector<pair<string, string>> noun_ability_pairs;
+    for (auto actor_ability_pair : actor_ability_pairs)
+    {
+        Predicate actor_predicate = actor_ability_pair.first;
+        Predicate ability_predicate = actor_ability_pair.second;
+
+        string actor_arg = actor_predicate.get_argument("noun_class");
+        string ability_arg = ability_predicate.get_argument("action_type");
+
+        noun_ability_pairs.push_back(make_pair(actor_arg, ability_arg));
+
+    }
+
+    return noun_ability_pairs;
+}
+
 
 void ConceptualSchema::apply_inheritance_rule(Expression expression)
 {
@@ -488,6 +525,9 @@ void ConceptualSchema::update_inheritances(string child, string parent)
         printf("the maps as they are whilst updating:\n");
         print_maps();
     }
+
+    // TODO - put a update_abilities() call in some places here.
+    // for the case of | mammals are animals, animals can swim, dogs are mammals ==> dogs can swim
 
     // step 1) make sure all the parents of the parent are inherited to the child
     if (child_to_parents_map.count(parent) != 0)
@@ -551,6 +591,39 @@ void ConceptualSchema::update_inheritances(string child, string parent)
 
     
 
+}
+
+void ConceptualSchema::update_abilities(string noun, string ability, int recursion)
+{
+    int ABILITY_RECURSION_DEPTH = 4;
+
+    if (recursion > ABILITY_RECURSION_DEPTH)
+    {
+        printf("WARNING: recursion depth limit reached in update_abilities");
+        return;
+    }
+
+    if (parent_to_children_map.count(noun) == 0)
+    {
+        return;
+    }
+
+    set<string> children = parent_to_children_map.at(noun);
+    
+    for (string child : children)
+    {
+        if (!can_do(child, ability))
+        {
+            add_ability(child, ability);
+            update_abilities(child, ability, recursion + 1);
+        }
+    }
+}
+
+bool ConceptualSchema::can_do(string noun, string action)
+{
+    return (ability_map.count(noun) != 0) &&
+        (ability_map.at(noun).count(action) != 0);
 }
 
 // void ConceptualSchema::make_inferences(Expression new_expression){

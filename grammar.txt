@@ -432,6 +432,8 @@ Frames:
 
         Verb[ModalVerb,MODE] NounPhrase[NUMBER] -NUMBER -MODE -habilitive
             # can a fish
+        Verb[ModalVerb,MODE] NounPhrase[plural] -plural -MODE -habilitive
+            # can dogs
 
         Verb[LinkingVerb,PERSON,NUMBER] Noun[Pronoun,PERSON,NUMBER,!possessive,!subjective] -PERSON -NUMBER -existential
             # am i

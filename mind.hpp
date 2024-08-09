@@ -45,16 +45,19 @@ private:
     vector<pair<string, string>> extract_inheritances(Expression expression);
 
     // returns nount to action pairings indicated by expression
-    // vector<pair<string, string>> extract_abilities(Expression expression);
+    vector<pair<string, string>> extract_abilities(Expression expression);
 
     void apply_inheritance_rule(Expression expression);
-    // void apply_ability_rule(Expression expression);
+    void apply_ability_rule(Expression expression);
     //void apply_activity_mentioned_rule(Expression expression);
 
     void update_inheritances(string child, string parent);
+    void update_abilities(string noun, string ability, int recursion = 1);
 
     void print_maps();
 
+    bool can_do(string noun, string action);
+    void add_ability(string noun, string action);
 public:
     vector<ConceptualEntity> nouns;
     set<string> noun_set;
@@ -62,7 +65,7 @@ public:
     map<string, set<string>> child_to_parents_map;
     map<string, set<string>> parent_to_children_map;
 
-    map<string, vector<string>> ability_map;
+    map<string, set<string>> ability_map;
 
     ConceptualSchema();
 
