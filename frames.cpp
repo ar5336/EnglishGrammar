@@ -52,13 +52,28 @@ void FrameCoordinates::print_out()
 
 // ======== FRAME ========
 
+string Frame::stringify_as_param()
+{
+    if (is_word_frame())
+    {
+        return frame_name;
+    }
+    if (is_matched())
+    {
+        return frame_name;
+    }
+    return "BLARG";
+}
+
 // default constructor
 Frame::Frame() {
     left_match = FrameCoordinates();
     right_match = FrameCoordinates();
+
+    type = FrameType::Null;
 }
 
-	// word frame constructor
+// word frame constructor
 Frame::Frame(
     string frame_name,
     vector<string> type_heirarchy,
@@ -76,10 +91,13 @@ Frame::Frame(
     }
 
     feature_set.emplace(word_form);
+    left_match = FrameCoordinates();
+    right_match = FrameCoordinates();
 
+    type = FrameType::Word;
 }
 
-	// word frame with multiple features
+// word frame with multiple features
 Frame::Frame(
     string frame_name,
     vector<string> type_heirarchy,
@@ -98,9 +116,11 @@ Frame::Frame(
     {
         feature_set.insert(type);
     }
+
+    type = FrameType::Word;
 }
 
-	// featureless word frame constructor
+// featureless word frame constructor
 Frame::Frame(
     string frame_name,   
     vector<string> type_heirarchy)
@@ -112,6 +132,8 @@ Frame::Frame(
     {
         feature_set.insert(type);
     }
+
+    type = FrameType::Word;
 }
 
 // syntax frame constructor
@@ -130,6 +152,8 @@ Frame::Frame(
         predicate_formation_rules(formation_rules)
 {
     is_binarized = false;
+
+    type = FrameType::Syntax;
 }
 
 // cnf frame constructor
@@ -156,8 +180,11 @@ Frame::Frame(
     right_match = FrameCoordinates();
     // left_match = NULL;
     // right_match = &(Frame());
+
+    type = FrameType::Binarized;
 }
 
+//  matched frame constructor
 Frame::Frame(
     string frame_name,
     string frame_nickname,
@@ -184,6 +211,7 @@ Frame::Frame(
     // left_match = NULL;
     // right_match = &(Frame());
     // left_match = left_match;
+    type = FrameType::Matched;
 }
 
 Frame Frame::with_links(
@@ -235,7 +263,7 @@ bool Frame::is_part_of_speech(string part_of_speech)
 
 bool Frame::is_word_frame()
 {
-    return !type_heirarchy.empty();
+    return !(type_heirarchy.size() == 0) && left_match.is_empty();
 }
 
 bool Frame::is_matched()

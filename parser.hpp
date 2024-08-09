@@ -42,7 +42,7 @@ private:
         bool is_left,
         Frame &consumer_frame);
 
-    bool get_matched_frames(
+    bool try_get_matched_frames(
         Frame left_consumer_frame,
         Frame right_consumer_frame,
         vector<Frame> &matched_frames);
@@ -81,9 +81,6 @@ public:
     PredicateHandler* predicate_handler;
 
     string current_utterance;
-
-    pair<int, int> highlighted_cell_position;
-    bool is_highlighted;
 
     Parser(Grammar grammar);
 

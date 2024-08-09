@@ -109,7 +109,7 @@ bool Parser::does_frame_have_features(
     return true;
 }
 
-bool Parser::get_matched_frames(
+bool Parser::try_get_matched_frames(
     Frame left_consumer_frame,
     Frame right_consumer_frame,
     vector<Frame> &matched_frames)
@@ -438,7 +438,7 @@ vector<Frame> Parser::find_matching_frames(vector<Frame> left_frames, vector<Fra
             right_frame_coordinates.num = right_index;
 
             vector<Frame> matched_frames;
-            if (get_matched_frames(left_frame, right_frame, matched_frames))
+            if (try_get_matched_frames(left_frame, right_frame, matched_frames))
             {
                 for (int match_index = 0; match_index < matched_frames.size(); match_index++)
                 {
@@ -453,7 +453,6 @@ vector<Frame> Parser::find_matching_frames(vector<Frame> left_frames, vector<Fra
 
 Parser::Parser(Grammar grammar) : grammar(grammar)
 {
-    is_highlighted = false;
 }
 
 Parser::Parser() {}
@@ -493,6 +492,9 @@ void Parser::update_parse_grid(string new_utterance)
             vector<Frame> word_frames_identified = grammar.word_map.at(token);
             for (Frame word_frame : word_frames_identified)
             {
+                if (word_frame.type != FrameType::Word)
+                    throw runtime_error("syntax frame on word frame row not allowed");
+                    
                 parse_grid[0][token_index].push_back(word_frame);
             }
         }

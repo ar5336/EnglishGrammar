@@ -55,10 +55,11 @@ private:
     Point start_text_corner; // top-left position
     Point start_grid_corner;
     Point start_predicate_corner;
+    Point start_individual_frame_corner;
 
     Point IMAGE_SIZE;
 
-    Scalar HIGHLIGHTER_YELLOW;
+    Scalar HIGHLIGHT;
     Scalar BACKGROUND;
     Scalar GRID_BOXES; // off white
     Scalar WORD_TEXT_MATCHED; // teal
@@ -79,11 +80,17 @@ private:
     PredicateHandler *predicate_handler;
     ConceptualSchema *conceptual_schema;
 
+    int highlight_frame_index;
+
     // SchemaDisplayer schema_displayer;
 
     bool IS_INITIATED;
 
+    string stringify_frame(Frame frame);
+
     void display_text(Point pos, string text, Scalar color, float font_scale);
+
+    void display_multi_line_text(Point *pos, string text, Scalar color, float font_scale);
 
     void staple_text_on(Point *pos, string text, Scalar color, float font_scale);
 
@@ -93,6 +100,10 @@ public:
     int scroll;
 
     string response_string;
+
+    pair<int, int> highlighted_cell_position;
+    pair<int, int> previous_highlighted_cell_position;
+    bool is_highlighted;
 
     Displayer(string screen_name);
 

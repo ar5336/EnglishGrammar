@@ -21,6 +21,16 @@ enum FeatureTagType
 	Prohibited = 2,
 };
 
+enum FrameType
+{
+	Null = 0,
+	Word = 1,
+	Syntax = 2,
+	Binarized = 3,
+	Matched = 4,
+	Reconstructed = 5, // not yet implemented
+};
+
 class FeatureTag
 {
 public:
@@ -71,6 +81,8 @@ public:
 class Frame
 {
 public:
+	FrameType type;
+
 	string frame_name;
 	string frame_nickname;
 	vector<string> type_heirarchy;
@@ -142,6 +154,8 @@ public:
 	Frame with_links(
 		FrameCoordinates to_left,
     	FrameCoordinates to_right);
+
+	string stringify_as_param();
 
 	string get_part_of_speech();
 

@@ -223,8 +223,9 @@ Displayer::Displayer(string screen_name)
         start_text_corner = Point(10, image.rows * 3 / 4);
         start_grid_corner = start_text_corner + Point(0, -60);
         start_predicate_corner = Point(image.cols *6/10, image.rows * 1/4);
+        start_individual_frame_corner = Point(image.cols *3.5/10, image.rows * 1/5);
 
-        HIGHLIGHTER_YELLOW = CV_RGB(50, 25, 0);
+        HIGHLIGHT = CV_RGB(50, 25, 0);
         BACKGROUND = CV_RGB(13,5,7);
         GRID_BOXES = CV_RGB(210,200,215);
         WORD_TEXT_MATCHED = CV_RGB(18,163,76);
@@ -243,6 +244,10 @@ Displayer::Displayer(string screen_name)
         IS_INITIATED = false;
 
         scroll = 0;
+
+        highlighted_cell_position = make_pair(-1, -1);
+        previous_highlighted_cell_position = make_pair(-1, -1);
+        highlight_frame_index = 0;
     };
 
 void Displayer::init(
@@ -292,6 +297,10 @@ void Displayer::display_predicate(Point *pos, bool is_given, Predicate predicate
 
 void Displayer::display()
 {
+    if (!IS_INITIATED)
+    {
+        throw runtime_error("attempting to display while displayer is not initiated");
+    }
     vector<string> split_tokens = split_spaces(parser->current_utterance);
     vector<Frame> word_frames;
 
@@ -301,6 +310,7 @@ void Displayer::display()
 
     vector<bool> is_word_highlighted;
 
+    int index_within_cell = 0;
     if (!parser->parse_grid.empty() && token_count != 0)
     {
         // diplay and initialize parse grid
@@ -318,22 +328,28 @@ void Displayer::display()
         {
             for (int col = 0; col < parser->parse_grid.at(row).size(); col++)
             {
-
                 pair<Point, Point> cell_bounds = get_cell_bounds(row, col);
 
                 Point top_left = cell_bounds.first;
                 Point bottom_right = cell_bounds.second;
 
+                bool is_directly_highlighted = false; 
+
                 bool is_covered_by_highlight;
                 bool is_this_cell_selected;
-                if (parser->is_highlighted)
+                if (is_highlighted)
                 {
-                    int highlight_row = parser->highlighted_cell_position.first;
-                    int highlight_col = parser->highlighted_cell_position.second;
+                    int highlight_row = highlighted_cell_position.first;
+                    int highlight_col = highlighted_cell_position.second;
+
+                    is_directly_highlighted |= (row == highlight_row && col == highlight_col);
+
                     int d_row = highlight_row - row;
                     int d_col = col - highlight_col;
 
-                    is_covered_by_highlight = (row <= highlight_row && col >= highlight_col && d_col <= d_row);
+                    is_covered_by_highlight =
+                        (row <= highlight_row &&
+                        col >= highlight_col && d_col <= d_row);
                 }
                 else
                 {
@@ -346,20 +362,26 @@ void Displayer::display()
                 // check if this cell is highlighted
                 if (is_covered_by_highlight)
                 {
-
-                    rectangle(image, top_left, bottom_right, HIGHLIGHTER_YELLOW, cv::FILLED);
+                    rectangle(image, top_left, bottom_right, HIGHLIGHT, cv::FILLED);
                 }
                 else
                 {
                     // rectangle(image, top_left, bottom_right, CV_RGB(0, 0, 0), cv::FILLED);
                 }
 
-                // draw rectangle
-                rectangle(image, top_left, bottom_right, GRID_BOXES);
+                // draw border
+                if (is_directly_highlighted)
+                {
+                    rectangle(image, top_left, bottom_right, GRID_BOXES, 2);
+                } else {
+                    rectangle(image, top_left, bottom_right, GRID_BOXES);
+                }
 
                 vector<Frame> frames_in_cell = parser->parse_grid.at(row).at(col);
 
                 float cell_font_scale = .5f;
+
+                bool frame_index_marked_for_increment = false;
 
                 Point bottom_left = top_left + Point(3, cell_height - 3);
                 Point ticker_cell_text = bottom_left;
@@ -367,22 +389,61 @@ void Displayer::display()
                 {
                     Frame frame = frames_in_cell.at(frame_index);
                     // display word
-                    string cell_text;
-                    if (row == 0)
+                    
+                    bool is_word = row == 0;
+                    string cell_text = is_word ? frame.get_part_of_speech() : frame.frame_nickname;
+                    
+                    display_text(
+                        ticker_cell_text,
+                        cell_text,
+                        (is_directly_highlighted && (highlight_frame_index == frame_index)) ?
+                            GRID_BOXES :
+                            (is_word ? 
+                                WORD_FRAME : SYNTAX_FRAME),
+                        cell_font_scale);
+
+                    if (is_highlighted)
                     {
-                        cell_text = frame.get_part_of_speech();
-                        display_text(ticker_cell_text, cell_text, WORD_FRAME, cell_font_scale);
-                    }
-                    else
-                    {
-                        // display frame
-                        cell_text = frame.frame_nickname;
-                        display_text(ticker_cell_text, cell_text, SYNTAX_FRAME, cell_font_scale);
+                        auto null_pair = make_pair(-1, -1);
+
+                        if (is_directly_highlighted)
+                        {
+                            if (previous_highlighted_cell_position != highlighted_cell_position)
+                            {
+                                highlight_frame_index = 0;
+                            }
+
+                            // printf("frame toStirng: %s\n", stringify_frame(frame).c_str());
+
+                            if (previous_highlighted_cell_position != null_pair &&
+                                highlighted_cell_position != null_pair &&
+                                previous_highlighted_cell_position == highlighted_cell_position)
+                            {
+                                frame_index_marked_for_increment = true;
+                            }
+
+                            if (highlight_frame_index == frame_index)
+                            {
+                               Point individual_frame_corner_copy = start_individual_frame_corner;
+                                // in this case, display the highlighted frame
+                                string frame_string = stringify_frame(frame);
+                                display_multi_line_text(&individual_frame_corner_copy, frame_string, GRID_BOXES, 0.9f);
+                            }
+                        }
+
+                        
                     }
                     ticker_cell_text += Point(measure_text(cell_text, cell_font_scale).width, 0);
                 }
+
+                if (frame_index_marked_for_increment)
+                    highlight_frame_index = ((highlight_frame_index + 1) % ((int)frames_in_cell.size()));
+
             }
         }
+
+        if (is_highlighted)
+            previous_highlighted_cell_position = highlighted_cell_position;
     }
 
     // display the text
@@ -399,10 +460,10 @@ void Displayer::display()
         if (token_index != split_tokens.size() - 1)
             token += ' '; // if not last token, add a space
 
-        if (parser->is_highlighted && is_word_highlighted[token_index])
+        if (is_highlighted && is_word_highlighted[token_index])
         {
             cv::Size size = measure_text(token);
-            rectangle(image, ticker_text_corner, ticker_text_corner + Point(size.width, -size.height), HIGHLIGHTER_YELLOW, cv::FILLED);
+            rectangle(image, ticker_text_corner, ticker_text_corner + Point(size.width, -size.height), HIGHLIGHT, cv::FILLED);
         }
 
         if (!does_match)
@@ -469,12 +530,12 @@ void Displayer::display()
 
     // display the conceptual schema
     // TODO - refactor this out into a ConceptualSchemaDisplayer
-    auto conceptual_nouns = conceptual_schema->noun_set;
+    // auto conceptual_nouns = conceptual_schema->noun_set;
 
-    Point conschem_corner = Point(30, 30);
-    Point conschem_other_corner = conschem_corner + Point(100, 60);
+    // Point conschem_corner = Point(30, 30);
+    // Point conschem_other_corner = conschem_corner + Point(100, 60);
 
-    Scalar CHERRY_RED = CV_RGB(225, 25, 15);
+    // Scalar CHERRY_RED = CV_RGB(225, 25, 15);
 
     // for (string conceptual_noun : conceptual_nouns)
     // {
@@ -496,6 +557,70 @@ void Displayer::display()
 // {
 //     schema_displayer.drift_positions();
 // }
+
+void Displayer::display_multi_line_text(Point *pos, string text, Scalar color, float font_scale)
+{
+    float new_line_dist = font_scale * 40.0f;
+
+    vector<string> lines = split_character(text, "\n");
+    
+    for (string line : lines)
+    {
+        display_text(Point(pos->x, pos->y), line, color, font_scale);
+        *pos += Point(0, new_line_dist);
+    }
+    float text_width = measure_text(text, font_scale).width;
+    pos->x += text_width;
+
+}
+
+string stringify_set(set<string> set)
+{
+    string feature_string = "";
+    for (auto string : set)
+    {
+        feature_string += string;
+        feature_string += ", ";
+    }
+
+    if (set.size() > 0)
+        return feature_string.substr(0, feature_string.length()-2);
+    return feature_string;
+}
+
+string Displayer::stringify_frame(Frame frame)
+{
+    string string_buildee = "";
+
+    if (frame.type == FrameType::Word)
+    {
+        string_buildee += "WORD FRAME:\n";
+        string_buildee += "    frame name: " + frame.frame_name + "\n";
+        string_buildee += "    feature set [" + stringify_set(frame.feature_set) + "]";
+        // TODO - add type heirarchy
+        return string_buildee;
+    }
+    if (frame.type == FrameType::Matched)
+    {
+        Frame left_frame = Frame();
+        Frame right_frame = Frame();
+        
+        if (!parser->try_get_frame_at(frame.left_match, left_frame) || !parser->try_get_frame_at(frame.right_match, right_frame))
+            throw runtime_error("frame coordinate deref error during string stringification");
+
+        string left_frame_str = left_frame.stringify_as_param();
+        string right_frame_str = right_frame.stringify_as_param();
+
+        string_buildee += "MATCHED FRAME:\n";
+        string_buildee += "    left match: " + left_frame_str + "\n";
+        string_buildee += "    right match: " + right_frame_str + "\n";
+        string_buildee += "    accumulated expression:\n" + predicate_handler->stringify_expression(frame.accumulated_expression) + "\n";
+
+        return string_buildee;
+    }
+    return string_buildee;
+}
+
 
 void Displayer::staple_text_on(Point *pos, string text, Scalar color, float font_scale)
 {

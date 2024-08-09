@@ -52,9 +52,9 @@ void mouse_callback_function(int event, int x, int y, int flags, void *userdata)
 				pair<Point, Point> cell_bounds = displayer.get_cell_bounds(row, col);
 				if (displayer.is_in_bounds(Point(x, y), cell_bounds))
 				{
-					parser.highlighted_cell_position = pair<int, int>(row, col);
+					displayer.highlighted_cell_position = pair<int, int>(row, col);
 					highlight_found = true;
-					parser.is_highlighted = true;
+					displayer.is_highlighted = true;
 					break;
 				}
 			}
@@ -62,7 +62,7 @@ void mouse_callback_function(int event, int x, int y, int flags, void *userdata)
 
 		if (!highlight_found)
 		{
-			parser.is_highlighted = false;
+			displayer.is_highlighted = false;
 		}
 		displayer.display();
 	}
@@ -75,7 +75,7 @@ void mouse_callback_function(int event, int x, int y, int flags, void *userdata)
 bool check_keypress(char cr)
 {
 	string current_utterance = parser.current_utterance;
-	parser.is_highlighted = false;
+	displayer.is_highlighted = false;
 
 	if (cr == -31) // shift
 	{
