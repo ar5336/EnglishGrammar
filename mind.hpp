@@ -60,7 +60,9 @@ private:
     void add_ability(string noun, string action);
 public:
     vector<ConceptualEntity> nouns;
+
     set<string> noun_set;
+    
     map<string, ConceptualEntity> entities_by_noun;
     map<string, set<string>> child_to_parents_map;
     map<string, set<string>> parent_to_children_map;
@@ -81,7 +83,7 @@ public:
 
     void update_conceptual_maps(Expression new_expression);
 
-    pair<bool, string> try_resolve_expression(Expression expression);
+    pair<bool, string> try_resolve_inquisitive_expression(Expression expression);
 
     // void make_inferences(Expression expression);
 };

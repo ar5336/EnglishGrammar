@@ -427,7 +427,7 @@ void Displayer::display()
                                Point individual_frame_corner_copy = start_individual_frame_corner;
                                 // in this case, display the highlighted frame
                                 string frame_string = stringify_frame(frame);
-                                display_multi_line_text(&individual_frame_corner_copy, frame_string, GRID_BOXES, 0.9f);
+                                display_multi_line_text(individual_frame_corner_copy, frame_string, GRID_BOXES, 0.5f);
                             }
                         }
 
@@ -529,13 +529,20 @@ void Displayer::display()
     }
 
     // display the conceptual schema
-    // TODO - refactor this out into a ConceptualSchemaDisplayer
     // auto conceptual_nouns = conceptual_schema->noun_set;
 
-    // Point conschem_corner = Point(30, 30);
-    // Point conschem_other_corner = conschem_corner + Point(100, 60);
+    Point conschem_corner = Point(30, 30);
+    Point conschem_other_corner = conschem_corner + Point(100, 60);
 
-    // Scalar CHERRY_RED = CV_RGB(225, 25, 15);
+    Scalar CHERRY_RED = CV_RGB(225, 25, 15);
+
+    string stringified_inheritances = stringify_conceptual_schema_inheritances();
+
+    display_multi_line_text(conschem_corner, stringified_inheritances, CHERRY_RED, 0.5f);
+    string stringified_nouns = stringify_conceptual_schema_nouns();
+
+    display_multi_line_text(conschem_corner + Point(400, 0), stringified_nouns, CHERRY_RED, 0.5f);
+
 
     // for (string conceptual_noun : conceptual_nouns)
     // {
@@ -543,6 +550,8 @@ void Displayer::display()
     //     staple_text_on(&conschem_ticker, conceptual_noun, CHERRY_RED, 0.5f);
     //     conschem_ticker += Point(10, 0);
     // }
+
+
 
 
     if (IS_INITIATED)
@@ -558,7 +567,7 @@ void Displayer::display()
 //     schema_displayer.drift_positions();
 // }
 
-void Displayer::display_multi_line_text(Point *pos, string text, Scalar color, float font_scale)
+void Displayer::display_multi_line_text(Point pos, string text, Scalar color, float font_scale)
 {
     float new_line_dist = font_scale * 40.0f;
 
@@ -566,12 +575,10 @@ void Displayer::display_multi_line_text(Point *pos, string text, Scalar color, f
     
     for (string line : lines)
     {
-        display_text(Point(pos->x, pos->y), line, color, font_scale);
-        *pos += Point(0, new_line_dist);
+        display_text(Point(pos.x, pos.y), line, color, font_scale);
+        pos += Point(0, new_line_dist);
     }
     float text_width = measure_text(text, font_scale).width;
-    pos->x += text_width;
-
 }
 
 string stringify_set(set<string> set)
@@ -612,12 +619,45 @@ string Displayer::stringify_frame(Frame frame)
         string right_frame_str = right_frame.stringify_as_param();
 
         string_buildee += "MATCHED FRAME:\n";
+        string_buildee += "    features: [" + stringify_set(frame.feature_set) + "]\n";
         string_buildee += "    left match: " + left_frame_str + "\n";
         string_buildee += "    right match: " + right_frame_str + "\n";
         string_buildee += "    accumulated expression:\n" + predicate_handler->stringify_expression(frame.accumulated_expression) + "\n";
 
         return string_buildee;
     }
+    return string_buildee;
+}
+
+string Displayer::stringify_conceptual_schema_inheritances()
+{
+    string string_buildee = "";
+
+    for (auto child_to_parent : conceptual_schema->child_to_parents_map)
+    {
+        string child = child_to_parent.first;
+        set<string> parents = child_to_parent.second;
+
+        string_buildee += child + " ==> [";
+        string_buildee += stringify_set(parents) + "]\n";
+    }
+
+    return string_buildee;
+}
+
+string Displayer::stringify_conceptual_schema_nouns()
+{
+    string string_buildee = "";
+
+    for (auto ability_pair : conceptual_schema->ability_map)
+    {
+        string child = ability_pair.first;
+        set<string> abilities = ability_pair.second;
+
+        string_buildee += child + " CAN_DO [";
+        string_buildee += stringify_set(abilities) + "]\n";
+    }
+
     return string_buildee;
 }
 

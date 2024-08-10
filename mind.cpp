@@ -56,7 +56,7 @@ string Mind::ask(Expression expression)
     // auto asStatement = Predicate(queryPredicate.type_id, queryPredicate.arguments);
 
     // first check if the statement resolves into existing entity inheritance/ability information from Conceptual Schema
-    auto resolution_pair = conceptual_schema->try_resolve_expression(expression);
+    auto resolution_pair = conceptual_schema->try_resolve_inquisitive_expression(expression);
 
     bool is_resolved = resolution_pair.first;
     string resolution_message = resolution_pair.second;
@@ -195,6 +195,9 @@ vector<pair<string, string>> ConceptualSchema::extract_inheritances(Expression e
         "IS", "object",
         "CONTAINS", "container");
 
+    if (connection_pairs.size() == 0)
+        return constructed_response;
+
     for (auto connection_pair : connection_pairs)
     {
         Predicate is_predicate = connection_pair.first;
@@ -243,7 +246,7 @@ void ConceptualSchema::update_conceptual_maps(Expression new_expression)
 }
 
 // returns bool is_resolved and a string message
-pair<bool, string> ConceptualSchema::try_resolve_expression(Expression expression)
+pair<bool, string> ConceptualSchema::try_resolve_inquisitive_expression(Expression expression)
 {
     // for now, only simple inheritance questions - "are dogs mammals", "are dogs animals"
 
@@ -254,7 +257,7 @@ pair<bool, string> ConceptualSchema::try_resolve_expression(Expression expressio
         if (noun_set.size() == 0)
         {
             if (DEBUGGING)
-                printf("nouns are empty\n");
+                printf("no defined nouns\n");
             return make_pair(false, "no known nouns");
         }
 
@@ -270,9 +273,6 @@ pair<bool, string> ConceptualSchema::try_resolve_expression(Expression expressio
     // then, find what inheritance this expression indicates
     vector<pair<string, string>> inheritances = extract_inheritances(expression);
 
-    if (inheritances.size() == 0)
-        return make_pair(false, "no inheritances found");
-
     bool constructed_bool = true;
     string constructed_response = "";
 
@@ -282,7 +282,10 @@ pair<bool, string> ConceptualSchema::try_resolve_expression(Expression expressio
     }
 
     // build the response string as you consider each of the indicated inheritances
-    if (inheritances.size() != 0)
+    if (DEBUGGING)
+        printf("number of inheritances found: %ld\n", inheritances.size());
+
+    if (inheritances.size() > 0)
     {
         for (auto inheritance : inheritances)
         {
@@ -318,19 +321,22 @@ pair<bool, string> ConceptualSchema::try_resolve_expression(Expression expressio
             string noun = ability_pair.first;
             string ability = ability_pair.second;
 
-            // if (parent_to_children_map.count(noun) == 0)
-            printf("checking if %s can do  ability:'%s'", noun.c_str(), ability.c_str());
+            if (DEBUGGING)
+                printf("checking if %s can do  ability:'%s'", noun.c_str(), ability.c_str());
 
             if (can_do(noun, ability))
             {
-                return make_pair(true, "yes, "+noun+" can "+ability+".");
+                return make_pair(true, "yes, "  + noun + " can " + ability + ".");
+            }
+            else
+            {
+                return make_pair(true, "no, " + noun + " can not " + ability + ".");
             }
         }
     }
  
 
-    printf("resolved response: %s\n", constructed_response.c_str());
-    return make_pair(true, constructed_response);
+    return make_pair(false, "");
 }
 
 template <typename T>
@@ -437,6 +443,9 @@ void ConceptualSchema::apply_ability_rule(Expression expression)
 
 void ConceptualSchema::add_ability(string noun, string action)
 {
+    if (DEBUGGING)
+        printf("adding ability '%s' to noun '%s'\n", action.c_str(), noun.c_str());
+
     if (ability_map.count(noun) == 0)
     {
         ability_map.emplace(noun, set<string>{action});
@@ -622,6 +631,7 @@ void ConceptualSchema::update_abilities(string noun, string ability, int recursi
 
 bool ConceptualSchema::can_do(string noun, string action)
 {
+    printf("checking if noun '%s' can do action '%s'\n", noun.c_str(), action.c_str());
     return (ability_map.count(noun) != 0) &&
         (ability_map.at(noun).count(action) != 0);
 }

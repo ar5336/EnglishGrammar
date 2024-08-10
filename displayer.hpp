@@ -88,9 +88,13 @@ private:
 
     string stringify_frame(Frame frame);
 
+    string stringify_conceptual_schema_inheritances();
+
+    string stringify_conceptual_schema_nouns();
+
     void display_text(Point pos, string text, Scalar color, float font_scale);
 
-    void display_multi_line_text(Point *pos, string text, Scalar color, float font_scale);
+    void display_multi_line_text(Point pos, string text, Scalar color, float font_scale);
 
     void staple_text_on(Point *pos, string text, Scalar color, float font_scale);
 

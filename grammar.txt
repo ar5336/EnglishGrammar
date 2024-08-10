@@ -348,8 +348,10 @@ Frames:
         Verb[!3PPresent] Noun[MassNoun] -plural
             # eat grass, eats grass, eating grass
 
-        Noun[plural] Verb[MainVerb,simple] -plural
+        Noun[plural] Verb[MainVerb,simple] -plural <IS object:! object_count:"3" noun_class:Noun | ACTION action:!! actor:! action_type:Verb>
+            # dogs run
         Noun[singular] Verb[MainVerb,!simple,!continuous,!3PPresent] -singular
+            # dog runs
 
         NounPhrase[plural] Verb[MainVerb,!3PPresent] -plural <ACTION action:! actor:NounPhrase->IS.object action_type:Verb>
         NounPhrase[singular] Verb[MainVerb,!simple] -singular <ACTION action:! actor:NounPhrase->IS.object action_type:Verb>
@@ -376,9 +378,10 @@ Frames:
         AdjectivePhrase[plural] Verb[MainVerb, simple] <ACTION action:! actor:AdjectivePhrase->IS.object action_type:Verb>
             # quick dogs run
             # hit dogs holler
+
         PreIndicativePhrase[plural] Noun[plural] -plural <IS object:! object_count:"3" noun_class:Noun | CONTAINS container:! containee:PreIndicativePhrase->IS.object>
-            # TODO - finish: <IS_SUBSET_OF set:PreIndicativePhrase-> noun_class:Noun>
             # horses are mammals
+
         PreIndicativePhrase Adjective[Comparable,absolute]
             # i am happy
         PreIndicativePhrase Adjective[NonComparable]
@@ -415,9 +418,10 @@ Frames:
         Noun AuxiliaryPhrase
         NounPhrase AuxiliaryPhrase
     Question "Q"
-        Verb[ModalVerb,MODE] VerbPhrase[NUMBER] -NUMBER -MODE
+        Verb[ModalVerb,MODE] VerbPhrase[NUMBER] -NUMBER -MODE <CAN_DO action_type:VerbPhrase->ACTION.action_type actor:VerbPhrase->IS.object>
             # will i run
             # might i run
+            # can dogs run
 
         InterrogativeClause[NUMBER,MODE] VerbPhrase[simple] -NUMBER -MODE 
             # can a fish live in the house
