@@ -68,6 +68,7 @@ public:
     vector<string> word_frame_accessors;
     vector<string> param_strings;
     vector<PatternElementPredicateAccessor> pattern_predicate_accessors;
+    vector<string> wildcard_list;
 
     PredicateCreator();
     PredicateCreator(PredicateHandler *handler_ptr, vector<string> creation_tokens);

@@ -96,7 +96,7 @@ Expression Mind::construct_subset_expression(string noun_1, string noun_2)
         vector<string>
         {
             /*object*/ object_1_var,
-            /*object_count*/ "3",
+            /*object_count*/ "inf",
             /*noun_class*/ noun_1,
         }
     ));
@@ -136,7 +136,7 @@ Expression Mind::construct_ability_expression(string noun_1, string action_type)
         vector<string>
         {
             /*object*/ object_var,
-            /*object_count*/ "3",
+            /*object_count*/ "inf",
             /*noun_class*/ noun_1,
         }
     ));
@@ -202,7 +202,7 @@ vector<pair<string, string>> ConceptualSchema::extract_inheritances(Expression e
     {
         Predicate is_predicate = connection_pair.first;
 
-        if (!equals(is_predicate.get_argument("object_count"), "3"))
+        if (!equals(is_predicate.get_argument("object_count"), "inf"))
         {
             // don't do this rule anymore
             return constructed_response;

@@ -74,3 +74,13 @@ bool find_in_string(string field, string target)
 {
 	return field.find(target) != string::npos;
 }
+
+bool is_string_all_chars(string test, char subject)
+{
+    for (char ch : test)
+	{
+		if (subject != ch)
+			return false;
+	}
+	return true;
+}

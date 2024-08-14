@@ -9,6 +9,7 @@ Words:
             home homes
             house houses
             horse horses
+            man men
             moose
             color colors
             food foods
@@ -112,16 +113,16 @@ Words:
             whom -animate
         Name:
             steve
-            greg
             frank
+            pony
         InterrogativePronoun:
-            who
-            what
-            when
-            where
-            why
-            which
-            whose
+            who -animate
+            what -indentity
+            when -time
+            where -location
+            why -reason
+            which -select
+            whose -belonging
     Verb:
         MainVerb:
             Transitive: # simple continuous perfect 3PPresent (pastPart)
@@ -179,24 +180,27 @@ Words:
             may -permissoin
             shall
         LinkingVerb:
-            am -singular -1stPerson -present
-            is -3rdPerson -singular -masculine -present
-            is -3rdPerson -singular -feminine -present
-            are -plural -3rdPerson -2ndPerson -1stPerson -present -neuter -masculine -feminine
-            are -singular -2ndPerson -present
-            be 
-            been
-            being
-            did
-            do -singular -plural -present -1stPerson -2ndPerson
-            do -plural -present -3rdPerson
-            does -singular -present -2ndPerson -3rdPerson
-            had -perfect
-            have -1stPerson -2ndPerson -pastPart -singular
-            has -3rdPerson -pastPart -singular
-            have -1stPerson -2ndPerson -3rdPerson -pastPart -plural
-            was
-            were
+            IndicativeVerb:
+                am -singular -1stPerson -present
+                is -3rdPerson -singular -masculine -present
+                is -3rdPerson -singular -feminine -present
+                are -plural -3rdPerson -2ndPerson -1stPerson -present -neuter -masculine -feminine
+                are -singular -2ndPerson -present
+                be 
+                been
+                being
+                was -singular -past
+                were -plural -past
+            HabilitiveVerb:
+                did
+                do -singular -plural -present -1stPerson -2ndPerson
+                do -plural -present -3rdPerson
+                does -singular -present -2ndPerson -3rdPerson
+            PossessiveVerb:
+                had -perfect
+                have -1stPerson -2ndPerson -pastPart -singular
+                has -3rdPerson -pastPart -singular
+                have -1stPerson -2ndPerson -3rdPerson -pastPart -plural
     Adjective:
         MainAdjective:
             NonComparable:
@@ -297,7 +301,8 @@ FeatureGroups:
     PRESENT= 3PPresent simple continuous
     PERSON= 1stPerson 2ndPerson 3rdPerson
     MODE= advice obligation offer futureProbability ability permission
-    TENSE=  simple continous perfect 3PPresent pastPart
+    TENSE= simple continous perfect 3PPresent pastPart
+    TRANSITIVITY= Transitive Intransitive
 
 Predicates:
     IS object object_count noun_class
@@ -312,6 +317,8 @@ Predicates:
 Frames:
     NounPhrase "NP"
         Determiner Noun[NUMBER] -NUMBER -determined <IS object:! object_count:"1" noun_class:Noun>
+            # the dog
+            # the dogs
 
         Determiner AdjectivePhrase[NUMBER] -NUMBER -determined
         NounPhrase[determined] PrepPhrase
@@ -320,6 +327,7 @@ Frames:
             # my cat, his cat, her cat
         # Adjective[MainAdjective] Noun[NUMBER] -NUMBER
 
+        Noun[plural] PrepPhrase <IS object:! object_count:"inf" noun_class:Noun>
 
         Noun Conjunction Noun -plural
             # cats and dogs
@@ -337,20 +345,22 @@ Frames:
         # Noun[location] Noun[NUMBER] -NUMBER
             # land animals, sea animals
     VerbPhrase "VP"
-        Verb[MainVerb,TENSE] NounPhrase -TENSE
-        Verb Adverb <ACTION action:! actor:"unknown" action_type:Verb | HAS_PROPERTY object:! property:Adverb>
+        Verb[MainVerb,TENSE,Transitive] NounPhrase -TENSE -transitive -subjectUnfilled <ACTION action:! actor:"unknown" action_type:Verb>
+            # <give the horse> an apple
+        Verb[TRANSITIVITY] Adverb -TRANSITIVITY <ACTION action:! actor:"unknown" action_type:Verb | HAS_PROPERTY object:! property:Adverb>
+            # run quickly
         Adverb Verb
 
         VerbPhrase[TENSE,NUMBER] PrepPhrase -TENSE -NUMBER 
-        Verb[MainVerb,TENSE] PrepPhrase -TENSE
+        Verb[MainVerb,TENSE] PrepPhrase -TENSE <ACTION action:! actor:"unknown" action_type:Verb>
 
         Verb[!perfect] Noun[MassNoun] -singular
         Verb[!3PPresent] Noun[MassNoun] -plural
             # eat grass, eats grass, eating grass
 
-        Noun[plural] Verb[MainVerb,simple] -plural <IS object:! object_count:"3" noun_class:Noun | ACTION action:!! actor:! action_type:Verb>
+        Noun[plural] Verb[MainVerb,simple] -plural <IS object:! object_count:"inf" noun_class:Noun | ACTION action:!! actor:! action_type:Verb>
             # dogs run
-        Noun[singular] Verb[MainVerb,!simple,!continuous,!3PPresent] -singular
+        Noun[singular] Verb[MainVerb,!simple,!continuous,!3PPresent] -singular <IS object:! object_count:"1" noun_class:Noun | ACTION action:!! actor:! action_type:Verb>
             # dog runs
 
         NounPhrase[plural] Verb[MainVerb,!3PPresent] -plural <ACTION action:! actor:NounPhrase->IS.object action_type:Verb>
@@ -370,7 +380,7 @@ Frames:
             # the dogs have run
     PrepPhrase "PP"
         Preposition Noun
-        Preposition NounPhrase[NUMBER] -NUMBER <PREPOSITION action:! preposition:Preposition subject:NounPhrase->IS.object>
+        Preposition[Place] NounPhrase[NUMBER] -NUMBER <PREPOSITION action:! preposition:Preposition subject:NounPhrase->IS.object>
             # under the bridge
         Preposition[Time] VerbPhrase
             # after running in the race
@@ -379,8 +389,16 @@ Frames:
             # quick dogs run
             # hit dogs holler
 
-        PreIndicativePhrase[plural] Noun[plural] -plural <IS object:! object_count:"3" noun_class:Noun | CONTAINS container:! containee:PreIndicativePhrase->IS.object>
+        #VerbPhrase[transitive,subjectUnfilled] NounPhrase <VerbPhrase->ACTION_2.subject=NounPhrase->Is.object>
+            #[give a man | a fish]
+        VerbPhrase[transitive] NounPhrase <ACTION_2 action:VerbPhrase->ACTION.action actor:VerbPhrase->IS.object action_type:VerbPhrase->ACTION.action_type subject:NounPhrase->IS.object>
+            # give a man a fish
+        VerbPhrase[transitive,subjectUnfilled] Noun[MassNoun] <IS object:! object_count:"1" noun_class:Noun | VerbPhrase->ACTION_2.subject=Noun->Is.object>
+
+        PreIndicativePhrase[plural] Noun[plural] -plural <IS object:! object_count:"inf" noun_class:Noun | CONTAINS container:! containee:PreIndicativePhrase->IS.object>
             # horses are mammals
+
+        Noun[plural] VerbPhrase[plural] <IS object:! object_count:"inf" noun_class:Noun>
 
         PreIndicativePhrase Adjective[Comparable,absolute]
             # i am happy
@@ -391,7 +409,7 @@ Frames:
         HabilitivePhrase Verb[MainVerb,simple]
             # he can run
 
-        InterrogativeClause[NUMBER] VerbPhrase[NUMBER]
+        StateQuestionObject[NUMBER] VerbPhrase[NUMBER]
             # can i eat the cookie, can i eat grass
 
         NounPhrase[NUMBER] PostIndicativePhrase[NUMBER]
@@ -401,7 +419,7 @@ Frames:
             # waters are rising
             # horse is running
 
-        Noun[plural] ModalPhrase[MODE] -MODE <IS object:! object_count:"3" noun_class:Noun | ModalPhrase->CAN_DO.actor=!>
+        Noun[plural] ModalPhrase[MODE] -MODE <IS object:! object_count:"inf" noun_class:Noun | ModalPhrase->CAN_DO.actor=!>
             # dogs can run, !dog can run
         NounPhrase ModalPhrase[MODE] -MODE <ModalPhrase->CAN_DO.actor=NounPhrase->IS.object>
             # a dog can run
@@ -409,7 +427,6 @@ Frames:
         PreIndicativePhrase Noun[Pronoun,possessive]
             # that cat is mine
 
-        VerbPhrase NounPhrase <ACTION_2 action:VerbPhrase->ACTION.action actor:VerbPhrase->IS.object action_type:VerbPhrase->ACTION.action_type subject:NounPhrase->IS.object>
         NounPhrase[NUMBER] VerbPhrase[NUMBER]
         VerbPhrase PrepPhrase <PrepPhrase->PREPOSITION.action=VerbPhrase->ACTION.action>
         Sentence PrepPhrase
@@ -423,13 +440,21 @@ Frames:
             # might i run
             # can dogs run
 
-        InterrogativeClause[NUMBER,MODE] VerbPhrase[simple] -NUMBER -MODE 
+        InterrogativePhrase ModalPhrase[MODE] -MODE <ModalPhrase->CAN_DO.actor=InterrogativePhrase->IS.object>
+            # which dogs can run
+            # which dogs in the city can run
+        InterrogativePhrase VerbPhrase <VerbPhrase->ACTION.actor=InterrogativeClause->IS.object>
+        InterrogativePhrase Verb <VerbPhrase->CAN_DO.actor=InterrogativeClause->IS.object>
+
+        StateQuestionObject[NUMBER,MODE] VerbPhrase[simple] -NUMBER -MODE 
             # can a fish live in the house
-        InterrogativeClause[MODE] Verb[MainVerb,simple] -MODE <CAN_DO action_type:Verb actor:InterrogativeClause->IS.object | ACTION action:! actor:InterrogativeClause->IS.object action_type:Verb>
+        StateQuestionObject[MODE] Verb[MainVerb,simple] -MODE <CAN_DO action_type:Verb actor:StateQuestionObject->IS.object | ACTION action:! actor:StateQuestionObject->IS.object action_type:Verb>
             # can a fish run
-        InterrogativeClause[categorical] Noun[plural] <CONTAINS container:! containee:InterrogativeClause->IS.object | IS object:! object_count:"3" noun_class:Noun>
+        StateQuestionObject[categorical] Noun[plural] <CONTAINS container:! containee:StateQuestionObject->IS.object | IS object:! object_count:"inf" noun_class:Noun>
             # are dogs animals
-    InterrogativeClause "IntC"
+        StateQuestionObject[categorical] Adjective <HAS_PROPERTY object:StateQuestionObject->IS.object property:Adjective>
+            # are dogs ugly
+    StateQuestionObject "sQOb"
         Verb[ModalVerb,MODE] Noun[Pronoun,NUMBER] -NUMBER -MODE -habilitive 
             # can you, can i
             # should i, might i
@@ -443,7 +468,7 @@ Frames:
             # am i
             # are we
 
-        Verb[LinkingVerb,3rdPerson,plural] Noun[plural] -plural -categorical <IS object:! object_count:"3" noun_class:Noun>
+        Verb[LinkingVerb,3rdPerson,plural] Noun[plural] -plural -categorical <IS object:! object_count:"inf" noun_class:Noun>
             # are dogs
 
         Verb[LinkingVerb,NUMBER,PERSON] Noun[Pronoun,NUMBER,PERSON] -PERSON -NUMBER -existential
@@ -452,6 +477,23 @@ Frames:
         Verb[LinkingVerb,present,NUMBER] NounPhrase[NUMBER] -present -NUMBER -existential
             # is a house
             # do the horses
+    InterrogativePhrase "IntP"
+    #    who -person
+    #    what -indentity
+    #    when -time
+    #    where -location
+    #    why -reason
+    #    which -select
+        Noun[InterrogativePronoun,select] Noun[plural] <IS object:! object_count:"inf" noun_class:Noun#2>
+            # <which dogs> are ugly
+            # pragrmatically, this should answer in both the general case (where conditions apply) and the particular case
+        Noun[InterrogativePronoun,select] NounPhrase[!determined]
+            # which dogs in the city
+
+    #    whose -belonging
+
+        # UNIMP
+        # how many
     PostIndicativePhrase "poIP"
         Verb[LinkingVerb,present,NUMBER] Verb[continuous] -present -continuous -NUMBER
             # are rising
@@ -464,13 +506,14 @@ Frames:
         PreIndicativePhrase Adjective[comparative]
             # i am happier
     PreIndicativePhrase "prIP"
-        Noun[Pronoun,NUMBER,PERSON]  Verb[LinkingVerb,NUMBER,PERSON] -NUMBER <SPECIFIER object:! person:Noun number:Noun | IS object:! object_count:"1" noun_class:"human">
+        # TODO - add distinctions between different 
+        Noun[Pronoun,NUMBER,PERSON]  Verb[LinkingVerb,NUMBER,PERSON] -NUMBER -PERSON <SPECIFIER object:! person:Noun number:Noun | IS object:! object_count:"1" noun_class:"human">
             # i am
             # you are
         NounPhrase[NUMBER]  Verb[LinkingVerb,NUMBER] -NUMBER
             # the dog is
             # my dogs are
-        Noun[plural] Verb[LinkingVerb,plural] -plural <IS object:! object_count:"3" noun_class:Noun>
+        Noun[plural] Verb[LinkingVerb,plural] -plural <IS object:! object_count:"inf" noun_class:Noun>
             # dogs are
             # horses are
     HabilitivePhrase "HP"

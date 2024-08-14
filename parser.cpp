@@ -494,7 +494,7 @@ void Parser::update_parse_grid(string new_utterance)
             {
                 if (word_frame.type != FrameType::Word)
                     throw runtime_error("syntax frame on word frame row not allowed");
-                    
+
                 parse_grid[0][token_index].push_back(word_frame);
             }
         }

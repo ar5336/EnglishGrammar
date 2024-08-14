@@ -6,7 +6,7 @@ ParameterCreationType determine_type(string argument)
     {
         return ParameterCreationType::STRING;
     }
-    if (argument == "!")
+    if (is_string_all_chars(argument, '!'))
     {
         return ParameterCreationType::WILDCARD;
     }
@@ -34,14 +34,18 @@ PredicateFormationRules::PredicateFormationRules()
 }
 
 PredicateFormationRules::PredicateFormationRules(vector<PredicateCreator> predicate_creators, vector<PredicateModifier> predicate_modifiers)
-: predicate_creators(predicate_creators), predicate_modifiers(predicate_modifiers) {
+: predicate_creators(predicate_creators), predicate_modifiers(predicate_modifiers)
+{
+    // identify the wildcard count for the total expression, so that their names can be easily generated in advance
 };
 
-PredicateCreator::PredicateCreator(){}
+PredicateCreator::PredicateCreator(){
+}
 
 PredicateCreator::PredicateCreator(PredicateHandler *handler, vector<string> creation_tokens)
 {
     string predicate_name = creation_tokens[0];
+    wildcard_list = vector<string>();
 
     auto parameter_tokens = vector<string>(creation_tokens.begin() + 1, creation_tokens.end());    
 
@@ -63,6 +67,12 @@ PredicateCreator::PredicateCreator(PredicateHandler *handler, vector<string> cre
         //     throw runtime_error("template parameter size "+to_string(template_size)+" does not match parameter token size "+to_string(token_size)+" for predicate "+predicate_name+". First extra parameter is:"+extra_param);
         // }
         // }
+        printf("fatal break during grammar reading. dumping creation tokens for predicate creator: [");
+        for (string token : creation_tokens)
+        {
+            printf("'%s', ", token.c_str());
+        }
+        printf("]\n");
         throw runtime_error("template parameter size "+to_string(template_size)+" does not match parameter token size "+to_string(token_size)+" for predicate "+predicate_name+".");
     }
 
@@ -102,6 +112,7 @@ PredicateCreator::PredicateCreator(PredicateHandler *handler, vector<string> cre
         {
             case WILDCARD:
                 matched = true;
+                wildcard_list.push_back(argument);
                 break;
             case WORD_FRAME:
                 matched = true;

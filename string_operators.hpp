@@ -26,4 +26,6 @@ vector<string> split_spaces(string str);
 
 bool find_in_string(string field, string target);
 
+bool is_string_all_chars(string test, char subject);
+
 #endif
