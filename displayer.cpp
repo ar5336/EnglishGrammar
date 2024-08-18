@@ -42,7 +42,7 @@ Size measure_text(string text, float font_scale = 1.0)
 //                 CHERRY_RED, // font color
 //                 1);
 //     }
-    
+
 //     nouns = new_nouns;
 // }
 
@@ -74,10 +74,10 @@ Size measure_text(string text, float font_scale = 1.0)
 
 //             if (i == j)
 //                 throw runtime_error("i and j should not equal");
-            
+
 //             string noun_1 = nouns[i];
 //             string noun_2 = nouns[j];
-            
+
 //             Point2f pos_1 = noun_to_pos.at(noun_1);
 //             Point2f pos_2 = noun_to_pos.at(noun_2);
 
@@ -145,7 +145,7 @@ Size measure_text(string text, float font_scale = 1.0)
 //     // first, make sure to add any new nouns
 //     image.setTo(Scalar(0, 0, 0));
 //     int noun_count = 0;
-//     for (string noun : schema->noun_set)
+//     for (string noun : schema->noun_class_set)
 //     {
 //         if (noun_to_pos.count(noun) == 0)
 //         {
@@ -223,23 +223,49 @@ Displayer::Displayer(string screen_name)
         start_text_corner = Point(10, image.rows * 3 / 4);
         start_grid_corner = start_text_corner + Point(0, -60);
         start_predicate_corner = Point(image.cols *6/10, image.rows * 1/4);
-        start_individual_frame_corner = Point(image.cols *3.5/10, image.rows * 1/5);
+        start_individual_frame_corner = Point(image.cols *1/30, image.rows * 1/5);
 
-        HIGHLIGHT = CV_RGB(50, 25, 0);
-        BACKGROUND = CV_RGB(13,5,7);
-        GRID_BOXES = CV_RGB(210,200,215);
-        WORD_TEXT_MATCHED = CV_RGB(18,163,76);
-        WORD_TEXT_UNMATCHED = CV_RGB(99,18,6);
-        WORD_FRAME = CV_RGB(69, 79, 89);
-        SYNTAX_FRAME = CV_RGB(70, 89, 69);
+        // HIGHLIGHT = CV_RGB(50, 25, 0);
+        // BACKGROUND = CV_RGB(13,5,7);
+        // GRID_BOXES = CV_RGB(210,200,215);
+        // HIGHLIGHTED_FRAME =
+        // WORD_TEXT_MATCHED = CV_RGB(18,163,76);
+        // WORD_TEXT_UNMATCHED = CV_RGB(99,18,6);
+        // WORD_FRAME = CV_RGB(69, 79, 89);
+        // SYNTAX_FRAME = CV_RGB(70, 89, 69);
+
+        // PREDICATE_FONT_SCALE = 0.6f;
+        // PREDICATE_TYPE_GIVEN = CV_RGB(166, 42, 8);
+        // PREDICATE_TYPE_INFERRED = CV_RGB(156, 96, 8);
+        // PREDICATE_PARAMETER = CV_RGB(66, 66, 66);
+        // PREDICATE_ARGUMENT = CV_RGB(125, 6, 40);
+        // PREDICATE_COLON = CV_RGB(117, 116, 116);
+        // PREDICATE_SPECIAL_ARGUMENT = CV_RGB(24, 34, 84);
+
+        // CONCEPTUAL_SCHEMA = CV_RGB(225, 25, 15);
+
+
+        auto RED = CV_RGB(125, 6, 40);
+        auto WHITE = CV_RGB(117, 116, 116);
+
+        HIGHLIGHT = WHITE * .2f;
+        BACKGROUND = WHITE;
+        GRID_BOXES = WHITE;
+        HIGHLIGHTED_FRAME = RED;
+        WORD_TEXT_MATCHED = WHITE;
+        WORD_TEXT_UNMATCHED = RED;
+        WORD_FRAME = WHITE;
+        SYNTAX_FRAME = WHITE;
 
         PREDICATE_FONT_SCALE = 0.6f;
-        PREDICATE_TYPE_GIVEN = CV_RGB(166, 42, 8);
-        PREDICATE_TYPE_INFERRED = CV_RGB(156, 96, 8);
-        PREDICATE_PARAMETER = CV_RGB(66, 66, 66);
-        PREDICATE_ARGUMENT = CV_RGB(125, 6, 40);
-        PREDICATE_COLON = CV_RGB(117, 116, 116);
+        PREDICATE_TYPE_GIVEN = RED;
+        PREDICATE_TYPE_INFERRED = WHITE;
+        PREDICATE_PARAMETER = WHITE;
+        PREDICATE_ARGUMENT = WHITE;
+        PREDICATE_COLON = WHITE;
         PREDICATE_SPECIAL_ARGUMENT = CV_RGB(24, 34, 84);
+
+        CONCEPTUAL_SCHEMA = WHITE;
 
         IS_INITIATED = false;
 
@@ -258,7 +284,7 @@ void Displayer::init(
     // set the callback function for any mouse event
 
     resizeWindow(screen_name, IMAGE_SIZE);
-    
+
     parser = parser_ptr;
     mind = mind_ptr;
     predicate_handler = predicate_handler_ptr;
@@ -333,7 +359,7 @@ void Displayer::display()
                 Point top_left = cell_bounds.first;
                 Point bottom_right = cell_bounds.second;
 
-                bool is_directly_highlighted = false; 
+                bool is_directly_highlighted = false;
 
                 bool is_covered_by_highlight;
                 bool is_this_cell_selected;
@@ -389,16 +415,16 @@ void Displayer::display()
                 {
                     Frame frame = frames_in_cell.at(frame_index);
                     // display word
-                    
+
                     bool is_word = row == 0;
                     string cell_text = is_word ? frame.get_part_of_speech() : frame.frame_nickname;
-                    
+
                     display_text(
                         ticker_cell_text,
                         cell_text,
                         (is_directly_highlighted && (highlight_frame_index == frame_index)) ?
-                            GRID_BOXES :
-                            (is_word ? 
+                            HIGHLIGHTED_FRAME :
+                            (is_word ?
                                 WORD_FRAME : SYNTAX_FRAME),
                         cell_font_scale);
 
@@ -412,8 +438,6 @@ void Displayer::display()
                             {
                                 highlight_frame_index = 0;
                             }
-
-                            // printf("frame toStirng: %s\n", stringify_frame(frame).c_str());
 
                             if (previous_highlighted_cell_position != null_pair &&
                                 highlighted_cell_position != null_pair &&
@@ -431,7 +455,7 @@ void Displayer::display()
                             }
                         }
 
-                        
+
                     }
                     ticker_cell_text += Point(measure_text(cell_text, cell_font_scale).width, 0);
                 }
@@ -453,7 +477,7 @@ void Displayer::display()
         string token = split_tokens[token_index];
         if (token.size() == 0)
             continue;
-        
+
         auto word_frames = parser->parse_grid[0][token_index];
         bool does_match = !(word_frames.size() == 0);
 
@@ -501,7 +525,7 @@ void Displayer::display()
             auto expr_type = expression_of_type.first;
             // if (expr_type == KnowledgeType::GIVEN) {
             vector<string> result_predicates = split_character(predicate_handler->stringify_expression(expression), "\n");
-            
+
             for (Predicate predicate : expression.predicates)
             {
                 auto predicate_ticker_corner = expression_ticker_corner;
@@ -529,20 +553,29 @@ void Displayer::display()
     }
 
     // display the conceptual schema
-    // auto conceptual_nouns = conceptual_schema->noun_set;
+    // auto conceptual_nouns = conceptual_schema->noun_class_set;
 
     Point conschem_corner = Point(30, 30);
     Point conschem_other_corner = conschem_corner + Point(100, 60);
 
-    Scalar CHERRY_RED = CV_RGB(225, 25, 15);
-
     string stringified_inheritances = stringify_conceptual_schema_inheritances();
 
-    display_multi_line_text(conschem_corner, stringified_inheritances, CHERRY_RED, 0.5f);
+    display_multi_line_text(conschem_corner, stringified_inheritances, CONCEPTUAL_SCHEMA, 0.5f);
     string stringified_nouns = stringify_conceptual_schema_nouns();
 
-    display_multi_line_text(conschem_corner + Point(400, 0), stringified_nouns, CHERRY_RED, 0.5f);
+    display_multi_line_text(conschem_corner + Point(400, 0), stringified_nouns, CONCEPTUAL_SCHEMA, 0.5f);
 
+    // display the events
+    Point timeline_corner = Point(700, 50);
+    for (auto event : mind->timeline.actions)
+    {
+        string stringified_result = event.stringify();
+        // if (DEBUGGING)
+        // {
+        //     printf("%s\n", stringified_result.c_str());
+        // }
+        timeline_corner = display_multi_line_text(timeline_corner, stringified_result, CONCEPTUAL_SCHEMA, 0.5f);
+    }
 
     // for (string conceptual_noun : conceptual_nouns)
     // {
@@ -550,14 +583,6 @@ void Displayer::display()
     //     staple_text_on(&conschem_ticker, conceptual_noun, CHERRY_RED, 0.5f);
     //     conschem_ticker += Point(10, 0);
     // }
-
-
-
-
-    if (IS_INITIATED)
-    {
-        // schema_displayer.display();
-    }
 
     cv::imshow(screen_name, image);
 }
@@ -567,18 +592,20 @@ void Displayer::display()
 //     schema_displayer.drift_positions();
 // }
 
-void Displayer::display_multi_line_text(Point pos, string text, Scalar color, float font_scale)
+Point2i Displayer::display_multi_line_text(Point pos, string text, Scalar color, float font_scale)
 {
     float new_line_dist = font_scale * 40.0f;
 
     vector<string> lines = split_character(text, "\n");
-    
+
     for (string line : lines)
     {
         display_text(Point(pos.x, pos.y), line, color, font_scale);
         pos += Point(0, new_line_dist);
     }
     float text_width = measure_text(text, font_scale).width;
+
+    return pos + Point(0, lines.size() * font_scale * new_line_dist);
 }
 
 string stringify_set(set<string> set)
@@ -611,7 +638,7 @@ string Displayer::stringify_frame(Frame frame)
     {
         Frame left_frame = Frame();
         Frame right_frame = Frame();
-        
+
         if (!parser->try_get_frame_at(frame.left_match, left_frame) || !parser->try_get_frame_at(frame.right_match, right_frame))
             throw runtime_error("frame coordinate deref error during string stringification");
 

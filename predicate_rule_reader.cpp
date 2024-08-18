@@ -14,7 +14,6 @@ ParameterCreationType determine_type(string argument)
     {
         return ParameterCreationType::FRAME_PREDICATE_PROPERTY;
     }
-    else
     {
         return ParameterCreationType::WORD_FRAME;
     }
@@ -189,6 +188,7 @@ bool PredicateRuleReader::try_read_predicate_rule(string predicate_rule, Predica
 {
     auto predicate_creators = vector<PredicateCreator>();
     auto predicate_modifiers = vector<PredicateModifier>();
+    auto predicate_types_to_destroy = vector<string>();
     vector<string> predicate_formation_strings = split_character(predicate_rule, "|");
 
     for (int i = 0; i < predicate_formation_strings.size(); i++)
@@ -206,6 +206,11 @@ bool PredicateRuleReader::try_read_predicate_rule(string predicate_rule, Predica
             continue;
         }
 
+        if (predicate_formation_string.at(0) == '%')
+        {
+            predicate_types_to_destroy.push_back(predicate_formation_string.substr(1));
+        }
+
         // ACTION actionVariable:! actor:NounPhrase->IS_INSTANCE_OF.object action:Verb
         predicate_creators.push_back(PredicateCreator(predicate_handler, formation_tokens));
     }
@@ -218,7 +223,7 @@ bool PredicateRuleReader::try_read_predicate_rule(string predicate_rule, Predica
 
     // formation_rules->predicate_creators = vector<PredicateCreator>(predicate_creators.begin(), predicate_creators.end());
     formation_rules->predicate_modifiers = predicate_modifiers;
-
+    formation_rules->predicate_types_to_destroy = predicate_types_to_destroy;
     return true;
 };
 

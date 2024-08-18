@@ -62,6 +62,7 @@ private:
     Scalar HIGHLIGHT;
     Scalar BACKGROUND;
     Scalar GRID_BOXES; // off white
+    Scalar HIGHLIGHTED_FRAME;
     Scalar WORD_TEXT_MATCHED; // teal
     Scalar WORD_TEXT_UNMATCHED; // burgundy
     Scalar WORD_FRAME; // grey sea
@@ -74,6 +75,8 @@ private:
     Scalar PREDICATE_ARGUMENT; // fuscia-red
     Scalar PREDICATE_COLON; // light grey
     Scalar PREDICATE_SPECIAL_ARGUMENT; // navy blue
+
+    Scalar CONCEPTUAL_SCHEMA;
 
     Parser *parser;
     Mind *mind;
@@ -94,7 +97,7 @@ private:
 
     void display_text(Point pos, string text, Scalar color, float font_scale);
 
-    void display_multi_line_text(Point pos, string text, Scalar color, float font_scale);
+    Point2i display_multi_line_text(Point pos, string text, Scalar color, float font_scale);
 
     void staple_text_on(Point *pos, string text, Scalar color, float font_scale);
 

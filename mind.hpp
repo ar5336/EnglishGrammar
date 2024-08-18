@@ -37,6 +37,64 @@ public:
     ConceptualEntity(string noun);
 };
 
+class Event
+{
+private:
+    string action_type;
+    string actor;
+    string subject;
+
+    string location;
+
+    // this can be like,
+    // attempted
+    // set<string> features;
+
+public:
+    Event();
+    Event(string action_type, string actor, string subject);
+
+    string stringify();
+
+    static bool compare(Event event_1, Event event_2);
+};
+
+class Timeline
+{
+private:
+    
+
+public:
+    vector<Event> actions;
+
+    // how will these locations on the timeline be referenced? bucketing.
+
+    // void emplace_action(
+    //     string location,
+    //     string pivot,
+    //     string direction // forwars, backward
+    // );
+    Timeline();
+    bool did_it_occur(Event event);
+};
+
+class ConcreteNoun
+{
+public:
+    ConceptualEntity *entity_type;
+
+    string name;
+
+    // set<string> properties_from_class;
+    set<string> properties;
+
+    // set<ActionIndicator> particular_actions;
+    // vector<Event> relevant_events;
+
+    // Point2i location;
+    // Point2f size;
+};
+
 class ConceptualSchema
 {
 private:
@@ -44,7 +102,7 @@ private:
     // returns child to parent pairings indicated by expression
     vector<pair<string, string>> extract_inheritances(Expression expression);
 
-    // returns nount to action pairings indicated by expression
+    // returns noun to action pairings indicated by expression
     vector<pair<string, string>> extract_abilities(Expression expression);
 
     void apply_inheritance_rule(Expression expression);
@@ -59,9 +117,10 @@ private:
     bool can_do(string noun, string action);
     void add_ability(string noun, string action);
 public:
-    vector<ConceptualEntity> nouns;
+    vector<ConceptualEntity> nouns_classes;
+    vector<ConcreteNoun> concrete_nouns;
 
-    set<string> noun_set;
+    set<string> noun_class_set;
     
     map<string, ConceptualEntity> entities_by_noun;
     map<string, set<string>> child_to_parents_map;
@@ -84,6 +143,9 @@ public:
     void update_conceptual_maps(Expression new_expression);
 
     pair<bool, string> try_resolve_inquisitive_expression(Expression expression);
+
+    // returns noun classes for the subject pairings
+    vector<Event> extract_events(Expression expression);
 
     // void make_inferences(Expression expression);
 };
@@ -123,6 +185,8 @@ public:
     string ask(Expression expression);
 
     void tell(Expression expression);
+
+    Timeline timeline;
 };
 
 // TODO - create

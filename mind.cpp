@@ -3,6 +3,7 @@
 Mind::Mind(PredicateHandler *predicate_handler, ConceptualSchema *conceptual_schema)
     : predicate_handler(predicate_handler), conceptual_schema(conceptual_schema)
 {
+    timeline = Timeline();
 }
 
 void Mind::tell(Expression expression)
@@ -13,6 +14,11 @@ void Mind::tell(Expression expression)
     }
 
     conceptual_schema->consider_expression(expression);
+
+    for (auto event : conceptual_schema->extract_events(expression))
+    {
+        timeline.actions.push_back(event);
+    }
 }
 
 // vector<string> Mind::identify_all_parents(string entity_name)
@@ -64,6 +70,21 @@ string Mind::ask(Expression expression)
     if (is_resolved)
     {
         return resolution_message;
+    }
+
+    // next, resolve against events
+    auto events = conceptual_schema->extract_events(expression);
+    for (auto event : events)
+    {
+        if (timeline.did_it_occur(event))
+        {
+            return "yes, it did happen";
+        }
+    }
+
+    if (events.size() != 0)
+    {
+        return "no, it did not happen";
     }
 
     // TODO - resolve against concrete database.
@@ -250,11 +271,11 @@ pair<bool, string> ConceptualSchema::try_resolve_inquisitive_expression(Expressi
 {
     // for now, only simple inheritance questions - "are dogs mammals", "are dogs animals"
 
-    // first, check if the nouns mentioned are defined in the schema
+    // first, check if the nouns_classes mentioned are defined in the schema
     auto expression_noun_set = expression.noun_set;
     for (auto expression_noun : expression_noun_set)
     {
-        if (noun_set.size() == 0)
+        if (noun_class_set.size() == 0)
         {
             if (DEBUGGING)
                 printf("no defined nouns\n");
@@ -349,12 +370,12 @@ std::set<T> getUnion(const std::set<T>& a, const std::set<T>& b)
 
 ConceptualSchema::ConceptualSchema()
 {
-    noun_set = set<string>();
+    noun_class_set = set<string>();
 }
 
 bool ConceptualSchema::has_noun(string noun)
 {
-    return noun_set.find(noun) != noun_set.end();
+    return noun_class_set.find(noun) != noun_class_set.end();
 }
 
 void ConceptualSchema::add_entity(ConceptualEntity new_node)
@@ -395,9 +416,9 @@ void ConceptualSchema::consider_expression(Expression expression)
         if (!has_noun(expression_noun))
         {
             if (DEBUGGING)
-                printf("added new noun '%s' to noun_set\n", expression_noun.c_str());
+                printf("added new noun '%s' to noun_class_set\n", expression_noun.c_str());
             // if expression noun is not present in current nouns
-            noun_set.insert(expression_noun);
+            noun_class_set.insert(expression_noun);
         }
     }
 
@@ -477,6 +498,75 @@ vector<pair<string, string>> ConceptualSchema::extract_abilities(Expression expr
     return noun_ability_pairs;
 }
 
+Event::Event()
+{
+}
+
+Event::Event(string action_type, string actor, string subject) : action_type(action_type), actor(actor), subject(subject)
+{
+    location = "unknown";
+}
+
+string Event::stringify()
+{
+    string constructee = "";
+    constructee += "Transitive Event:\n";
+    constructee += "    Action type: " + action_type + "\n";
+    constructee += "    Actor: " + actor + "\n"; 
+    constructee += "    Subject: " + subject + "\n";
+    return constructee;
+}
+
+bool unknown_or_match(string arg_1, string arg_2)
+{
+    return (equals(arg_1, "unknown")
+     || equals(arg_2, "unknown")
+     || equals(arg_1, arg_2));
+}
+
+bool Event::compare(Event event_1, Event event_2)
+{
+    if (!equals(event_1.action_type, event_2.action_type))
+        return false;
+    
+    if (!unknown_or_match(event_1.actor, event_2.actor))
+        return false;
+
+    if (!unknown_or_match(event_1.subject, event_2.subject))
+        return false;
+    
+    return true;
+}
+
+vector<Event> ConceptualSchema::extract_events(Expression expression)
+{
+    vector<Event> identified_events;
+
+    auto object_event_pairs = expression.get_connections(
+        "IS", "object",
+        "ACTION_2", "actor");
+
+    for (auto object_event_pair : object_event_pairs)
+    {
+        Predicate actor_predicate = object_event_pair.first;
+        Predicate action_predicate = object_event_pair.second;
+
+        auto event_other_object_pairs = expression.get_connections(
+            "ACTION_2", "subject",
+            "IS", "object");
+        
+        for (auto event_other_object_pair : event_other_object_pairs)
+        {
+            Predicate subject_predicate = event_other_object_pair.second;
+
+            identified_events.push_back(Event(
+                action_predicate.get_argument("action_type"), // action_type
+                actor_predicate.get_argument("noun_class"),       // actor
+                subject_predicate.get_argument("noun_class")));   // subject
+        }
+    }
+    return identified_events;
+}
 
 void ConceptualSchema::apply_inheritance_rule(Expression expression)
 {
@@ -698,4 +788,22 @@ bool ConceptualSchema::can_do(string noun, string action)
 ConceptualEntity::ConceptualEntity(string noun) : noun(noun)
 {
     noun = "NOTHING";
+}
+
+Timeline::Timeline()
+{
+    actions = vector<Event>();
+}
+
+bool Timeline::did_it_occur(Event event)
+{
+    // TODO - make this into a 
+    for (auto occurence : actions)
+    {
+        if (Event::compare(occurence, event))
+        {
+            return true;
+        }
+    }
+    return false;
 }

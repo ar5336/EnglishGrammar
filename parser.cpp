@@ -223,6 +223,17 @@ Expression Parser::apply_formation_rules_on_expression(PredicateFormationRules f
 
     string wildcard_value = variable_namer.generate_name();
 
+    vector<Predicate> predicates_to_destroy;
+    // mark the designated predicate types for destruction, but don't destroy them yet
+    for (string predicate_type_to_destroy : formation_rule.predicate_types_to_destroy)
+    {
+        vector<Predicate> predicates_marked_for_destruction = Expression::extract_predicate_types(combined_expression, predicate_type_to_destroy);
+        for (auto predicate : predicates_marked_for_destruction)
+        {
+            predicates_to_destroy.push_back(predicate);
+        }
+    }
+
     // apply the modification rules before the formation rules. note - not hard decision may be changed
     // vector<Predicate> modified_predicates;
     for (int i = 0; i < formation_rule.predicate_modifiers.size(); i++)
@@ -337,6 +348,12 @@ Expression Parser::apply_formation_rules_on_expression(PredicateFormationRules f
         }
 
         created_predicates.push_back(predicate_handler->construct_predicate(predicate_template.predicate, calculated_arguments));
+    }
+
+    // delete predicates slated for destruction
+    for (auto predicate_to_destroy : predicates_to_destroy)
+    {
+        combined_expression.extract_predicate(predicate_to_destroy);
     }
 
     // add the created predicates to the expression

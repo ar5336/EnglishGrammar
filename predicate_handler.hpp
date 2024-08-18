@@ -44,6 +44,8 @@ public:
     // removes the predicate from the original expression
     Predicate extract_predicate(Predicate original);
 
+    static vector<Predicate> extract_predicate_types(Expression& og_expression, string predicate_type);
+
     vector<pair<Predicate, Predicate>> get_connections(
         string source_predicate_type,
         string source_argument,

@@ -79,6 +79,7 @@ public:
 class PredicateFormationRules
 {
 public:
+    vector<string> predicate_types_to_destroy;
     vector<PredicateCreator> predicate_creators;
     vector<PredicateModifier> predicate_modifiers;
 

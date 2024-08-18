@@ -22,7 +22,9 @@
 using namespace std;
 using namespace cv;
 
-string current_utterance = "dogs are mammals";
+string initial_utterance = "a dog bit a person";
+
+string current_utterance = "";
 
 Parser parser;
 
@@ -39,6 +41,50 @@ ConceptualSchema conceptual_schema = ConceptualSchema();
 Mind mind = Mind(&predicate_handler, &conceptual_schema);
 
 bool is_shift_pressed = false;
+
+vector<string> known_facts = {
+	"dogs are mammals",
+	"people are mammals",
+	"mammals are animals",
+	"ravens are birds",
+	"birds are animals",
+	"birds can fly",
+	"animals can breathe"};
+
+void parse_utterance(string utterance)
+{
+	parser.update_parse_grid(utterance);
+	
+	Frame interp_frame;
+	if (!parser.try_get_top_interpretation(interp_frame))
+	{
+		printf("failed to interpret given utterance \"%s\"\n", utterance.c_str());
+		return;
+	}
+
+	auto interp_handler = InterpretationHandler(&parser, interp_frame);
+
+	Expression expression;
+	if(!interp_handler.try_construct_expression(expression))
+	{
+		printf("failed to construct expression for given utternace \"%s\"\n", utterance.c_str());
+		return;
+	}
+
+
+	mind.tell(expression);
+
+}
+
+void parse_known_facts()
+{
+	for (string fact : known_facts)
+	{
+		parse_utterance(fact);
+		displayer.display();
+	}
+	parser.update_parse_grid(initial_utterance);
+}
 
 void mouse_callback_function(int event, int x, int y, int flags, void *userdata)
 {
@@ -216,6 +262,7 @@ int main(int argc, char **argv)
 	parser.update_parse_grid(current_utterance);
 
 	// displayer.display();
+	parse_known_facts();
 
 	while (1)
 	{
