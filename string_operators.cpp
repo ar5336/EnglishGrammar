@@ -84,3 +84,17 @@ bool is_string_all_chars(string test, char subject)
 	}
 	return true;
 }
+
+string stringify_set(set<string> set)
+{
+    string feature_string = "";
+    for (auto string : set)
+    {
+        feature_string += string;
+        feature_string += ", ";
+    }
+
+    if (set.size() > 0)
+        return feature_string.substr(0, feature_string.length()-2);
+    return feature_string;
+}

@@ -51,13 +51,26 @@ bool operator==(const Predicate& lhs, const Predicate& rhs)
     if (lhs.predicate_template.predicate != rhs.predicate_template.predicate)
         return false;
 
+    if (DEBUGGING)
+        printf("they are both %s\n", lhs.predicate_template.predicate.c_str());
+
     if (lhs.arguments.size() != rhs.arguments.size())
         return false;
 
+    if (DEBUGGING)
+        printf("they both have args count of %ld\n", lhs.arguments.size());
+
     for (int i = 0; i < lhs.arguments.size(); i++)
     {
-        if (lhs.arguments[i] != rhs.arguments[i])
+        string lhs_arg = lhs.arguments[i];
+        string rhs_arg = rhs.arguments[i];
+
+        if (!equals(lhs_arg, rhs_arg))
+        {
+            if (DEBUGGING)
+                printf("mismatch between args '%s' and '%s'\n", lhs_arg.c_str(), rhs_arg.c_str());
             return false;
+        }
     }
 
     return true;

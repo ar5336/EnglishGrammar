@@ -46,6 +46,12 @@ public:
 
     static vector<Predicate> extract_predicate_types(Expression& og_expression, string predicate_type);
 
+    // TODO - restrict this to connective arguments not things like noun_class and object_count
+    // afterwards, rename to extract_predicates_by_connection
+    static vector<Predicate> extract_predicates_by_argument(Expression& og_expression, string argument, bool anaphorics_prohibited);
+
+    static vector<Predicate> extract_anaphora_closure_by_argument(Expression& og_expression, string argument);
+
     vector<pair<Predicate, Predicate>> get_connections(
         string source_predicate_type,
         string source_argument,

@@ -4,7 +4,8 @@
 // #include <string>
 // #include <map>
 #include <utility>
-#include <set>
+// #include <set>
+// #include <map>
 #include <vector>
 // #include <tuple>
 #include <stack>
@@ -37,22 +38,59 @@ public:
     ConceptualEntity(string noun);
 };
 
+class ConcreteNoun
+{
+public:
+    ConceptualEntity *entity_type;
+
+    int id;
+    string name;
+
+    // set<string> properties_from_class;
+    set<string> properties;
+
+    // set<ActionIndicator> particular_actions;
+    // vector<Event> relevant_events;
+
+    // Point2i location;
+    // Point2f size;
+
+    ConcreteNoun(string name, ConceptualEntity* entity_type, int id);
+
+    string stringify();
+};
+
 class Event
 {
 private:
     string action_type;
-    string actor;
-    string subject;
 
     string location;
+
+    int id;
 
     // this can be like,
     // attempted
     // set<string> features;
 
 public:
+    // these can not stay as strings of noun_class
+    // they should point to ConceptualEntity
+    string actor_noun_class;
+    int actor_noun_id;
+
+    string subject_noun_class;
+    int subject_noun_id;
+
     Event();
-    Event(string action_type, string actor, string subject);
+    // constructor for actualized entity
+    Event(
+        string action_type,
+        string actor_noun_class,
+        int actor_noun_id,
+        string subject_noun_class,
+        int subject_noun_id,
+        int id);
 
     string stringify();
 
@@ -75,24 +113,7 @@ public:
     //     string direction // forwars, backward
     // );
     Timeline();
-    bool did_it_occur(Event event);
-};
-
-class ConcreteNoun
-{
-public:
-    ConceptualEntity *entity_type;
-
-    string name;
-
-    // set<string> properties_from_class;
-    set<string> properties;
-
-    // set<ActionIndicator> particular_actions;
-    // vector<Event> relevant_events;
-
-    // Point2i location;
-    // Point2f size;
+    bool did_it_occur(Event event, Event& og_event);
 };
 
 class ConceptualSchema
@@ -118,7 +139,6 @@ private:
     void add_ability(string noun, string action);
 public:
     vector<ConceptualEntity> nouns_classes;
-    vector<ConcreteNoun> concrete_nouns;
 
     set<string> noun_class_set;
     
@@ -143,9 +163,6 @@ public:
     void update_conceptual_maps(Expression new_expression);
 
     pair<bool, string> try_resolve_inquisitive_expression(Expression expression);
-
-    // returns noun classes for the subject pairings
-    vector<Event> extract_events(Expression expression);
 
     // void make_inferences(Expression expression);
 };
@@ -175,6 +192,13 @@ private:
     // cat CAN_DO run
     Expression construct_ability_expression(string noun_1, string action_type);
 
+    vector<Event> extract_events(Expression expression);
+
+    void resolve_properties(Expression expression);
+
+    ConcreteNoun* dereference_noun_id(int noun_id);
+
+    int id_counter = 0;
 public:
     Mind(PredicateHandler *predicate_handler, ConceptualSchema *conceptual_schema);
 
@@ -186,7 +210,15 @@ public:
 
     void tell(Expression expression);
 
+    vector<ConcreteNoun> concrete_nouns;
+
     Timeline timeline;
+
+    Expression resolve_anaphoras(Expression expression);
+
+    // map<string, ConcreteNoun> concrete_nouns_by_id;
+
+    // void create_concrete_noun(ConcreteNoun noun);
 };
 
 // TODO - create

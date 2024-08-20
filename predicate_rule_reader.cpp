@@ -48,7 +48,7 @@ PredicateCreator::PredicateCreator(PredicateHandler *handler, vector<string> cre
 
     auto parameter_tokens = vector<string>(creation_tokens.begin() + 1, creation_tokens.end());    
 
-    PredicateTemplate predicate_template;
+    PredicateTemplate predicate_template = PredicateTemplate();
     if (!handler->try_get_predicate_template(predicate_name, &predicate_template))
         throw runtime_error("could not find predicate template for name '"+predicate_name+"'");
     

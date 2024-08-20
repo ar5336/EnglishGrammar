@@ -222,7 +222,7 @@ Displayer::Displayer(string screen_name)
         image = Mat(IMAGE_SIZE, CV_8UC3, cv::Scalar(0));
         start_text_corner = Point(10, image.rows * 3 / 4);
         start_grid_corner = start_text_corner + Point(0, -60);
-        start_predicate_corner = Point(image.cols *6/10, image.rows * 1/4);
+        start_predicate_corner = Point(image.cols *7/10, image.rows * 1/4);
         start_individual_frame_corner = Point(image.cols *1/30, image.rows * 1/5);
 
         // HIGHLIGHT = CV_RGB(50, 25, 0);
@@ -257,7 +257,7 @@ Displayer::Displayer(string screen_name)
         WORD_FRAME = WHITE;
         SYNTAX_FRAME = WHITE;
 
-        PREDICATE_FONT_SCALE = 0.6f;
+        PREDICATE_FONT_SCALE = 0.5f;
         PREDICATE_TYPE_GIVEN = RED;
         PREDICATE_TYPE_INFERRED = WHITE;
         PREDICATE_PARAMETER = WHITE;
@@ -514,8 +514,7 @@ void Displayer::display()
 
     cv::line(image, cursor_top, cursor_bottom, WORD_TEXT_MATCHED, 2, cv::LINE_4, 0);
 
-    // display expression handler
-
+    // display expressions
     Point expression_ticker_corner = start_predicate_corner + Point(0, scroll);
     Point new_line = Point(0,25);
 
@@ -584,6 +583,14 @@ void Displayer::display()
     //     conschem_ticker += Point(10, 0);
     // }
 
+    // display the concrete nouns
+    Point concrete_noun_corner = Point(900, 50);
+    for (auto noun : mind->concrete_nouns)
+    {
+        string stringified_result = noun.stringify();
+        concrete_noun_corner = display_multi_line_text(concrete_noun_corner, stringified_result, CONCEPTUAL_SCHEMA, 0.5f);
+    }
+
     cv::imshow(screen_name, image);
 }
 
@@ -605,21 +612,7 @@ Point2i Displayer::display_multi_line_text(Point pos, string text, Scalar color,
     }
     float text_width = measure_text(text, font_scale).width;
 
-    return pos + Point(0, lines.size() * font_scale * new_line_dist);
-}
-
-string stringify_set(set<string> set)
-{
-    string feature_string = "";
-    for (auto string : set)
-    {
-        feature_string += string;
-        feature_string += ", ";
-    }
-
-    if (set.size() > 0)
-        return feature_string.substr(0, feature_string.length()-2);
-    return feature_string;
+    return pos;
 }
 
 string Displayer::stringify_frame(Frame frame)
@@ -681,8 +674,9 @@ string Displayer::stringify_conceptual_schema_nouns()
         string child = ability_pair.first;
         set<string> abilities = ability_pair.second;
 
-        string_buildee += child + " CAN_DO [";
+        string_buildee += child + ":\n  abilities: [";
         string_buildee += stringify_set(abilities) + "]\n";
+        // string_buildee += "  properties: [" + stringify_set()
     }
 
     return string_buildee;

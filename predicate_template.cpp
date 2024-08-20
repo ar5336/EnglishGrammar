@@ -1,9 +1,13 @@
 #include "predicate_template.hpp"
 
-PredicateTemplate::PredicateTemplate() {}
+PredicateTemplate::PredicateTemplate() {
+    parameter_names = vector<string>();
+    parameter_index_map = map<string, int>();
+}
 
 PredicateTemplate::PredicateTemplate(string predicate_name, vector<string> parameter_names)
     : predicate(predicate_name), parameter_names(parameter_names) {
+        parameter_index_map = map<string, int>();
         for (int param_index = 0; param_index < parameter_names.size(); param_index++)
         {
             string param_name = parameter_names[param_index];

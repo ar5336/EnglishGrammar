@@ -38,7 +38,7 @@ Predicate PredicateHandler::construct_predicate(string predicate_name, vector<st
 {
     if (DEBUGGING)
     {
-        printf("creating predicate: %s", predicate_name.c_str());
+        printf("\033[1;33mcreating\033[0m predicate: %s", predicate_name.c_str());
         for(string argument : predicate_arguments)
         {
             printf(" %s", argument.c_str());
@@ -277,10 +277,10 @@ bool Expression::try_get_predicate_by_name(Expression expression, string predica
 
 Predicate Expression::extract_predicate(Predicate original)
 {
-    vector<Predicate> leftover_predicates;
+    vector<Predicate> leftover_predicates = vector<Predicate>();
 
     Predicate extracted_predicate;
-    bool predicate_found;
+    bool predicate_found = false;
 
     for (auto pred : predicates)
     {
@@ -305,16 +305,88 @@ Predicate Expression::extract_predicate(Predicate original)
 
 vector<Predicate> Expression::extract_predicate_types(Expression& og_expression, string predicate_type)
 {
-    vector<Predicate> removed_predicates;
-    for (auto predicate : og_expression.predicates)
+    vector<Predicate> removed_predicates = vector<Predicate>();
+
+    vector<Predicate> og_predicates = og_expression.predicates;
+    for (auto predicate : og_predicates)
     {
         if (equals(predicate.predicate_template.predicate, predicate_type))
         {
-            removed_predicates.push_back(og_expression.extract_predicate(predicate));
-
+            removed_predicates.push_back(predicate);
+            og_expression.extract_predicate(predicate);
         }
     }
 
+    return removed_predicates;
+}
+
+vector<Predicate> Expression::extract_predicates_by_argument(Expression &og_expression, string argument, bool anaphorics_prohibited = false)
+{
+    vector<Predicate> removed_predicates;
+    vector<Predicate> list = og_expression.predicates;
+    for (auto predicate : list)
+    {
+        if (equals(predicate.predicate_template.predicate, "ANAPHORIC"))
+            continue;
+
+        for (string candidate_argument : predicate.arguments)
+        {
+            if (equals(candidate_argument, argument))
+            {
+                removed_predicates.push_back(og_expression.extract_predicate(predicate));
+            }
+        }
+    }
+    return removed_predicates;
+}
+
+vector<Predicate> Expression::extract_anaphora_closure_by_argument(Expression &og_expression, string argument)
+{
+    vector<Predicate> removed_predicates;
+
+    set<Predicate> visited_predicates;
+    vector<Predicate> predicates_to_visit = extract_predicates_by_argument(og_expression, argument, /*anaphorics prohibited*/ true);
+
+    while(predicates_to_visit.size() > 0)
+    {
+        auto top_predicate = predicates_to_visit.back();
+        predicates_to_visit.pop_back();
+
+        og_expression.extract_predicate(top_predicate);
+        removed_predicates.push_back(top_predicate);
+
+        set<Predicate> relevant_predicates;
+        for (string top_predicate_argument : top_predicate.arguments)
+        {
+            auto identified_relevant_predicates = extract_predicates_by_argument(og_expression, top_predicate_argument, /*anaphorics prohibited*/ true);
+            for (auto identified_relevant_predicate : identified_relevant_predicates)
+            {
+                if (visited_predicates.count(identified_relevant_predicate) == 0)
+                    relevant_predicates.emplace(identified_relevant_predicate);
+            }
+        }
+
+        for (auto relevant_predicate : relevant_predicates)
+        {
+            predicates_to_visit.push_back(relevant_predicate);
+        }
+
+        visited_predicates.emplace(top_predicate);
+    }
+
+    // for (auto predicate : og_expression.predicates)
+    // {
+    //     if (equals(predicate.predicate_template.predicate, predicate_type))
+    //     {
+    //         for (string candidate_argument : predicate.arguments)
+    //         {
+    //             if (equals(candidate_argument, argument))
+    //             {
+    //                 removed_predicates.push_back(og_expression.extract_predicate(predicate));
+    //             }
+    //         }
+    //     }
+    // }
     return removed_predicates;
 }
 
@@ -325,7 +397,7 @@ vector<pair<Predicate, Predicate>> Expression::get_connections(
     string target_argument)
 {
     if (DEBUGGING)
-        printf("getting connections from\n\tpred:'%s' arg:'%s' to\n\tpred:'%s' arg:'%s'\n",
+        printf("\033[1;34mgetting\033[0m connections from\n\tpred:'%s' arg:'%s' to\n\tpred:'%s' arg:'%s'\n",
         source_predicate_type.c_str(),
         source_argument.c_str(),
         target_predicate_type.c_str(),

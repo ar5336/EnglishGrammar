@@ -408,7 +408,7 @@ string Parser::get_argument_accessor(Frame left_frame, Frame right_frame, Patter
 
     if (DEBUGGING)
     {
-        printf("accessing parameter '%s' in predicate '%s'\n", accessor_paramter_name.c_str(), original_predicate.predicate_template.predicate.c_str());
+        printf("\033[1;34maccessing\033[0m parameter '%s' in predicate '%s'\n", accessor_paramter_name.c_str(), original_predicate.predicate_template.predicate.c_str());
     }
     string argument = original_predicate.get_argument(accessor_paramter_name);
 
