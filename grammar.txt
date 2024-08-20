@@ -142,10 +142,10 @@ Words:
                 get getting got gets gotten
                 tear tearing tore tears torn
                 rip ripping ripped rips
+                ride riding rode rides ridden
             Intransitive: # simple continuous perfect 3PPresent (pastPart)
                 think thinking thought thinks thunk
                 play playing played plays
-                ride riding rode rides ridden
                 point pointing pointed points
                 fly flying flew flies flown
                 jump jumping jumped jumps
@@ -192,11 +192,12 @@ Words:
                 is -3rdPerson -singular -masculine -feminine -present
                 are -plural -3rdPerson -2ndPerson -1stPerson -present -neuter -masculine -feminine
                 are -singular -2ndPerson -present
-                be 
-                been
-                being
+                be -future -singular -plural
+                been -past -singular -plural
+                being -present
                 was -singular -past
                 were -plural -past
+                got -past -plural -singular
             HabilitiveVerb:
                 did
                 do -singular -plural -present -1stPerson -2ndPerson
@@ -220,6 +221,8 @@ Words:
                 confused
                 alive
                 hit
+                hurt
+                bitten
             Comparable: # absolute comparative superlative
                 hungry hungrier hungriest
                 new newer newest
@@ -238,6 +241,11 @@ Words:
                 squeaky squeakier squeakiest
                 small smaller smallest
                 young younger youngest
+                bright brighter brightest
+                young younger youngest
+                smart smarter smartest
+                stupid stupider stupidest
+                dumb dumber dumbest
         PossessiveAdjective:
             my -1stPerson -singular -possessive
             our -1stPerson -plural -possessive
@@ -359,7 +367,12 @@ Frames:
 
         # Noun[location] Noun[NUMBER] -NUMBER
             # land animals, sea animals
-        NounPhrase[NUMBER] AnaphoricDescriptivePhrase[transitive] -NUMBER -anaphoric <AnaphoricDescriptivePhrase->ACTION_2.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
+
+    AnaphoricNounPhrase "AnNP"
+        NounPhrase[NUMBER] AnaphoricActorDescriptivePhrase[transitive] -NUMBER -anaphoric <AnaphoricActorDescriptivePhrase->ACTION_2.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
+            # the dog that bit the person
+        NounPhrase AnaphoricSubjectDescriptivePhrase <AnaphoricSubjectDescriptivePhrase->ACTION_2.subject=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
+            # the person that got bit
     VerbPhrase "VP"
         Verb[MainVerb,TENSE,Transitive] NounPhrase -TENSE -transitive -actor_unfilled <ACTION_2 action:! actor:"unknown" action_type:Verb subject:NounPhrase->IS.object>
             # <give the horse> an apple
@@ -479,11 +492,11 @@ Frames:
         Noun AuxiliaryPhrase
         NounPhrase AuxiliaryPhrase
 
-        NounPhrase[!anaphoric] PropertyDescriptorPhrase <PropertyDescriptorPhrase->HAS_PROPERTY.object=NounPhrase->IS.object>
+        NounPhrase PropertyDescriptorPhrase <PropertyDescriptorPhrase->HAS_PROPERTY.object=NounPhrase->IS.object>
             # the dog is ugly
 
-        NounPhrase[anaphoric] PropertyDescriptorPhrase <PropertyDescriptorPhrase->HAS_PROPERTY.object=NounPhrase->ANAPHORIC.anaphoric_object>
-            # the dog that bit the person is ugly
+        AnaphoricNounPhrase PropertyDescriptorPhrase <PropertyDescriptorPhrase->HAS_PROPERTY.object=AnaphoricNounPhrase->ANAPHORIC.anaphoric_object>
+            # <the dog that bit the person> is ugly
     Question "Q"
         Verb[ModalVerb,MODE] VerbPhrase[NUMBER] -NUMBER -MODE <CAN_DO action_type:VerbPhrase->ACTION.action_type actor:VerbPhrase->IS.object>
             # will i run
@@ -535,11 +548,24 @@ Frames:
             # do the horses
         Verb[LinkingVerb,present,NUMBER] Noun[plural] -present -plurals -existential <IS object:! object_count:"inf" noun_class:Noun>
             # do dogs
-    AnaphoricDescriptivePhrase "AnaDP"
+    AnaphoricActorDescriptivePhrase "AnADP"
         Noun[RelativePronoun] VerbPhrase[transitive,actor_unfilled] -transitive -actor_unfilled -descriptive
             # the dog <that bit a person> is ugly
         Noun[RelativePronoun] Verb[!Transitive] -intransitive -actor_unfilled <ACTION action:! actor:"unknown" action_type:Verb>
             # the runner <that fell> is clumsy
+
+    AnaphoricSubjectDescriptivePhrase "AnSDP"
+        Noun[RelativePronoun] AnaphoricSubjectDescriber -transitive -actor_unfilled -descriptive
+            # the person <that got bit> is ugly
+            # the person <that was bitten> is ugly
+
+    AnaphoricSubjectDescriber "AnSD"
+        Verb[IndicativeVerb,past] Verb[MainVerb,pastPart] -past <ACTION_2 action:! actor:"unknown" action_type:Verb#2 subject:"unknown">
+            # was bitten
+        Verb[IndicativeVerb,past] Verb[MainVerb,perfect] -past <ACTION_2 action:! actor:"unknown" action_type:Verb#2 subject:"unknown">
+            # got bit
+        # will be bit
+        # will have been bit
 
     InterrogativePhrase "IntP"
     #    who -person

@@ -1,0 +1,543 @@
+
+
+
+how predicates are supposed to look
+
+pigs are animals
+birds are animals
+birds can fly
+
+animal encompasses pig
+animal encompasses bird
+bird can fly
+animal can eat
+
+?can animal eat? Y
+?can bird eat? Y
+?can animal fly? N
+?can pig fly? N
+
+"pigs are land animals"
+"birds are animals"
+"birds can fly"
+
+?"can pigs fly"
+    NO
+
+"objects can fly if they are thrown"
+"animals are objects"
+?"can pigs fly"
+    SOMETIMES
+
+
+"cats are animals"
+
+    S [p:issubsetof]
+
+predicate: cat issubsetof animal
+
+"animals can run"
+
+    S [p:habilitive]
+
+predicate: animal can run
+    this should prompt the creation of a
+    cat can run
+ 
+ "knights fight in battles"
+ "kings appoint knights"
+ "knights are people"
+ "kings are people"
+ "adults are people"
+ "adults can fight"
+ "babies are not adults"
+ "babies are people"
+
+    DO_STH_TO_STH person give gift person
+
+
+
+Statements made by the deranged:
+given predicates:
+    CAN_DO horse run                "horses can run"
+    HAS_PROPERTY horse fast         "horses are fast"
+    IS_SUBSET_OF horse mammal       "horse are mammals"
+    IS_SUBSET_OF mammal animal      "mammals are animals"
+    IS_INSTANCE_OF charles horse    "charles is a horse"
+derived predicates:
+    CAN_DO charles run
+    HAS_PROPERTY charles fast
+    IS_SUBSET_OF horse animal
+    IS_INSTANCE_OF charles mammal
+    IS_INSTANCE_OF charles animal
+
+
+ALL_AND
+    HAS_PROPERTY horse fast
+    IS_SUBSET_OF horse racehorse
+
+
+
+
+
+"are horses fast"
+?HAS_PROPERTY horse fast -> YES
+
+"are horses mammals"
+?IS_SUBSET_OF horse mammal -> YES
+
+"is charles fast"
+?HAS_PROPERTY charles fast -> YES
+    requires inheritance of HAS_PROPERTY
+
+"can charles run"
+?CAN_DO chales run -> YES
+
+a Predicate KnowledgeBase can contain any number of predicates.
+    it has given predicates displayed in red
+    it also has inferred predicates displayed in orange
+
+
+"squeaky wheel gets the grease"
+
+IS_INSTANCE_OF c wheel
+IS_INSTANCE_OF g grease
+HAS_PROPERTY c squeaky
+VERB_APPLIES c get g
+
+AdjectivePhrase => HAS_PROPERTY
+
+[ ] put predicate construction in the grammar. that way the interpretation is done there
+
+
+"a person can live in a house"
+{
+    CAN_DO person live
+    PREPOSITION person inside house
+}
+
+"a person can live under a house
+{
+    CAN_DO person live
+    PREPOSITION person under house
+}
+
+?? how to construct predicates from grammar rules
+
+simplest case
+    S => PreIndicativePhrase[plural] Noun[plural] -plural <IS_SUBSET_OF PreIndicativePhrase.Noun Noun.Noun>
+            # horses are mammals
+        
+        PreIndicativePhrase must emit "horse"
+
+    PreIndicativePhrase => Noun[plural]  Verb[LinkingVerb,plural] -plural <object:Noun>
+
+each grammar formation category is expected to emit a certain predicate structure.
+"a horse" - IS_INSTANCE_OF h horse
+"a horse runs" - DOES h run
+
+>!
+IS_INSTANCE_OF x horse
+IS_SUBSET_OF x mammal
+
+>!
+IS_INSTANCE_OF x mammal
+CAN_DO x breathe
+
+>~
+IS_INSTANCE_OF x horse
+CAN_DO x breathe
+
+>?
+IS_INSTANCE_OF x horse
+CAN_DO x breathe
+
+=> yes
+
+
+
+to process the question, each of the declarations must be matched against.
+they should be indexed by length, variables mentioned. Then looped through (more indexing can be added later)
+    ? predicate types mentioned?
+        [] the responder could use the results of the indexing to determine its response
+            some variables aren't present -> i don't know anything about <insert missing variables>
+            length mismatch -> i don't know anything about that
+
+    to implement this, add a PredicateStatement object that holds a list of predicates in itself
+        it can be evaluated, ?checked for contradictions with other predicateStatements?
+    
+    the PredicateHandler should be renamed to the StatementHandler
+        It should have an infer statements, just liek this has inferPredicates
+    
+
+>! "if it is hungry it drools"
+IS x hungry
+DOES x drool
+
+> "doe
+
+
+>! "if a horse is in a field then it is running"
+IF
+IS_INSTANCE_OF x, horse
+PREPOSITION x, in, field
+THEN
+CAN_DO x, run
+
+>! "running animals trample the ground"
+"grass grows on the ground"
+
+
+change of predicate structure
+
+IS_SUBSET_OF horse mammal
+
+"horses are mammals"
+IS_INSTANCE_OF(x, horse)
+IS_INSTANCE_OF(y, mammal)
+IS_SUBSET_OF(x, y)
+
+"mammals can breathe"
+CAN_DO(x, breathe)
+IS_INSTANCE_OF(x, mammal)
+
+infer
+
+"horses can breathe"
+CAN_DO(x, breathe)
+IS_INSTANCE_OF(x, horse)
+
+
+multiple characters will allow for testing relationships - 1st, 2nd 3rd person
+
+["does he know about this",]
+
+
+IFTHEN should be a new kind of statement, alongside statement and question
+
+"is the horse running" and "can the horse run" are different questions
+ACTION(x, run, TIME:present)
+vs
+ACTION(x, run, MODE:ability)
+
+HORSE_EATS_GRASS()
+
+
+
+goal heirarchy network
+
+imagine some goals
+    run this farm
+        grow crops
+            attend seasonally
+        feed cows daily
+    convince her to go to the other restaraunt
+        deride justifications of statement
+
+
+
+state: hungry, thirsty
+goals: 
+    get food
+    get drink
+
+curious -> get answers
+doubtful -> prove wrong, ask more
+contemptuous -> ignore, argue
+
+anger -> deride source of anger, address source
+
+
+create a predicateExpression that disagrees with another predicateExpression
+
+caesar is good because he gave us bread and brought peace
+    > caesar is not good
+    |    > he did not give us bread
+    |        > HE did not give us bread
+    |            > it was something else that gave us bread
+    |        > he did NOT give us bread
+    |            offer evidence: i have had less bread since whenever
+    |            > instead he brought the 
+    |    > he did not bring peace
+    |        > HE did not bring peace
+    |            > something else brought peace
+    |        > he did NOT bring peace
+
+she went to the wedding
+    > SHE did not go to the wedding
+        > SHE 
+
+a given reason of disagreement - conflicting goals?
+
+
+
+scene:
+    there is a frog in the box
+
+> "do i know that there is a frog in the box
+
+
+~~~~~~~~~~~~~
+do you live in a field
+  intc   v  
+               pp
+            vp
+        Q
+
+verbPhrase
+    Verb PrepPhrase Verb[simple]
+
+"Intc[do you] VP[run around]"
+[must you]obligation [go to the field]
+ACTION()
+Question
+ IntC VP <VP.Predicate+(MODE: INTC.MODE)
+
+"is steve angry"
+?
+    HAS_PROPERTY(x, anger)
+    HAS_NAME(x, steve)
+
+> you are speaking to a barman that has sold
+    bread to jimmy
+    cheese to steve
+are  there people that buy cheese here
+    yes
+
+
+A FOPL form of "the quick brown fox jumps over a lazy dog"
+
+IS_INSTANCE_OF x fox
+HAS_PROPERTY x brown
+HAS_PROPERTY x quick
+
+IS_INSTANCE_OF y dog
+HAS_PROPERTY y lazy
+
+ACTION z x jump
+PREPOSITION z over y
+
+==========================================================================
+in a field that has the blight, grass does not grow
+IS_INSTANCE_OF x field
+HAS_PROPERTY x blight
+>
+IS_INSTANCE_OF y grass
+
+
+==========================================================================
+
+
+IDEA: create a grammar but for predicates. This makes all sorts of sense FR. 
+
+Predicates:
+    IS_INSTANCE_OF object nounClass
+    HAS_PROPERTY object property
+    PREPOSITION action preposition subject
+    ACTION actionVariable actor action
+
+the quick brown fox >
+    NP | IS_INSTANCE_OF x fox
+    AP | HAS_PROPERTY x brown
+    AP | HAS_PROPERTY x quick
+
+    NounPhrase "NP"
+        Determiner Noun[NUMBER] -NUMBER <IS_INSTANCE_OF ! Noun.frame_name>
+            (here, ! indicates that a new variable name will be generated)
+
+        Determiner AdjectivePhrase[NUMBER] -NUMBER <>
+            # the IS_INSTANCE_OF shoudl have already been produced by the A N frame
+        # the quick brown fox
+        # a lazy dog
+
+    AdjectivePhrase "AP"
+        Adjective Noun[NUMBER] -NUMBER <IS_INSTANCE_OF ! Noun.frame_name | HAS_PROPERTY ! Adjective.frame_name>
+        # brown fox
+        # lazy dog
+
+        Adjective AdjectivePhrase[NUMBER] -NUMBER <HAS_PROPERTY AdjectivePhrase->IS_INSTANCE_OF.subject Adjective.frame_name>
+        # quick brown fox
+
+the quick brown fox jumps over the lazy dog
+
+    VerbPhrase "VP"
+        NounPhrase Verb <ACTION actionVariable:! actor:NounPhrase->IS_INSTANCE_OF.object action:Verb.frame_name>
+        # the quick brown fox jumps
+
+        VerbPhrase PrepPhrase <PrepPhrase->PREPOSITION.action=VerbPhrase->IS_INSTANCE_OF.object>
+        # the quick brown fox jumps over the lazy dog
+
+    PrepPhrase "PP"
+        Preposition NounPhrase <PREPOSITION action:! preposition:Preposition.frame_name subject:NounPhrase.IS_INSTANCE_OF.object>
+        # over the lazy dog
+
+predicate formation instructions, or like, something else. Not sure what to call these
+
+PredicateFormationRule structure
+    < PredicateFormer (| PredicateFormer)* >
+
+PredicateFormer structure
+    PredicateTemplate | PredicateModifier
+
+PredicateTemplate structure
+    PREDICATE_BASE parameterName:[wildcard|WordFrame.frame_name|PredicateParameterAccessor]
+
+PredicateParameterAccessor
+    SyntaxFrame->PREDICATE_NAME.parameterName
+        # when matching, if the syntax frame does not have such predicates - just drop this current PredicateTemplate and move on
+        # however, drop a warning about it
+
+PredicateModifier
+    PredicateParameterAccessor=PredicateParameterAccessor
+
+Gonna have to create a PreicateInstructionParser.
+This is gonna require tests.
+
+I'll create a test mode for myprogram that will run these tests. But really they should be everywhere. They should encompass both the parser and predicate logic.
+
+The Predicate formats should be placed in a predicateGrammar.txt separate from the grammar.txt
+
++PredicateRuleReader
++PredicateRuleGrammar (should just be hardcoded?)
+
+=============================================================
+ENTITY x car - this is way better than IS_INSTANCE_OF
+
+okay, and also there are advanced predicates that we don't have yet. a much simpler goal would be to just regain teh functionality we currently have in hard-coded trash.
+birds are animals
+birds can fly
+ravens are birds
+
+therefore
+    ravens can fly
+
+
+CLASS x bird
+CLASS y animal
+IS_SUBSET_OF x y
+
+transitive property of subset
+
+MAKE SURE to index all CLASS statements when creating an entity for easy inference
+
+
+oh and a small upgrade to this would be for class heirarchies for verbs.
+"running is a type of walking"
+"sprinting is a type of running"
+"jogging is a type of running"
+
+"gliding is a type of flying"
+    > ravens can glide
+
+create a Noun class, so that 
+
+
+kind of insane idea, predicate features.
+independent of the predicate and its arguments
+
+allows for referencing of any predicate with a feature
+
+a feature should guarantee that 
+
+ENTITY COMPONENT SYSTEM
+
+a component has features
+a predicate can have * components
+
+
+ [ ]    a new type of accessor PredicateTypeParameterAccessor
+        parameter:[ParameterType].parameter
+        object:[parameter_type:Identifier].object
+
+ [ ]  as well as yet another accessor for Features 
+        parameter:{featureName}
+
+        and FeatureGroups
+        parameter:{FEATURE_GROUP_NAME}
+
+    the idea with these is to enable conditions that transfer from featureGroup to predicates
+
+ [X]   as well as just plain strings
+        noun_class:"human"
+    
+
+ [ ] ACTION implies CAN_DO
+
+ [ ] CONTAINS is transitive when the containee IS of object_count 3 (all)
+
+
+ACTION [actor|object] IS > CAN_DO action_type:ACTION.action_type actor:IS.object
+CONTAINS [containee|object] IS(A) & A.object_count > anything attached to CONTAINS container applies to containee
+
+can't rule it up :(   yet >:)
+
+need to determine how to properly index an expression for identifying connections
+
+first create a
+map<string, tupe<index, string>> var_to_index_n_arg
+
+
+so I need a rundown on the big picture.
+
+how am i gonna run inferences.
+have expression indeces.
+
+first, for every expression, identify the Noun -> Noun relationship
+the quick brown fox jumped over the lazy dog
+
+turn predicate->predicate thru variable graph into a 
+
+noun to noun thru predicate graph
+
+FOX -> HAS_PROPERTY brown
+FOX -> HAS_PROPERTY quick
+
+FOX -> 
+
+we are interested in the IS predicates
+and the predicates that are connected to them
+
+assuming there's no islands. But why not. There can always be them in a sentence if its weird
+
+ok we can later verify that all the predicates are connected.
+
+not the rules are such that 
+
+yeah so all you just need is a predicate to predicate by arguments map, and then take it out into mind.cpp, then apply the rules
+
+
+so you go through each incoming expression, and update the noun-noun-inheritance graph
+and also the can-do graph along with it
+
+but mvp is inheritance
+
+update noun inheritance graph based on the basis of the IS -> CONTAINS -> IS connection
+
+
+===========================
+
+ok so a relationshional dataset is not feasable to store as predicate logic.
+Instead it should be stored as a connection graph, and resolved into such.
+
+So it goes
+Frames > Predicates > Connections/Conditions
+(ouh conditions will be so sick to implement)
+
+but for now it will be like
+
+General:
+    dog IS mammal
+
+mind should have a predicate_to_relation transform of some sort, to check "are dogs mammals
+
+
+conceptual schema
+cncptl schm
+cpl_sm
+conschem
+
+not just nouns have to be given conceptual grouping.
+
+but so shoudl adjectives and def verbs
+
+"the man that can run faster than a fish can swim"

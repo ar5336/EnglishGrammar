@@ -374,19 +374,6 @@ vector<Predicate> Expression::extract_anaphora_closure_by_argument(Expression &o
         visited_predicates.emplace(top_predicate);
     }
 
-    // for (auto predicate : og_expression.predicates)
-    // {
-    //     if (equals(predicate.predicate_template.predicate, predicate_type))
-    //     {
-    //         for (string candidate_argument : predicate.arguments)
-    //         {
-    //             if (equals(candidate_argument, argument))
-    //             {
-    //                 removed_predicates.push_back(og_expression.extract_predicate(predicate));
-    //             }
-    //         }
-    //     }
-    // }
     return removed_predicates;
 }
 

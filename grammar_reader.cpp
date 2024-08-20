@@ -38,6 +38,9 @@ void GrammarReader::add_term_forms(
 
 void GrammarReader::read_syntax_entry()
 {
+    if (DEBUGGING)
+        printf("reading syntax entry %s\n", current_line.c_str());
+    
     // determine if you're reading a name / nickname line or a pattern line
     // the second token of a pattern name line is quoted
     string second_token = split_tokens[1];

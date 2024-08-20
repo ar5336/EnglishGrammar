@@ -54,6 +54,14 @@ void Mind::tell(Expression expression)
     }
 }
 
+enum ActionParamType
+{
+    NONE,
+    ACTOR,
+    SUBJECT,
+    SUBJECT_2,
+};
+
 Expression Mind::resolve_anaphoras(Expression expression)
 {
     if (DEBUGGING)
@@ -65,14 +73,9 @@ Expression Mind::resolve_anaphoras(Expression expression)
     // gather all the predicates that reference the anaphoric variable
     vector<Predicate> anaphoric_predicates = Expression::extract_predicate_types(stripped_expression, "ANAPHORIC");
 
-    // if (DEBUGGING)
-    // {
-    //     printf("%d anaphoras extracted\n", (int)anaphoric_predicates.size());
-    // }
-
     vector<vector<Predicate>> anaphora_groups;
     vector<Event> resolved_anaphora_events;
-
+    vector<Predicate> action_predicates;
     
     for (auto anaphoric_predicate : anaphoric_predicates)
     {
@@ -98,10 +101,16 @@ Expression Mind::resolve_anaphoras(Expression expression)
             printf("anaphora expression: %s\n", predicate_handler->stringify_expression(anaphora_expression).c_str());
         }
 
+        vector<Predicate> action_predicates_extracted = Expression::extract_predicate_types(anaphora_expression, "ACTION_2");
+        if (action_predicates_extracted.size() > 1)
+            throw runtime_error("more than one event per anaphora, parsing not implemented for this yet");
+
+        action_predicates.push_back(action_predicates_extracted.at(0));
+
         if (events.size() != 1)
         {   
             //TODO - change the behavior hrere, as in the future, anaphoras will be able to refer to concrete nouns, or even abstract nouns
-            throw runtime_error("failed to resolve anaphora into event");
+            throw runtime_error("failed to resolve anaphora into event. found " + to_string(events.size()) + " events.");
         }
 
         resolved_anaphora_events.push_back(events.at(0));
@@ -114,7 +123,17 @@ Expression Mind::resolve_anaphoras(Expression expression)
         Event event = resolved_anaphora_events.at(i);
         auto anaphoric_predicate = anaphoric_predicates.at(i);
 
-        string base_var_name = anaphoric_predicate.get_argument("anaphoric_object");
+        string base_var_name = anaphoric_predicate.get_argument("object");
+        string anaphoric_var_name = anaphoric_predicate.get_argument("anaphoric_object");
+
+        ActionParamType param_type = ActionParamType::NONE;
+
+        // identify which ACTION_2 param type of base_var_name
+        Predicate action_predicate = action_predicates.at(i);
+        if (equals(action_predicate.get_argument("actor"), base_var_name))
+            param_type = ActionParamType::ACTOR;
+        if (equals(action_predicate.get_argument("subject"), base_var_name))
+            param_type = ActionParamType::SUBJECT;
 
         Event pass_event = Event();
         if (timeline.did_it_occur(event, pass_event))
@@ -130,72 +149,28 @@ Expression Mind::resolve_anaphoras(Expression expression)
 
             Event relevant_event = event;
 
+            vector<string> args = vector<string> {anaphoric_var_name};
+
+            if (param_type == ActionParamType::ACTOR)
+                args.push_back(to_string(pass_event.actor_noun_id));
+            else if (param_type == ActionParamType::SUBJECT)
+                args.push_back(to_string(pass_event.subject_noun_id));
+            else 
+                throw runtime_error("unsupported anaphoric reference to an argument in an action predicate");
+
             // IS object:a object_count:1 noun_class:fish       IS object:a object_count:1 noun_class:fish
             // ANAPHORIC object:a                           =>  OBJECT object:a id:45  (maps to a fish named billy or something)
             restored_expression_preds.push_back(
                 predicate_handler->construct_predicate(
                     "OBJECT",
-                    vector<string>
-                    {
-                        /*object*/ base_var_name,
-                        /*id*/ to_string(pass_event.actor_noun_id)
-                    }
+                    args
                 )
             );
         }
-        
-
-        // (this is just for demonstration, anaphoras should include properties and components and inheritances)
     }
 
-    // create OBJECT predicates in place of the anaphora to handle them explicitly 
-    // for (auto anaphora_group_index = 0; anaphora_group_index < anaphoric_predicates.size(); anaphora_group_index++)
-    // {
-
-    // }
-
-    // conceptual_schema->extract_events()
     return Expression(restored_expression_preds);
 }
-
-// void Mind::create_concrete_noun(ConcreteNoun noun)
-// {
-// }
-
-// vector<string> Mind::identify_all_parents(string entity_name)
-// {
-//     const int WHILE_LIMIT = 100;
-
-//     // TODO - update child_to_parent_map to be <string> => vector<string>
-//     // so you can have multiple inheritance
-//     vector<string> parent_stack;
-
-//     set<string> visited_entities;
-//     string current_entity_name = entity_name;
-//     while (conceptual_schema->has_noun(current_entity_name) != 0
-//         && visited_entities.count(current_entity_name) == 0)
-//     {
-//         set<string> parents = conceptual_schema->get_parents(current_entity_name);
-
-//         for (string parent_name : parents)
-//         {
-//             if (visited_entities.count(parent_name) == 0)
-//                 parent_stack.push_back(parent_name);
-
-//             visited_entities.insert(current_entity_name);
-//             current_entity_name = parent_name;
-//         }
-
-        
-//         if (visited_entities.size() > WHILE_LIMIT)
-//             throw runtime_error("WHILE_LIMIT reached");
-//     }
-
-//     if (DEBUGGING && parent_stack.size() > 1)
-//         printf("found parents for child '%s' count: %ld\n", entity_name.c_str(), parent_stack.size());
-
-//     return parent_stack;
-// }
 
 string Mind::ask(Expression expression)
 {
@@ -530,35 +505,11 @@ bool ConceptualSchema::has_noun(string noun)
 
 void ConceptualSchema::add_entity(ConceptualEntity new_node)
 {
-    // just update the children of your children, don't care about parents pointers yet. no need.
-    // stack<string> children_updating_stack;
-    // if (new_node.children.size() != 0)
-    // {
-    //     for (string child : new_node.children)
-    //     {
-    //         children_updating_stack.push(child);
-    //     }
-    // }
-
     if (DEBUGGING)
     {
         printf("\033[1;32madding\033[0m object of noun class '%s'\n", new_node.noun.c_str());
     }
     entities_by_noun.emplace(new_node.noun, new_node);
-
-    // traverse to update parents and children
-    // while (children_updating_stack.size() > 0)
-    // {
-    //     string child_to_update = children_updating_stack.top();
-
-    //     if (entities_by_noun.count(child_to_update) == 0)
-    //        throw runtime_error("child of ConceptualEntity not found");
-
-    //     ConceptualEntity node = entities_by_noun.at(child_to_update);
-
-    //     node.children = getUnion(node.children, new_node.children);
-
-    // }
 }
 
 void ConceptualSchema::consider_expression(Expression expression)
@@ -689,8 +640,8 @@ string Event::stringify()
     string constructee = "";
     constructee += "Transitive Event [" + to_string(id) + "]:\n";
     constructee += "    Action type: " + action_type + "\n";
-    constructee += "    Actor: " + actor_noun_class + "[" +  + "] \n"; 
-    constructee += "    Subject: " + subject_noun_class + "\n";
+    constructee += "    Actor: " + actor_noun_class + "[" + to_string(actor_noun_id) + "]\n"; 
+    constructee += "    Subject: " + subject_noun_class + "[" + to_string(subject_noun_id) + "]\n";
     return constructee;
 }
 
@@ -746,29 +697,25 @@ vector<Event> Mind::extract_events(Expression expression)
         }
     }
 
-    object_event_pairs = expression.get_connections(
-        "OBJECT", "object",
-        "ACTION_2", "actor");
+    if (identified_events.size() != 0)
+        return identified_events;
 
-    for (auto object_event_pair : object_event_pairs)
-    {
-        Predicate actor_predicate = object_event_pair.first;
-        Predicate action_predicate = object_event_pair.second;
-
-        auto event_other_object_pairs = expression.get_connections(
+    auto event_other_object_pairs = expression.get_connections(
             "ACTION_2", "subject",
-            "OBJECT", "object");
-        
-        for (auto event_other_object_pair : event_other_object_pairs)
-        {
-            Predicate subject_predicate = event_other_object_pair.second;
+            "IS", "object");
+    
+    for (auto event_other_object_pair : event_other_object_pairs)
+    {
+        Predicate action_predicate = event_other_object_pair.first;
+        Predicate subject_predicate = event_other_object_pair.second;
 
-            // identified_events.push_back(Event(
-            //     action_predicate.get_argument("action_type"), // action_type
-            //     actor_predicate.get_argument("noun_class"),       // actor
-            //     subject_predicate.get_argument("noun_class"),
-            //     identified_events.size()));   // subject
-        }
+        identified_events.push_back(Event(
+            action_predicate.get_argument("action_type"), // action_type
+            "unknown",       // actor
+            -1,
+            subject_predicate.get_argument("noun_class"),
+            (int)concrete_nouns.size(),
+            identified_events.size()));   // subject
     }
 
     return identified_events;
