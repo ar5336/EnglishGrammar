@@ -44,7 +44,7 @@ public:
     // removes the predicate from the original expression
     Predicate extract_predicate(Predicate original);
 
-    static vector<Predicate> extract_predicate_types(Expression& og_expression, string predicate_type);
+    static vector<Predicate> extract_predicate_types(Expression& og_expression, set<string> predicate_types);
 
     // TODO - restrict this to connective arguments not things like noun_class and object_count
     // afterwards, rename to extract_predicates_by_connection

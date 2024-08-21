@@ -196,7 +196,7 @@ bool try_get_word_frame(string accessor, Frame left_frame, Frame right_frame, Fr
     }
     else 
     {
-        printf("disaster: neither of the identified frames could be matched to when accessing word frame '%s'\n", frame_name.c_str());
+        printf("033[1;31mdisaster\033[0m: neither of the identified frames could be matched to when accessing word frame '%s'\n", frame_name.c_str());
         return false;
     }
 
@@ -227,7 +227,7 @@ Expression Parser::apply_formation_rules_on_expression(PredicateFormationRules f
     // mark the designated predicate types for destruction, but don't destroy them yet
     for (string predicate_type_to_destroy : formation_rule.predicate_types_to_destroy)
     {
-        vector<Predicate> predicates_marked_for_destruction = Expression::extract_predicate_types(combined_expression, predicate_type_to_destroy);
+        vector<Predicate> predicates_marked_for_destruction = Expression::extract_predicate_types(combined_expression, {predicate_type_to_destroy});
         for (auto predicate : predicates_marked_for_destruction)
         {
             predicates_to_destroy.push_back(predicate);
@@ -425,7 +425,7 @@ Expression Parser::set_argument_accessor(
     Predicate original_predicate;
     if (!try_get_predicate(left_frame, right_frame, argument_accessor, original_predicate))
     {
-        printf("disaster: failed to access assignee of predicate modifier rule\n");
+        printf("033[1;31mdisaster\033[0m: failed to access assignee of predicate modifier rule\n");
         return combined_expression;
     }
 

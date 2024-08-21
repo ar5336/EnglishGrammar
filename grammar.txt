@@ -222,7 +222,9 @@ Words:
                 alive
                 hit
                 hurt
-                bitten
+                normal
+                mature
+                immature
             Comparable: # absolute comparative superlative
                 hungry hungrier hungriest
                 new newer newest
@@ -235,17 +237,25 @@ Words:
                 lazy lazier laziest
                 brown browner brownest
                 fat fatter fattest
+                skinny skinnier skinniest
                 ugly uglier ugliest
                 dark darker darkest
                 mad madder maddest
                 squeaky squeakier squeakiest
+                big bigger biggest
+                large larger largest
                 small smaller smallest
+                tiny tinier tiniest
                 young younger youngest
                 bright brighter brightest
+                dim dimmer dimmest
                 young younger youngest
                 smart smarter smartest
                 stupid stupider stupidest
                 dumb dumber dumbest
+                sad sadder saddest
+                white whiter whitest
+                black blacker blackest
         PossessiveAdjective:
             my -1stPerson -singular -possessive
             our -1stPerson -plural -possessive
@@ -305,6 +315,8 @@ Words:
             during
             since
             until
+        Actor:
+            by
     Conjunction:
         and
         but
@@ -371,8 +383,12 @@ Frames:
     AnaphoricNounPhrase "AnNP"
         NounPhrase[NUMBER] AnaphoricActorDescriptivePhrase[transitive] -NUMBER -anaphoric <AnaphoricActorDescriptivePhrase->ACTION_2.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the dog that bit the person
-        NounPhrase AnaphoricSubjectDescriptivePhrase <AnaphoricSubjectDescriptivePhrase->ACTION_2.subject=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
+        NounPhrase[NUMBER] AnaphoricActorDescriptivePhrase[intransitive] -NUMBER -anaphoric <AnaphoricActorDescriptivePhrase->ACTION.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
+            # the pig that flew
+        NounPhrase AnaphoricSubjectDescriptivePhrase -actor_unfilled <AnaphoricSubjectDescriptivePhrase->ACTION_2.subject=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the person that got bit
+
+        AnaphoricNounPhrase[actor_unfilled] ActorDescriptivePhrase <AnaphoricNounPhrase->ACTION_2.actor=ActorDescriptivePhrase->IS.object>
     VerbPhrase "VP"
         Verb[MainVerb,TENSE,Transitive] NounPhrase -TENSE -transitive -actor_unfilled <ACTION_2 action:! actor:"unknown" action_type:Verb subject:NounPhrase->IS.object>
             # <give the horse> an apple
@@ -554,6 +570,10 @@ Frames:
         Noun[RelativePronoun] Verb[!Transitive] -intransitive -actor_unfilled <ACTION action:! actor:"unknown" action_type:Verb>
             # the runner <that fell> is clumsy
 
+    ActorDescriptivePhrase "AtrDP"
+        Preposition[Preposition,Actor] NounPhrase
+        # the man that got bit <by the dog>
+
     AnaphoricSubjectDescriptivePhrase "AnSDP"
         Noun[RelativePronoun] AnaphoricSubjectDescriber -transitive -actor_unfilled -descriptive
             # the person <that got bit> is ugly
@@ -609,7 +629,7 @@ Frames:
         #Noun[plural] Verb[LinkingVerb,plural] -plural <IS object:! object_count:"inf" noun_class:Noun>
             # dogs are
             # horses are
-    ActionDescriptorPhrase "ADP"
+    ActionDescriptorPhrase "AtnDP"
         Verb[LinkingVerb,NUMBER] Verb[continuous] 
             # are running
     PropertyDescriptorPhrase "PDP"

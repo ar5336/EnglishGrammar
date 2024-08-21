@@ -33,24 +33,36 @@ void Mind::tell(Expression expression)
         string actor_noun_class = event.actor_noun_class;
         string subject_noun_class = event.subject_noun_class;
 
-        if (conceptual_schema->entities_by_noun.count(actor_noun_class) == 0)
+        bool is_actor_initialized = event.has_actor();
+        if (is_actor_initialized && conceptual_schema->entities_by_noun.count(actor_noun_class) == 0)
         {
-            throw runtime_error ("unknown noun class '" + actor_noun_class + "'\n");
+            // throw runtime_error ("unknown noun class '" + actor_noun_class + "'\n");
+            is_actor_initialized = true;
         }
 
-        if (conceptual_schema->entities_by_noun.count(subject_noun_class) == 0)
+        bool is_subject_initialized = event.has_subject();
+        if (is_subject_initialized && conceptual_schema->entities_by_noun.count(subject_noun_class) == 0)
         {
-            throw runtime_error ("unknown noun class '" + subject_noun_class + "'\n");
+            // throw runtime_error ("unknown noun class '" + subject_noun_class + "'\n");
+            is_subject_initialized = true;
         }
 
         // auto actor_entity = conceptual_schema->entities_by_noun.at(actor_noun_class);
         // auto subject_entity = conceptual_schema->entities_by_noun.at(subject_noun_class);
 
         if (DEBUGGING)
-            printf("\033[1;32mcreating\033[0m concrete nouns '%s' and '%s'\n", actor_noun_class.c_str(), subject_noun_class.c_str());
+        {
+            if (is_actor_initialized)
+                printf("\033[1;32mcreating\033[0m concrete actor noun '%s'\n", actor_noun_class.c_str());
+            if (is_subject_initialized)
+                printf("\033[1;32mcreating\033[0m concrete subject noun '%s'\n", subject_noun_class.c_str());
+        }
 
-        concrete_nouns.push_back(ConcreteNoun("unknown", &conceptual_schema->entities_by_noun.at(actor_noun_class), id_counter++));
-        concrete_nouns.push_back(ConcreteNoun("unknown", &conceptual_schema->entities_by_noun.at(subject_noun_class), id_counter++));
+        if (is_actor_initialized)
+            concrete_nouns.push_back(ConcreteNoun("unknown", &conceptual_schema->entities_by_noun.at(actor_noun_class), id_counter++));
+        
+        if (is_subject_initialized)
+            concrete_nouns.push_back(ConcreteNoun("unknown", &conceptual_schema->entities_by_noun.at(subject_noun_class), id_counter++));
     }
 }
 
@@ -71,7 +83,7 @@ Expression Mind::resolve_anaphoras(Expression expression)
     auto stripped_expression = expression;
     // lump together all the predicates that are attached to the anaphoric noun
     // gather all the predicates that reference the anaphoric variable
-    vector<Predicate> anaphoric_predicates = Expression::extract_predicate_types(stripped_expression, "ANAPHORIC");
+    vector<Predicate> anaphoric_predicates = Expression::extract_predicate_types(stripped_expression, {"ANAPHORIC"});
 
     vector<vector<Predicate>> anaphora_groups;
     vector<Event> resolved_anaphora_events;
@@ -87,7 +99,6 @@ Expression Mind::resolve_anaphoras(Expression expression)
         string base_var_name = anaphoric_predicate.get_argument("object");
         string anaphoric_var_name = anaphoric_predicate.get_argument("anaphoric_object");
 
-
         // extract all predicates from the og expression that mention the anaphoric variable
         vector<Predicate> anaphora_group = Expression::extract_anaphora_closure_by_argument(stripped_expression, base_var_name);
 
@@ -101,7 +112,7 @@ Expression Mind::resolve_anaphoras(Expression expression)
             printf("anaphora expression: %s\n", predicate_handler->stringify_expression(anaphora_expression).c_str());
         }
 
-        vector<Predicate> action_predicates_extracted = Expression::extract_predicate_types(anaphora_expression, "ACTION_2");
+        vector<Predicate> action_predicates_extracted = Expression::extract_predicate_types(anaphora_expression, {"ACTION_2", "ACTION"});
         if (action_predicates_extracted.size() > 1)
             throw runtime_error("more than one event per anaphora, parsing not implemented for this yet");
 
@@ -132,8 +143,10 @@ Expression Mind::resolve_anaphoras(Expression expression)
         Predicate action_predicate = action_predicates.at(i);
         if (equals(action_predicate.get_argument("actor"), base_var_name))
             param_type = ActionParamType::ACTOR;
-        if (equals(action_predicate.get_argument("subject"), base_var_name))
-            param_type = ActionParamType::SUBJECT;
+        
+        if (equals(action_predicate.predicate_template.predicate, "ACTION_2"))
+            if (equals(action_predicate.get_argument("subject"), base_var_name))
+                param_type = ActionParamType::SUBJECT;
 
         Event pass_event = Event();
         if (timeline.did_it_occur(event, pass_event))
@@ -203,9 +216,6 @@ string Mind::ask(Expression expression)
     {
         return "no, it did not happen";
     }
-
-    // TODO - resolve against concrete database.
-    // for questions like "is fido the dog brown"
 
     // can't do a simple hash comparison now. need to check connection equivalence between expression
     return "unknown";
@@ -635,14 +645,41 @@ Event::Event(
     location = "unknown";
 }
 
+Event::Event(
+    string action_type,
+    string actor_noun_class,
+    int actor_noun_id,
+    int id) 
+    : action_type(action_type),
+    actor_noun_class(actor_noun_class),
+    actor_noun_id(actor_noun_id),
+    id(id)
+{
+    subject_noun_class = "unknown";
+    subject_noun_id = -1;
+    location = "unknown";
+}
+
 string Event::stringify()
 {
     string constructee = "";
     constructee += "Transitive Event [" + to_string(id) + "]:\n";
     constructee += "    Action type: " + action_type + "\n";
-    constructee += "    Actor: " + actor_noun_class + "[" + to_string(actor_noun_id) + "]\n"; 
-    constructee += "    Subject: " + subject_noun_class + "[" + to_string(subject_noun_id) + "]\n";
+    if (has_actor())
+        constructee += "    Actor: " + actor_noun_class + "[" + to_string(actor_noun_id) + "]\n"; 
+    if (has_subject())
+        constructee += "    Subject: " + subject_noun_class + "[" + to_string(subject_noun_id) + "]\n";
     return constructee;
+}
+
+bool Event::has_subject()
+{
+    return !equals(subject_noun_class, "unknown");
+}
+
+bool Event::has_actor()
+{
+    return !equals(actor_noun_class, "unknown");
 }
 
 bool unknown_or_match(string arg_1, string arg_2)
@@ -672,6 +709,25 @@ vector<Event> Mind::extract_events(Expression expression)
 
     auto object_event_pairs = expression.get_connections(
         "IS", "object",
+        "ACTION", "actor");
+
+    for (auto object_event_pair : object_event_pairs)
+    {
+        Predicate actor_predicate = object_event_pair.first;
+        Predicate action_predicate = object_event_pair.second;
+
+        identified_events.push_back(Event(
+            action_predicate.get_argument("action_type"), // action_type
+            actor_predicate.get_argument("noun_class"),       // actor
+            (int)concrete_nouns.size(),
+            timeline.actions.size()));   // subject
+    }
+
+    if (identified_events.size() != 0)
+        return identified_events;
+
+    object_event_pairs = expression.get_connections(
+        "IS", "object",
         "ACTION_2", "actor");
 
     for (auto object_event_pair : object_event_pairs)
@@ -693,7 +749,7 @@ vector<Event> Mind::extract_events(Expression expression)
                 (int)concrete_nouns.size(),
                 subject_predicate.get_argument("noun_class"),
                 (int)concrete_nouns.size() + 1,
-                identified_events.size()));   // subject
+                timeline.actions.size()));   // subject
         }
     }
 

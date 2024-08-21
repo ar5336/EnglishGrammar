@@ -336,6 +336,10 @@ void Displayer::display()
 
     vector<bool> is_word_highlighted;
 
+    // display text before the parse grid.
+
+    // measure off the tokens of the text to determine the placemnts of the edges of the cells
+
     int index_within_cell = 0;
     if (!parser->parse_grid.empty() && token_count != 0)
     {

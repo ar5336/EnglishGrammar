@@ -303,14 +303,14 @@ Predicate Expression::extract_predicate(Predicate original)
     return Predicate();
 }
 
-vector<Predicate> Expression::extract_predicate_types(Expression& og_expression, string predicate_type)
+vector<Predicate> Expression::extract_predicate_types(Expression& og_expression, set<string> predicate_types)
 {
     vector<Predicate> removed_predicates = vector<Predicate>();
 
     vector<Predicate> og_predicates = og_expression.predicates;
     for (auto predicate : og_predicates)
     {
-        if (equals(predicate.predicate_template.predicate, predicate_type))
+        if (predicate_types.count(predicate.predicate_template.predicate) != 0)
         {
             removed_predicates.push_back(predicate);
             og_expression.extract_predicate(predicate);

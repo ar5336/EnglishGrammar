@@ -91,8 +91,18 @@ public:
         string subject_noun_class,
         int subject_noun_id,
         int id);
+    
+    Event(
+        string action_type,
+        string actor_noun_class,
+        int actor_noun_id,
+        int id);
 
     string stringify();
+
+    bool has_subject();
+    
+    bool has_actor();
 
     static bool compare(Event event_1, Event event_2);
 };

@@ -1,14 +1,12 @@
 #ifndef TEST
 #define TEST
 
-// #include "grammar_reader.hpp"
-// #include "frames.hpp"
-// #include "grammar.hpp"
-// #include "string_operators.hpp"
-// #include "parser.hpp"
-// #include "displayer.hpp"
-// #include "interpretation.hpp"
-// #include "predicate_handler.hpp"
+#include <iostream>
+
+#include "grammar_reader.hpp"
+#include "interpretation.hpp"
+#include "mind.hpp"
+#include "global.hpp"
 
 int test_all();
 

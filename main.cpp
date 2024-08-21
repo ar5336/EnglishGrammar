@@ -22,7 +22,7 @@
 using namespace std;
 using namespace cv;
 
-string initial_utterance = "the person that got bit by the dog is happy";
+string initial_utterance = "the raven that flew";
 
 string current_utterance = "";
 
@@ -49,9 +49,9 @@ vector<string> known_facts = {
 	"ravens are birds",
 	"birds are animals",
 	"birds can fly",
-	"animals can breathe"
+	"animals can breathe",
 	"animals can bite",
-	"a dog bit a person"};
+	"a raven flew"};
 
 void parse_utterance(string utterance)
 {
@@ -228,16 +228,19 @@ void handler(int sig) {
 
 int main(int argc, char **argv)
 {
-	if (argc > 1 && ((string)argv[1] == "--test"))
+	int arg_index = 1;
+	set<string> debug_alternatives = set<string> {"--debug", "-d"};
+	if (argc > 1 && (debug_alternatives.count((string)argv[arg_index]) != 0))
+	{
+		DEBUGGING = true;
+		arg_index++;
+	}
+
+	set<string> test_alternatives = set<string> {"--test", "-t"};
+	if (argc > arg_index && (test_alternatives.count((string)argv[arg_index]) != 0))
 	{
 		test_all();
 		return 1;
-	}
-
-	set<string> debug_alternatives = {"--debug", "-d"};
-	if (argc > 1 && (debug_alternatives.count((string)argv[1]) != 0))
-	{
-		DEBUGGING = true;
 	}
 
 	signal(11, handler);   // install our handler
