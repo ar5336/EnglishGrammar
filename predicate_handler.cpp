@@ -322,15 +322,17 @@ vector<Predicate> Expression::extract_predicate_types(Expression& og_expression,
 
 vector<Predicate> Expression::extract_predicates_by_argument(Expression &og_expression, string argument, bool anaphorics_prohibited = false)
 {
-    vector<Predicate> removed_predicates;
+    vector<Predicate> removed_predicates = vector<Predicate>();
     vector<Predicate> list = og_expression.predicates;
     for (auto predicate : list)
     {
-        if (equals(predicate.predicate_template.predicate, "ANAPHORIC"))
+        if (anaphorics_prohibited && equals(predicate.predicate_template.predicate, "ANAPHORIC"))
             continue;
-
-        for (string candidate_argument : predicate.arguments)
+        
+        for (int argument_index = 0; argument_index < predicate.arguments.size(); argument_index++)
         {
+            string candidate_argument = predicate.arguments[argument_index];
+
             if (equals(candidate_argument, argument))
             {
                 removed_predicates.push_back(og_expression.extract_predicate(predicate));
@@ -358,6 +360,9 @@ vector<Predicate> Expression::extract_anaphora_closure_by_argument(Expression &o
         set<Predicate> relevant_predicates;
         for (string top_predicate_argument : top_predicate.arguments)
         {
+            if (!top_predicate.predicate_template.is_param_schematic(top_predicate_argument))
+                continue;
+
             auto identified_relevant_predicates = extract_predicates_by_argument(og_expression, top_predicate_argument, /*anaphorics prohibited*/ true);
             for (auto identified_relevant_predicate : identified_relevant_predicates)
             {

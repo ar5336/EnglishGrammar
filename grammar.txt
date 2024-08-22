@@ -80,31 +80,31 @@ Words:
                 sea -location
                 air -location
         Pronoun:
-            i -1stPerson -singular -objective
+            i -1stPerson -singular -active
             me -1stPerson -singular -subjective
             mine -1stPerson -singular -possessive
 
-            we -1stPerson -plural -objective
+            we -1stPerson -plural -active
             us -1stPerson -plural -subjective
             ours -1stPerson -plural -possessive
 
-            you -2ndPerson -singular -objective -subjective
+            you -2ndPerson -singular -active -subjective
             yours -2ndPerson -singular -possessive
 
-            y'all -2ndPerson -plural -objective -subjective
-            y'alls -2ndPerson -plural -objective -possessive
+            y'all -2ndPerson -plural -active -subjective
+            y'alls -2ndPerson -plural -active -possessive
 
-            they -3rdPerson -plural -neuter -objective
+            they -3rdPerson -plural -neuter -active
             them -3rdPerson -plural -neuter -subjective
             theirs -3rdPerson -plural -neuter -possessive
 
-            they -3rdPerson -singular -neuter -objective
+            they -3rdPerson -singular -neuter -active
 
-            he -3rdPerson -singular -masculine -objective
+            he -3rdPerson -singular -masculine -active
             him -3rdPerson -singular -masculine -subjective
             his -3rdPerson -singular -masculine -possessive
 
-            she -3rdPerson -singular -feminine -objective
+            she -3rdPerson -singular -feminine -active
             her -3rdPerson -singular -feminine -subjective
             hers -3rdPerson -singular -feminine -possessive
 
@@ -143,6 +143,7 @@ Words:
                 tear tearing tore tears torn
                 rip ripping ripped rips
                 ride riding rode rides ridden
+                see seeing saw sees seen
             Intransitive: # simple continuous perfect 3PPresent (pastPart)
                 think thinking thought thinks thunk
                 play playing played plays
@@ -165,9 +166,10 @@ Words:
                 make making made makes
                 grow growing grew grows
                 meow meowing meowed meows
-                see seeing saw sees seen
                 lose losing lost loses
                 live living lived lives
+                sleep sleeping slept sleeps
+                fall falling fell falls
         AuxiliaryVerb:
             be -continuous
             have -perfect
@@ -333,17 +335,18 @@ FeatureGroups:
     TRANSITIVITY= Transitive Intransitive
 
 Predicates:
-    IS object object_count noun_class
-    HAS_PROPERTY object property
-    TIME action time
-    PREPOSITION action preposition subject
-    ACTION action actor action_type
-    ACTION_2 action actor action_type subject
-    CAN_DO action_type actor
-    SPECIFIER object person number
-    CONTAINS container containee
-    ANAPHORIC object anaphoric_object
-    OBJECT object id
+    IS              object->    object_count noun_class
+    HAS_PROPERTY    object->    property
+    TIME            action->    time
+    PREPOSITION     action->    preposition object->
+    ACTION          action->    actor->     action_type
+    ACTION_2        action->    actor->     action_type object->
+    ACTION_3        action->    actor->     action_type object-> indirect_object->
+    CAN_DO          action_type actor->
+    SPECIFIER       object->    person      number
+    CONTAINS        container-> containee->
+    ANAPHORIC       object->    anaphoric_object->
+    OBJECT          object->    id
 
 Frames:
     NounPhrase "NP"
@@ -381,16 +384,17 @@ Frames:
             # land animals, sea animals
 
     AnaphoricNounPhrase "AnNP"
-        NounPhrase[NUMBER] AnaphoricActorDescriptivePhrase[transitive] -NUMBER -anaphoric <AnaphoricActorDescriptivePhrase->ACTION_2.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
+        NounPhrase[NUMBER] AnaphoricActorDescriptivePhrase[transitive] -NUMBER -actor -anaphoric <AnaphoricActorDescriptivePhrase->ACTION_2.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the dog that bit the person
-        NounPhrase[NUMBER] AnaphoricActorDescriptivePhrase[intransitive] -NUMBER -anaphoric <AnaphoricActorDescriptivePhrase->ACTION.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
+        NounPhrase[NUMBER] AnaphoricActorDescriptivePhrase[intransitive] -NUMBER -actor -anaphoric <AnaphoricActorDescriptivePhrase->ACTION.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the pig that flew
-        NounPhrase AnaphoricSubjectDescriptivePhrase -actor_unfilled <AnaphoricSubjectDescriptivePhrase->ACTION_2.subject=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
+        NounPhrase AnaphoricSubjectDescriptivePhrase -object -actor_unfilled <AnaphoricSubjectDescriptivePhrase->ACTION_2.object=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the person that got bit
 
-        AnaphoricNounPhrase[actor_unfilled] ActorDescriptivePhrase <AnaphoricNounPhrase->ACTION_2.actor=ActorDescriptivePhrase->IS.object>
+        AnaphoricNounPhrase[actor_unfilled] ActorDescriptivePhrase -actor <AnaphoricNounPhrase->ACTION_2.actor=ActorDescriptivePhrase->IS.object>
+            # <the man that got bit by the dogs>
     VerbPhrase "VP"
-        Verb[MainVerb,TENSE,Transitive] NounPhrase -TENSE -transitive -actor_unfilled <ACTION_2 action:! actor:"unknown" action_type:Verb subject:NounPhrase->IS.object>
+        Verb[MainVerb,TENSE,Transitive] NounPhrase -TENSE -transitive -actor_unfilled <ACTION_2 action:! actor:"unknown" action_type:Verb object:NounPhrase->IS.object>
             # <give the horse> an apple
         Verb[TRANSITIVITY] Adverb -TRANSITIVITY <ACTION action:! actor:"unknown" action_type:Verb | HAS_PROPERTY object:! property:Adverb>
             # run quickly
@@ -416,14 +420,14 @@ Frames:
             # dog runs
 
         # transitive
-        NounPhrase[plural] Verb[MainVerb,!3PPresent,Transitive] -plural -transitive -subject_unfilled <ACTION_2 action:! actor:NounPhrase->IS.object action_type:Verb subject:"unknown">
+        NounPhrase[plural] Verb[MainVerb,!3PPresent,Transitive] -plural -transitive -object_unfilled <ACTION_2 action:! actor:NounPhrase->IS.object action_type:Verb object:"unknown">
             # the dogs bit
             # !the dogs bites
-        NounPhrase[singular] Verb[MainVerb,!simple,Transitive] -singular -transitive -subject_unfilled <ACTION_2 action:! actor:NounPhrase->IS.object action_type:Verb subject:"unknown">
+        NounPhrase[singular] Verb[MainVerb,!simple,Transitive] -singular -transitive -object_unfilled <ACTION_2 action:! actor:NounPhrase->IS.object action_type:Verb object:"unknown">
             # a dog bites
             # a dog bit
             # !a dog bite
-        NounPhrase[singular] Verb[MainVerb,simple,Transitive] -singular -transitive -subject_unfilled <ACTION_2 action:! actor:NounPhrase->IS.object action_type:Verb subject:"unknown">
+        NounPhrase[singular] Verb[MainVerb,simple,Transitive] -singular -transitive -object_unfilled <ACTION_2 action:! actor:NounPhrase->IS.object action_type:Verb object:"unknown">
             # (did) (<a dog bite> (another dog))
         Noun[plural] Verb[MainVerb,simple,Transitive] -plural -intransitive <IS object:! object_count:"inf" noun_class:Noun | ACTION action:!! actor:! action_type:Verb>
             # dogs run
@@ -444,7 +448,7 @@ Frames:
             # the dogs have run
     PrepPhrase "PP"
         Preposition Noun
-        Preposition[Place] NounPhrase[NUMBER] -NUMBER <PREPOSITION action:! preposition:Preposition subject:NounPhrase->IS.object>
+        Preposition[Place] NounPhrase[NUMBER] -NUMBER <PREPOSITION action:! preposition:Preposition object:NounPhrase->IS.object>
             # under the bridge
         Preposition[Time] VerbPhrase
             # after running in the race
@@ -453,11 +457,11 @@ Frames:
             # quick dogs run
             # hit dogs holler
 
-        VerbPhrase[transitive,subject_unfilled] NounPhrase <VerbPhrase->ACTION_2.subject=NounPhrase->IS.object>
+        VerbPhrase[transitive,object_unfilled] NounPhrase <VerbPhrase->ACTION_2.object=NounPhrase->IS.object>
             # [a dog bit | a horse]
-        #VerbPhrase[transitive,objectUnfilled] NounPhrase <ACTION_3 action:VerbPhrase->ACTION.action actor:VerbPhrase->IS.object action_type:VerbPhrase->ACTION.action_type subject:NounPhrase->IS.object>
+        #VerbPhrase[transitive,objectUnfilled] NounPhrase <ACTION_3 action:VerbPhrase->ACTION.action actor:VerbPhrase->IS.object action_type:VerbPhrase->ACTION.action_type object:NounPhrase->IS.object>
             # [give a man| a fish]
-        VerbPhrase[transitive,subject_unfilled] Noun[MassNoun] <IS object:! object_count:"1" noun_class:Noun | VerbPhrase->ACTION_2.subject=Noun->IS.object>
+        VerbPhrase[transitive,object_unfilled] Noun[MassNoun] <IS object:! object_count:"1" noun_class:Noun | VerbPhrase->ACTION_2.object=Noun->IS.object>
             # give a man grass
 
         Noun[plural] SetDescriptorPhrase <IS object:! object_count:"inf" noun_class:Noun | SetDescriptorPhrase->CONTAINS.containee=!>
@@ -513,6 +517,7 @@ Frames:
 
         AnaphoricNounPhrase PropertyDescriptorPhrase <PropertyDescriptorPhrase->HAS_PROPERTY.object=AnaphoricNounPhrase->ANAPHORIC.anaphoric_object>
             # <the dog that bit the person> is ugly
+        AnaphoricNounPhrase VerbPhrase[actor_unfilled,transitive] <VerbPhrase->ACTION_2.actor=AnaphoricNounPhrase->ANAPHORIC.anaphoric_object>
     Question "Q"
         Verb[ModalVerb,MODE] VerbPhrase[NUMBER] -NUMBER -MODE <CAN_DO action_type:VerbPhrase->ACTION.action_type actor:VerbPhrase->IS.object>
             # will i run
@@ -580,9 +585,9 @@ Frames:
             # the person <that was bitten> is ugly
 
     AnaphoricSubjectDescriber "AnSD"
-        Verb[IndicativeVerb,past] Verb[MainVerb,pastPart] -past <ACTION_2 action:! actor:"unknown" action_type:Verb#2 subject:"unknown">
+        Verb[IndicativeVerb,past] Verb[MainVerb,pastPart] -past <ACTION_2 action:! actor:"unknown" action_type:Verb#2 object:"unknown">
             # was bitten
-        Verb[IndicativeVerb,past] Verb[MainVerb,perfect] -past <ACTION_2 action:! actor:"unknown" action_type:Verb#2 subject:"unknown">
+        Verb[IndicativeVerb,past] Verb[MainVerb,perfect] -past <ACTION_2 action:! actor:"unknown" action_type:Verb#2 object:"unknown">
             # got bit
         # will be bit
         # will have been bit

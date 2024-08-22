@@ -3,10 +3,15 @@
 PredicateTemplate::PredicateTemplate() {
     parameter_names = vector<string>();
     parameter_index_map = map<string, int>();
+    are_params_schematic = vector<bool>();
 }
 
-PredicateTemplate::PredicateTemplate(string predicate_name, vector<string> parameter_names)
-    : predicate(predicate_name), parameter_names(parameter_names) {
+PredicateTemplate::PredicateTemplate(string predicate_name, vector<string> parameter_names, vector<bool> are_params_schematic)
+    : predicate(predicate_name), parameter_names(parameter_names), are_params_schematic(are_params_schematic)
+    {
+        if (are_params_schematic.size() != parameter_names.size())
+            throw runtime_error("are params schematic size " + to_string(are_params_schematic.size()) + " does not match parameter names size " + to_string(parameter_names.size()) +".");
+
         parameter_index_map = map<string, int>();
         for (int param_index = 0; param_index < parameter_names.size(); param_index++)
         {
@@ -20,6 +25,13 @@ bool PredicateTemplate::contains_parameter_name(string parameter_name)
     return parameter_index_map.count(parameter_name) != 0;
 }
 
+bool PredicateTemplate::is_param_schematic(string param_name)
+{
+    if (contains_parameter_name(param_name) &&
+        are_params_schematic.at(parameter_index_map.at(param_name)))
+        return true;
+    return false;
+}
 
 void PredicateTemplateHandler::add_entry(PredicateTemplate predicate_template)
 {

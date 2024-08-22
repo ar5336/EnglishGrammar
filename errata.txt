@@ -541,3 +541,31 @@ not just nouns have to be given conceptual grouping.
 but so shoudl adjectives and def verbs
 
 "the man that can run faster than a fish can swim"
+
+
+
+
+
+
+====
+
+an event is a noun. it's a thing.
+you can refer to it thru language.
+
+quoth billy to johnny
+    i saw you riding down the street
+    i saw you rode down the street -past
+    i saw you ride down the street
+    !i saw you rides down the street
+    !i saw you ridden down the street
+
+Event 0
+    johnny riding
+        prep [down street]
+
+Event1 
+    billy seeing
+        Event
+
+
+a single utterance could probably imply a billion events.

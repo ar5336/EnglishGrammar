@@ -104,6 +104,10 @@ Expression Mind::resolve_anaphoras(Expression expression)
 
         // identify the events described in the anaphora
         Expression anaphora_expression = Expression(anaphora_group);
+        // conceptual_schema->consider_expression(anaphora_expression)
+        // introduce some sort of call here where the
+        // IS statemetnts are transformed into concrete object references
+        // - to simplify things greatly down the line
         auto events = extract_events(anaphora_expression);
 
         if (DEBUGGING)
@@ -145,7 +149,7 @@ Expression Mind::resolve_anaphoras(Expression expression)
             param_type = ActionParamType::ACTOR;
         
         if (equals(action_predicate.predicate_template.predicate, "ACTION_2"))
-            if (equals(action_predicate.get_argument("subject"), base_var_name))
+            if (equals(action_predicate.get_argument("object"), base_var_name))
                 param_type = ActionParamType::SUBJECT;
 
         Event pass_event = Event();
@@ -720,7 +724,7 @@ vector<Event> Mind::extract_events(Expression expression)
             action_predicate.get_argument("action_type"), // action_type
             actor_predicate.get_argument("noun_class"),       // actor
             (int)concrete_nouns.size(),
-            timeline.actions.size()));   // subject
+            timeline.actions.size()));  
     }
 
     if (identified_events.size() != 0)
@@ -730,25 +734,54 @@ vector<Event> Mind::extract_events(Expression expression)
         "IS", "object",
         "ACTION_2", "actor");
 
+    auto concrete_object_event_pairs = expression.get_connections(
+        "OBJECT", "object",
+        "ACTION_2", "actor");
+    
+    for (auto pair : concrete_object_event_pairs)
+    {
+        object_event_pairs.push_back(pair);
+    }
+
     for (auto object_event_pair : object_event_pairs)
     {
         Predicate actor_predicate = object_event_pair.first;
         Predicate action_predicate = object_event_pair.second;
 
+        bool is_actor_concrete = equals(actor_predicate.predicate_template.predicate, "OBJECT");
+
         auto event_other_object_pairs = expression.get_connections(
-            "ACTION_2", "subject",
+            "ACTION_2", "object",
             "IS", "object");
+
+        auto other_other_object_event_pairs = expression.get_connections(
+            "ACTION_2", "object",
+            "OBJECT", "object");
+
+        for (auto pair : other_other_object_event_pairs)
+        {
+            event_other_object_pairs.push_back(pair);
+        }
         
         for (auto event_other_object_pair : event_other_object_pairs)
         {
-            Predicate subject_predicate = event_other_object_pair.second;
+            Predicate object_predicate = event_other_object_pair.second;
+
+            bool is_actor_concrete = equals(actor_predicate.predicate_template.predicate, "OBJECT");
+            bool is_object_concrete = equals(object_predicate.predicate_template.predicate, "OBJECT");
+
+            int actor_id = is_actor_concrete ? stoi(actor_predicate.get_argument("id")) : (int)concrete_nouns.size();
+            string actor_noun_class = is_actor_concrete ? concrete_nouns[actor_id].entity_type->noun : actor_predicate.get_argument("noun_class");
+
+            int object_id = is_object_concrete ? stoi(object_predicate.get_argument("id")) : (int)concrete_nouns.size() + 1;
+            string object_noun_class = is_object_concrete ? concrete_nouns[object_id].entity_type->noun : object_predicate.get_argument("noun_class");
 
             identified_events.push_back(Event(
                 action_predicate.get_argument("action_type"), // action_type
-                actor_predicate.get_argument("noun_class"),       // actor
-                (int)concrete_nouns.size(),
-                subject_predicate.get_argument("noun_class"),
-                (int)concrete_nouns.size() + 1,
+                actor_noun_class,       // actor
+                actor_id,
+                object_noun_class,
+                object_id,
                 timeline.actions.size()));   // subject
         }
     }
@@ -757,7 +790,7 @@ vector<Event> Mind::extract_events(Expression expression)
         return identified_events;
 
     auto event_other_object_pairs = expression.get_connections(
-            "ACTION_2", "subject",
+            "ACTION_2", "object",
             "IS", "object");
     
     for (auto event_other_object_pair : event_other_object_pairs)
@@ -771,7 +804,7 @@ vector<Event> Mind::extract_events(Expression expression)
             -1,
             subject_predicate.get_argument("noun_class"),
             (int)concrete_nouns.size(),
-            identified_events.size()));   // subject
+            timeline.actions.size()));   // subject
     }
 
     return identified_events;

@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 using namespace std;
 
@@ -12,14 +13,17 @@ class PredicateTemplate
 public:
     string predicate;
     vector<string> parameter_names;
+    vector<bool> are_params_schematic;
 
     map<string, int> parameter_index_map;
 
     PredicateTemplate();
 
-    PredicateTemplate(string predicate_name, vector<string> parameter_names);
+    PredicateTemplate(string predicate_name, vector<string> parameter_names, vector<bool> are_params_schematic);
 
     bool contains_parameter_name(string parameter_name);
+
+    bool is_param_schematic(string param_name);
 
     void replace(PredicateTemplate other);
 };

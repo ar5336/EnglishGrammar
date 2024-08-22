@@ -255,9 +255,24 @@ void GrammarReader::read_predicate_template_entry()
 {
     string predicate_name = split_tokens[0];
 
-    vector<string> param_names(split_tokens.begin() + 1, split_tokens.end());
+    vector<string> input_param_names(split_tokens.begin() + 1, split_tokens.end());
+    auto are_params_schematic = vector<bool>();
+    auto param_names = vector<string>();
+    for (string param_name : input_param_names)
+    {
+        if (find_in_string(param_name, "->"))
+        {
+            param_names.push_back(param_name.substr(0, param_name.size()-2));
+            are_params_schematic.push_back(true);
+        }
+        else
+        {
+            param_names.push_back(param_name);
+            are_params_schematic.push_back(false);
+        }
+    }
 
-    PredicateTemplate predicate_template = PredicateTemplate(predicate_name, param_names);
+    PredicateTemplate predicate_template = PredicateTemplate(predicate_name, param_names, are_params_schematic);
 
     predicate_template_handler->add_entry(predicate_template);
 }
