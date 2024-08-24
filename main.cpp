@@ -22,7 +22,7 @@
 using namespace std;
 using namespace cv;
 
-string initial_utterance = "the raven that flew bit a horse";
+string initial_utterance = "the dog that bit a man is ugly";
 
 string current_utterance = "";
 
@@ -50,8 +50,10 @@ vector<string> known_facts = {
 	"birds are animals",
 	"birds can fly",
 	"animals can breathe",
-	"animals can bite",
-	"a raven flew"};
+	"animals can bite"};
+	// "a raven flew",
+	// "the raven that flew bit a horse"};
+	// "a dog bit a man"};
 
 void parse_utterance(string utterance)
 {

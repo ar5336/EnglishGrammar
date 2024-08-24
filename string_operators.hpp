@@ -3,6 +3,7 @@
 
 #include <string>
 #include <set>
+#include <map>
 #include <boost/algorithm/string.hpp>
 
 using namespace std;
@@ -30,5 +31,9 @@ bool find_in_string(string field, string target);
 bool is_string_all_chars(string test, char subject);
 
 string stringify_set(set<string> set);
+
+string stringify_stoi_map(map<string,int> map);
+
+string stringify_bool_vec(vector<bool> vec);
 
 #endif

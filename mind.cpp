@@ -24,7 +24,7 @@ void Mind::tell(Expression expression)
         printf("%s\n", predicate_handler->stringify_expression(expression).c_str());
     }
 
-    for (auto event : extract_events(expression))
+    for (auto event : extract_events(expression, false))
     {
         timeline.actions.push_back(event);
 
@@ -34,17 +34,19 @@ void Mind::tell(Expression expression)
         string subject_noun_class = event.subject_noun_class;
 
         bool is_actor_initialized = event.has_actor();
-        if (is_actor_initialized && conceptual_schema->entities_by_noun.count(actor_noun_class) == 0)
+        bool create_actor_noun = false;
+        if (is_actor_initialized && concrete_nouns.size() <= event.actor_noun_id)
         {
             // throw runtime_error ("unknown noun class '" + actor_noun_class + "'\n");
-            is_actor_initialized = true;
+            create_actor_noun = true;
         }
 
         bool is_subject_initialized = event.has_subject();
-        if (is_subject_initialized && conceptual_schema->entities_by_noun.count(subject_noun_class) == 0)
+        bool create_subject_noun = false;
+        if (is_subject_initialized && concrete_nouns.size() <= event.subject_noun_id)
         {
             // throw runtime_error ("unknown noun class '" + subject_noun_class + "'\n");
-            is_subject_initialized = true;
+            create_subject_noun = true;
         }
 
         // auto actor_entity = conceptual_schema->entities_by_noun.at(actor_noun_class);
@@ -52,16 +54,16 @@ void Mind::tell(Expression expression)
 
         if (DEBUGGING)
         {
-            if (is_actor_initialized)
+            if (!create_actor_noun)
                 printf("\033[1;32mcreating\033[0m concrete actor noun '%s'\n", actor_noun_class.c_str());
-            if (is_subject_initialized)
+            if (!create_subject_noun)
                 printf("\033[1;32mcreating\033[0m concrete subject noun '%s'\n", subject_noun_class.c_str());
         }
 
-        if (is_actor_initialized)
+        if (is_actor_initialized && create_actor_noun)
             concrete_nouns.push_back(ConcreteNoun("unknown", &conceptual_schema->entities_by_noun.at(actor_noun_class), id_counter++));
         
-        if (is_subject_initialized)
+        if (is_subject_initialized && create_subject_noun)
             concrete_nouns.push_back(ConcreteNoun("unknown", &conceptual_schema->entities_by_noun.at(subject_noun_class), id_counter++));
     }
 }
@@ -108,7 +110,7 @@ Expression Mind::resolve_anaphoras(Expression expression)
         // introduce some sort of call here where the
         // IS statemetnts are transformed into concrete object references
         // - to simplify things greatly down the line
-        auto events = extract_events(anaphora_expression);
+        auto events = extract_events(anaphora_expression, false);
 
         if (DEBUGGING)
         {
@@ -160,10 +162,6 @@ Expression Mind::resolve_anaphoras(Expression expression)
                 printf("anaphora resolution underway\n");
             }
 
-            // only current anaphora supported references the actor. of an ACTION_2.
-            // TODO - extrapolate this to something like "<the man that got bitten by a dog> is hurt"
-            // this can probably be accomplished by adding a new Predicate or parameter to ANAPHORIC
-
             Event relevant_event = event;
 
             vector<string> args = vector<string> {anaphoric_var_name};
@@ -206,7 +204,7 @@ string Mind::ask(Expression expression)
     }
 
     // next, resolve against events
-    auto events = extract_events(expression);
+    auto events = extract_events(expression, false);
     for (auto event : events)
     {
         Event pass_event = Event();
@@ -233,76 +231,6 @@ string Mind::ask(Expression expression)
     // }
 
     // return ResponseType::NO;
-}
-
-Expression Mind::construct_subset_expression(string noun_1, string noun_2)
-{
-    string object_1_var = "a";
-    string object_2_var = "b";
-
-    // construct can_do
-    vector<Predicate> predicates = vector<Predicate>();
-
-    predicates.push_back(predicate_handler->construct_predicate(
-        "IS",
-        vector<string>
-        {
-            /*object*/ object_1_var,
-            /*object_count*/ "inf",
-            /*noun_class*/ noun_1,
-        }
-    ));
-
-    predicates.push_back(predicate_handler->construct_predicate(
-        "IS",
-        vector<string>
-        {
-            /*object*/ object_2_var,
-            /*object_count*/ "1",
-            /*noun_class*/ noun_2,
-        }
-    ));
-
-    predicates.push_back(predicate_handler->construct_predicate(
-        "CONTAINS",
-        vector<string>
-        {
-            /*container*/ object_2_var,
-            /*containee*/ object_1_var
-        }
-    ));
-
-    return Expression(predicates);
-}
-
-Expression Mind::construct_ability_expression(string noun_1, string action_type)
-{
-    string object_var = "a";
-    string action_var = "b";
-
-    // construct can_do
-    vector<Predicate> predicates = vector<Predicate>();
-
-    predicates.push_back(predicate_handler->construct_predicate(
-        "IS",
-        vector<string>
-        {
-            /*object*/ object_var,
-            /*object_count*/ "inf",
-            /*noun_class*/ noun_1,
-        }
-    ));
-
-    predicates.push_back(predicate_handler->construct_predicate(
-        "CAN_DO",
-        vector<string>
-        {
-            /*action_type*/ action_type,
-            /*actor*/ object_var,
-        }
-    ));
-
-    return Expression(predicates);
 }
 
 ConcreteNoun* Mind::dereference_noun_id(int noun_id)
@@ -707,7 +635,7 @@ bool Event::compare(Event event_1, Event event_2)
     return true;
 }
 
-vector<Event> Mind::extract_events(Expression expression)
+vector<Event> Mind::extract_events(Expression expression, bool modify_nouns = false)
 {
     vector<Event> identified_events = vector<Event>();
 
@@ -720,11 +648,23 @@ vector<Event> Mind::extract_events(Expression expression)
         Predicate actor_predicate = object_event_pair.first;
         Predicate action_predicate = object_event_pair.second;
 
-        identified_events.push_back(Event(
+        auto event = Event(
             action_predicate.get_argument("action_type"), // action_type
             actor_predicate.get_argument("noun_class"),       // actor
             (int)concrete_nouns.size(),
-            timeline.actions.size()));  
+            timeline.actions.size());
+
+        auto og_event = Event();
+        if (timeline.did_it_occur(event, og_event))
+            identified_events.push_back(Event(
+                action_predicate.get_argument("action_type"), // action_type
+                og_event.actor_noun_class,       // actor
+                og_event.actor_noun_id,
+                timeline.actions.size()));
+        else
+        {
+            identified_events.push_back(event);
+        }
     }
 
     if (identified_events.size() != 0)
@@ -989,65 +929,6 @@ bool ConceptualSchema::can_do(string noun, string action)
     return (ability_map.count(noun) != 0) &&
         (ability_map.at(noun).count(action) != 0);
 }
-
-// void ConceptualSchema::make_inferences(Expression new_expression){
-//     // first pass, build inheritance map
-//     update_conceptual_maps(new_expression);
-
-//     if (DEBUGGING)
-//         printf("making inferences\n");
-
-//     printf("noun set size: %ld\n", noun_set.size());
-//     for(string noun : noun_set)
-//     {
-//         auto parent_list = identify_all_parents(noun);
-        
-//         // if any of the parents has an ability, then the noun has an ability
-//         for (string parent : parent_list) {
-//             if (DEBUGGING)
-//                 printf("making inference on parent: '%s' of noun '%s'\n", parent.c_str(), noun.c_str());
-
-//             if (ability_map.count(parent) != 0)
-//             {
-//                 auto inherited_abilities = ability_map.at(parent);
-
-//                 for (string inherited_ability : inherited_abilities)
-//                 {
-//                     infer(construct_ability_expression(noun, inherited_ability));
-
-//                 }
-//             }
-
-//             if (child_to_parents_map.count(parent) != 0)
-//             {
-//                 auto inherited_parent = child_to_parents_map.at(parent);
-
-//                 infer(construct_subset_expression(noun, inherited_parent));
-//             }
-
-//             // if (first_arg_to_predicate_map.count(parent) != 0)
-//             // {
-//             //     auto parent_predicates = first_arg_to_predicate_map.at(parent);
-
-//             //     for (auto parent_predicate : parent_predicates)
-//             //     {
-//             //         auto new_tupe = parent_predicate.type;
-//             //         auto changed_args = parent_predicate.arguments;
-//             //         changed_args[0] = noun;
-
-//             //         // TODO - find a more efficient way of not inferring certain already-inferred things
-//             //         auto new_expr = construct_expression(new_tupe, changed_args);
-//             //         if (inferred_predicates.count(new_expr) == 0) {
-//             //             auto was_inserted = inferred_predicates.insert(new_expr);
-//             //             if (was_inserted.second) {
-//             //                 expressions.push_back(new_expr);
-//             //             }
-//             //         }
-//             //     }
-//             // }
-//         }
-//     }
-// }
 
 ConceptualEntity::ConceptualEntity(string noun) : noun(noun)
 {

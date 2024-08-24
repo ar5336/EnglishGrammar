@@ -119,6 +119,13 @@ Words:
             steve
             frank
             pony
+            billy
+            bobby
+            annie
+            adam
+            clyde
+            alice
+            nancy
         InterrogativePronoun:
             who -animate
             what -indentity
@@ -129,21 +136,26 @@ Words:
             whose -belonging
     Verb:
         MainVerb:
-            Transitive: # simple continuous perfect 3PPresent (pastPart)
+            ReceptiveTransitive: # simple continuous perfect 3PPresent (pastPart)
                 take taking took takes taken
+                drink drinking diank drinks
+            SuperTransitive: # simple continuous perfect 3PPresent (pastPart)
                 gift gifting gifted gifts
-                drink drinking diank drinks 
                 give giving gave gives given
-                bring bringing brought brings
+                transfer transferring transferred transfers
+            Transitive: # simple continuous perfect 3PPresent (pastPart)
                 bite biting bit bites bitten
+                drink drinking diank drinks
+                bring bringing brought brings
                 eat eating ate eats eaten
-                drink drinking drank drinks drunk
                 feel feeling felt feels
                 get getting got gets gotten
                 tear tearing tore tears torn
                 rip ripping ripped rips
                 ride riding rode rides ridden
                 see seeing saw sees seen
+                hate hating hated hates
+                love loving loved loves
             Intransitive: # simple continuous perfect 3PPresent (pastPart)
                 think thinking thought thinks thunk
                 play playing played plays
@@ -518,6 +530,9 @@ Frames:
         AnaphoricNounPhrase PropertyDescriptorPhrase <PropertyDescriptorPhrase->HAS_PROPERTY.object=AnaphoricNounPhrase->ANAPHORIC.anaphoric_object>
             # <the dog that bit the person> is ugly
         AnaphoricNounPhrase VerbPhrase[actor_unfilled,transitive] <VerbPhrase->ACTION_2.actor=AnaphoricNounPhrase->ANAPHORIC.anaphoric_object>
+            # <the horse that bit the fish | ran into the river>
+        # NounPhrase SubjectDescriber[transitive] <SubjectDescriber->ACTION_2.object=NounPhrase->IS.object>
+            # a horse got bitten
     Question "Q"
         Verb[ModalVerb,MODE] VerbPhrase[NUMBER] -NUMBER -MODE <CAN_DO action_type:VerbPhrase->ACTION.action_type actor:VerbPhrase->IS.object>
             # will i run
@@ -580,11 +595,11 @@ Frames:
         # the man that got bit <by the dog>
 
     AnaphoricSubjectDescriptivePhrase "AnSDP"
-        Noun[RelativePronoun] AnaphoricSubjectDescriber -transitive -actor_unfilled -descriptive
+        Noun[RelativePronoun] SubjectDescriber -transitive -actor_unfilled -descriptive
             # the person <that got bit> is ugly
             # the person <that was bitten> is ugly
 
-    AnaphoricSubjectDescriber "AnSD"
+    SubjectDescriber "SuD"
         Verb[IndicativeVerb,past] Verb[MainVerb,pastPart] -past <ACTION_2 action:! actor:"unknown" action_type:Verb#2 object:"unknown">
             # was bitten
         Verb[IndicativeVerb,past] Verb[MainVerb,perfect] -past <ACTION_2 action:! actor:"unknown" action_type:Verb#2 object:"unknown">

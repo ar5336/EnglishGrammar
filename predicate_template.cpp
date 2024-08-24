@@ -29,7 +29,9 @@ bool PredicateTemplate::is_param_schematic(string param_name)
 {
     if (contains_parameter_name(param_name) &&
         are_params_schematic.at(parameter_index_map.at(param_name)))
+    {
         return true;
+    }
     return false;
 }
 
@@ -46,6 +48,7 @@ void PredicateTemplate::replace(PredicateTemplate other)
     predicate = other.predicate;
     parameter_names = other.parameter_names;
     parameter_index_map = other.parameter_index_map;
+    are_params_schematic = other.are_params_schematic;
 }
 
 PredicateTemplateHandler::PredicateTemplateHandler() {

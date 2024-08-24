@@ -1,12 +1,15 @@
 #include "parser.hpp"
 
-VariableNamer::VariableNamer() {}
+VariableNamer::VariableNamer() {
+    current_index = 0;
+    prestige = 0;
+    existing_names = set<string>();
+}
 
 string VariableNamer::generate_name()
 {
     if (current_index < 25)
     {
-
         current_index++;
     }
     else{
@@ -470,6 +473,7 @@ vector<Frame> Parser::find_matching_frames(vector<Frame> left_frames, vector<Fra
 
 Parser::Parser(Grammar grammar) : grammar(grammar)
 {
+    variable_namer = VariableNamer();
 }
 
 Parser::Parser() {}

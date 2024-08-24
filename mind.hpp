@@ -197,12 +197,7 @@ private:
 
     // vector<string> identify_all_parents(string entityName);
 
-    // dog IS mammal
-    Expression construct_subset_expression(string noun_1, string noun_2);
-    // cat CAN_DO run
-    Expression construct_ability_expression(string noun_1, string action_type);
-
-    vector<Event> extract_events(Expression expression);
+    vector<Event> extract_events(Expression expression, bool modify_nouns);
 
     void resolve_properties(Expression expression);
 

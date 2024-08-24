@@ -6,11 +6,14 @@
 #include <vector>
 #include <stdexcept>
 
+#include "string_operators.hpp"
+
 using namespace std;
 
 class PredicateTemplate
 {
 public:
+// remember to update PredicateTemplate::replace whenever adding a new param here
     string predicate;
     vector<string> parameter_names;
     vector<bool> are_params_schematic;

@@ -346,7 +346,7 @@ vector<Predicate> Expression::extract_anaphora_closure_by_argument(Expression &o
 {
     vector<Predicate> removed_predicates;
 
-    set<Predicate> visited_predicates;
+    set<Predicate> visited_predicates = set<Predicate>();
     vector<Predicate> predicates_to_visit = extract_predicates_by_argument(og_expression, argument, /*anaphorics prohibited*/ true);
 
     while(predicates_to_visit.size() > 0)
@@ -358,12 +358,28 @@ vector<Predicate> Expression::extract_anaphora_closure_by_argument(Expression &o
         removed_predicates.push_back(top_predicate);
 
         set<Predicate> relevant_predicates;
-        for (string top_predicate_argument : top_predicate.arguments)
+        
+        for (int i = 0; i < top_predicate.arguments.size(); i++)
         {
-            if (!top_predicate.predicate_template.is_param_schematic(top_predicate_argument))
+            string top_predicate_argument = top_predicate.arguments[i];
+            string top_predicate_param_name = top_predicate.predicate_template.parameter_names[i];
+
+            if (DEBUGGING)
+                printf("top argument: %s in %s\n", top_predicate_argument.c_str(), top_predicate.predicate_template.predicate.c_str());
+                
+            if (!top_predicate.predicate_template.is_param_schematic(top_predicate_param_name))
+            {
+                visited_predicates.emplace(top_predicate);
                 continue;
+            }
 
             auto identified_relevant_predicates = extract_predicates_by_argument(og_expression, top_predicate_argument, /*anaphorics prohibited*/ true);
+
+            if (DEBUGGING)
+            {
+                printf("'%ld' relevant predicates identified\n", identified_relevant_predicates.size());
+                // identified_relevant_predicates
+            }
             for (auto identified_relevant_predicate : identified_relevant_predicates)
             {
                 if (visited_predicates.count(identified_relevant_predicate) == 0)
@@ -378,6 +394,9 @@ vector<Predicate> Expression::extract_anaphora_closure_by_argument(Expression &o
 
         visited_predicates.emplace(top_predicate);
     }
+
+    if (DEBUGGING)
+        printf("removing %ld predicates\n", removed_predicates.size());
 
     return removed_predicates;
 }

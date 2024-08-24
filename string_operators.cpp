@@ -88,7 +88,7 @@ bool is_string_all_chars(string test, char subject)
 string stringify_set(set<string> set)
 {
     string feature_string = "";
-    for (auto string : set)
+    for (string string : set)
     {
         feature_string += string;
         feature_string += ", ";
@@ -97,4 +97,29 @@ string stringify_set(set<string> set)
     if (set.size() > 0)
         return feature_string.substr(0, feature_string.length()-2);
     return feature_string;
+}
+
+string stringify_stoi_map(map<string, int> map)
+{
+	string result = "";
+	for (auto element : map)
+	{
+		result += "[ " + element.first + " -> " + to_string(element.second) + " ]\n";
+	}
+
+    return result;
+}
+
+string stringify_bool_vec(vector<bool> vec)
+{
+	string bools_string = "";
+    for (bool val : vec)
+    {
+        bools_string += val ? "true" : "false";
+        bools_string += ", ";
+    }
+
+    if (vec.size() > 0)
+        return bools_string.substr(0, bools_string.length()-2);
+    return bools_string;
 }
