@@ -1,0 +1,41 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Logos",
+	"patterns": [
+		{
+			"name": "keyword.structural.langdef",
+			"match": "\\b(FeatureGroups|Predicates|Frames|Question)\\b"
+		},
+		{
+			"name": "keyword.main.langdef",
+			"match": "\\b(Noun|Verb|Adjective|Adverb|Determiner|Preposition|Conjunction)\\b"
+		},
+		{
+			"name": "keyword.substrate.langdef",
+			"match": "\\b(MainNoun|Pronoun|RelativePronoun)\\b"
+		},
+		{
+			"include": "#strings"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.logos",
+				"match": "\\b(if|while|for|return)\\b"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.logos",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.logos",
+					"match": "\\\\."
+				}
+			]
+		}
+	},
+	"scopeName": "langdef"
+}

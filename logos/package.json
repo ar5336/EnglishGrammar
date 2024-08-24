@@ -1,0 +1,25 @@
+{
+  "name": "langdef",
+  "displayName": "GrammarHighlighting",
+  "description": "highlighting for grammar document",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.92.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "langdef",
+      "aliases": ["langdef", "langdef"],
+      "extensions": ["langdef"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "langdef",
+      "scopeName": "langdef",
+      "path": "./syntaxes/langdef.tmLanguage.json"
+    }]
+  }
+}

@@ -1,0 +1,30 @@
+{
+    "name": "Custom Theme",
+    "colors": {
+        "editor.foreground": "#ffffff",
+        "editor.background": "#000000"
+    },
+    "tokenColors": [
+        {
+            "scope": "keyword.structural.langdef",
+            "settings": {
+                "foreground": "#FF0000",
+                "fontStyle": "bold"
+            }
+        },
+        {
+            "scope": "keyword.main.langdef",
+            "settings": {
+                "foreground": "#00FF00",
+                "fontStyle": "italic"
+            }
+        },
+        {
+            "scope": "keyword.substrate.langdef",
+            "settings": {
+                "foreground": "#808080",
+                "fontStyle": "italic"
+            }
+        }
+    ]
+}

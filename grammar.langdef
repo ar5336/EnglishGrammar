@@ -126,6 +126,10 @@ Words:
             clyde
             alice
             nancy
+            jimmy
+            greg
+            daniel
+            dan
         InterrogativePronoun:
             who -animate
             what -indentity
@@ -359,6 +363,7 @@ Predicates:
     CONTAINS        container-> containee->
     ANAPHORIC       object->    anaphoric_object->
     OBJECT          object->    id
+    NAME            object->    name
 
 Frames:
     NounPhrase "NP"
@@ -394,6 +399,8 @@ Frames:
 
         # Noun[location] Noun[NUMBER] -NUMBER
             # land animals, sea animals
+
+        Noun[Name] NounPhrase[singular] -singular <
 
     AnaphoricNounPhrase "AnNP"
         NounPhrase[NUMBER] AnaphoricActorDescriptivePhrase[transitive] -NUMBER -actor -anaphoric <AnaphoricActorDescriptivePhrase->ACTION_2.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
