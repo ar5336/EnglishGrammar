@@ -65,7 +65,7 @@ bool PredicateTemplateHandler::try_get_predicate_template(string predicate_name,
     // printf("predicate_templates size: %d\n", (int)predicate_templates.size());
     // printf("predicate_templates 0: %s\n", predicate_templates[0].c_str());
     // printf("predicate_templates 1: %s\n", predicate_templates[1].c_str());
-    printf("033[1;31mdisaster\033[0m: fetching predicate template from predicate name \"%s\"failed\n", predicate_name.c_str());
+    printf("\033[1;31mdisaster\033[0m: fetching predicate template from predicate name \"%s\"failed\n", predicate_name.c_str());
     predicate_template->replace(PredicateTemplate());
     return false;
 }
@@ -76,6 +76,6 @@ int PredicateTemplateHandler::get_predicate_index(string predicate_name)
     {
         return predicate_index_map.at(predicate_name);
     }
-    printf("033[1;31mdisaster\033[0m: index fetching failed for predicate name \"%s\"\n", predicate_name.c_str());
+    printf("\033[1;31mdisaster\033[0m: index fetching failed for predicate name \"%s\"\n", predicate_name.c_str());
     return -1;
 }

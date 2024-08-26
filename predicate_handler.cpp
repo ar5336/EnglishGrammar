@@ -1,16 +1,7 @@
 #include "predicate_handler.hpp"
 
 PredicateHandler::PredicateHandler(PredicateTemplateHandler *predicate_template_reader){
-    // first_arg_to_predicate_map = map<string, vector<Predicate>>();
-    
     predicate_template_handler = predicate_template_reader;
-
-    // tell(construct_predicate("IS_SUBSET_OF", vector<string> {"horse", "mammal"}));
-    // tell(construct_predicate("IS_SUBSET_OF", vector<string> {"bird", "animal"}));
-    // tell(construct_predicate("IS_SUBSET_OF", vector<string> {"raven", "bird"}));
-    // tell(construct_predicate("CAN_DO", vector<string> {"bird", "fly"}));
-    
-    // InferExpressions();
 }
 
 int PredicateHandler::pred_int_from_string(string type)
@@ -366,7 +357,7 @@ vector<Predicate> Expression::extract_anaphora_closure_by_argument(Expression &o
 
             if (DEBUGGING)
                 printf("top argument: %s in %s\n", top_predicate_argument.c_str(), top_predicate.predicate_template.predicate.c_str());
-                
+
             if (!top_predicate.predicate_template.is_param_schematic(top_predicate_param_name))
             {
                 visited_predicates.emplace(top_predicate);

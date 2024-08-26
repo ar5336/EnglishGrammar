@@ -32,7 +32,9 @@ public:
 
     Mind test_mind;
 
-    void run_parse(string utterance);
+    void tell_mind(string utterance);
+
+    string ask_mind(string utterance);
 
     void setup_parse();
 

@@ -32,7 +32,10 @@ void Grammar::add_to_word_map(Frame frame, string word_string)
 //   > A C
 void Grammar::binarize_grammar()
 { // first version with assumption of no optional frames - to be updated.
-	printf("binarizing grammar\n");
+	
+	if (DEBUGGING)
+		printf("binarizing grammar\n");
+	
 	for (int frame_index = 0; frame_index < syntax_frames.size(); frame_index++)
 	{
 		vector<Frame> cnf_subframes;

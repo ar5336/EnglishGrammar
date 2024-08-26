@@ -28,8 +28,7 @@ void Mind::tell(Expression expression)
     {
         timeline.actions.push_back(event);
 
-        // add the noun instances to the concrete nouns list
-
+        // add the uninitialized noun instances to the concrete nouns list
         string actor_noun_class = event.actor_noun_class;
         string subject_noun_class = event.subject_noun_class;
 
@@ -48,9 +47,6 @@ void Mind::tell(Expression expression)
             // throw runtime_error ("unknown noun class '" + subject_noun_class + "'\n");
             create_subject_noun = true;
         }
-
-        // auto actor_entity = conceptual_schema->entities_by_noun.at(actor_noun_class);
-        // auto subject_entity = conceptual_schema->entities_by_noun.at(subject_noun_class);
 
         if (DEBUGGING)
         {
@@ -204,7 +200,7 @@ string Mind::ask(Expression expression)
     }
 
     // next, resolve against events
-    auto events = extract_events(expression, false);
+    auto events = extract_events(expression, true);
     for (auto event : events)
     {
         Event pass_event = Event();
@@ -217,20 +213,10 @@ string Mind::ask(Expression expression)
     if (events.size() != 0)
     {
         return "no, it did not happen";
-    }
+            }
 
     // can't do a simple hash comparison now. need to check connection equivalence between expression
     return "unknown";
-
-    // auto is_given = given_expressions.count(expression) != 0;
-    // auto is_inferred = inferred_expressions.count(expression) != 0;
-
-    // if (is_given || is_inferred)
-    // {
-    //     return ResponseType::YES;
-    // }
-
-    // return ResponseType::NO;
 }
 
 ConcreteNoun* Mind::dereference_noun_id(int noun_id)
@@ -558,6 +544,7 @@ Event::Event()
     actor_noun_id = 1;
     subject_noun_id = 1;
     id = -1;
+    action_type = "unknown";
 }
 
 Event::Event(
@@ -682,9 +669,12 @@ vector<Event> Mind::extract_events(Expression expression, bool modify_nouns = fa
     {
         object_event_pairs.push_back(pair);
     }
-
+    
+    Event new_event = Event();
     for (auto object_event_pair : object_event_pairs)
     {
+        new_event = Event();
+
         Predicate actor_predicate = object_event_pair.first;
         Predicate action_predicate = object_event_pair.second;
 
@@ -716,13 +706,14 @@ vector<Event> Mind::extract_events(Expression expression, bool modify_nouns = fa
             int object_id = is_object_concrete ? stoi(object_predicate.get_argument("id")) : (int)concrete_nouns.size() + 1;
             string object_noun_class = is_object_concrete ? concrete_nouns[object_id].entity_type->noun : object_predicate.get_argument("noun_class");
 
-            identified_events.push_back(Event(
+            new_event = Event(
                 action_predicate.get_argument("action_type"), // action_type
                 actor_noun_class,       // actor
                 actor_id,
                 object_noun_class,
                 object_id,
-                timeline.actions.size()));   // subject
+                timeline.actions.size());
+            identified_events.push_back(new_event);   // subject
         }
     }
 
@@ -732,19 +723,24 @@ vector<Event> Mind::extract_events(Expression expression, bool modify_nouns = fa
     auto event_other_object_pairs = expression.get_connections(
             "ACTION_2", "object",
             "IS", "object");
-    
+
+    if (event_other_object_pairs.size() <= 0)
+        return identified_events;
+
     for (auto event_other_object_pair : event_other_object_pairs)
     {
         Predicate action_predicate = event_other_object_pair.first;
         Predicate subject_predicate = event_other_object_pair.second;
 
-        identified_events.push_back(Event(
+        new_event = Event(
             action_predicate.get_argument("action_type"), // action_type
             "unknown",       // actor
             -1,
             subject_predicate.get_argument("noun_class"),
             (int)concrete_nouns.size(),
-            timeline.actions.size()));   // subject
+            timeline.actions.size());
+
+        identified_events.push_back(new_event);   // subject
     }
 
     return identified_events;
@@ -925,7 +921,9 @@ void ConceptualSchema::update_abilities(string noun, string ability, int recursi
 
 bool ConceptualSchema::can_do(string noun, string action)
 {
-    printf("checking if noun '%s' can do action '%s'\n", noun.c_str(), action.c_str());
+    if (DEBUGGING)
+        printf("checking if noun '%s' can do action '%s'\n", noun.c_str(), action.c_str());
+    
     return (ability_map.count(noun) != 0) &&
         (ability_map.at(noun).count(action) != 0);
 }

@@ -22,7 +22,7 @@
 using namespace std;
 using namespace cv;
 
-string initial_utterance = "the dog that bit a man is ugly";
+string initial_utterance = "a man got bit by a horse";
 
 string current_utterance = "";
 
@@ -178,29 +178,23 @@ bool check_keypress(char cr)
 			// interpret the sentence
 
 			auto base_frame = Frame();
-			if (parser.try_get_top_interpretation(base_frame)
-				// && (equals(base_frame.frame_name, "Sentence")
-				// || equals(base_frame.frame_name, "Question"))
-				){
+			if (parser.try_get_top_interpretation(base_frame)){
 				auto interp_handler = InterpretationHandler(&parser, base_frame);
 
 				auto expression = Expression();
 				if (interp_handler.try_construct_expression(expression))
 				{
-					// printf("expression string: \n\n%s\n", expression.stringify().c_str());
-
-					// if (equals(base_frame.frame_name, "Sentence"))
-					// {
-					// }
 					if (equals(base_frame.frame_name, "Question"))
 					{
 						auto response = mind.ask(expression);
 
 						displayer.response_string = response;
-					} else {
+					} else
+					{
 						mind.tell(expression);
 					}
-				} else {
+				} else
+				{
 					printf("failed to construct expression\n");
 				}
 				displayer.display();
@@ -249,7 +243,7 @@ int main(int argc, char **argv)
 
 	// read the grammar
 	GrammarReader reader = GrammarReader(&grammar, &predicate_handler, &predicate_template_handler);
-	reader.read_grammar("grammar.txt");
+	reader.read_grammar("grammar.langdef");
 
 	// translate the read frames into cnf frames
 	grammar.binarize_grammar();

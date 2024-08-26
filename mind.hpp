@@ -63,7 +63,6 @@ public:
 class Event
 {
 private:
-    string action_type;
 
     string location;
 
@@ -74,6 +73,7 @@ private:
     // set<string> features;
 
 public:
+    string action_type;
     // these can not stay as strings of noun_class
     // they should point to ConceptualEntity
     string actor_noun_class;
@@ -198,6 +198,8 @@ private:
     // vector<string> identify_all_parents(string entityName);
 
     vector<Event> extract_events(Expression expression, bool modify_nouns);
+
+    vector<pair<int,string>> extract_names();
 
     void resolve_properties(Expression expression);
 

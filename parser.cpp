@@ -199,7 +199,7 @@ bool try_get_word_frame(string accessor, Frame left_frame, Frame right_frame, Fr
     }
     else 
     {
-        printf("033[1;31mdisaster\033[0m: neither of the identified frames could be matched to when accessing word frame '%s'\n", frame_name.c_str());
+        printf("\033[1;31mdisaster\033[0m: neither of the identified frames could be matched to when accessing word frame '%s'\n", frame_name.c_str());
         return false;
     }
 
@@ -428,7 +428,7 @@ Expression Parser::set_argument_accessor(
     Predicate original_predicate;
     if (!try_get_predicate(left_frame, right_frame, argument_accessor, original_predicate))
     {
-        printf("033[1;31mdisaster\033[0m: failed to access assignee of predicate modifier rule\n");
+        printf("\033[1;31mdisaster\033[0m: failed to access assignee of predicate modifier rule\n");
         return combined_expression;
     }
 

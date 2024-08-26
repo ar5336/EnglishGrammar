@@ -292,7 +292,8 @@ void GrammarReader::read_grammar(string fileName)
     fstream newfile;
     int tab_spaces = 4;
 
-    printf("reading grammar\n");
+    if (DEBUGGING)
+        printf("reading grammar\n");
 
     newfile.open(fileName, ios::in); // open a file to perform read operation using file object
     if (newfile.is_open())
