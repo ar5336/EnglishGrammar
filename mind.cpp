@@ -169,22 +169,49 @@ string Mind::ask(Expression expression)
         return resolution_message;
     }
 
+    expression = resolve_anaphoras(expression);
+
+    auto properties_map = extract_concrete_properties(expression);
+
+    if (DEBUGGING)
+        printf("extracted %ld properties\n", properties_map.size());
+
+    bool props_match = false;
+    for (auto id_to_props : properties_map)
+    {
+        int ob_id = id_to_props.first;
+        vector<string> props = id_to_props.second;
+        for (auto prop : props)
+        {
+            if (concrete_nouns.at(ob_id).properties.count(prop) == 0)
+                return "no, it does not have the property '" + prop + "'";
+            else
+                props_match = true;
+        }
+    }
+
+    if (props_match)
+        return "yes, it does have that property";
+    
     // next, resolve against events
     auto events = extract_events(expression, false);
     for (auto event : events)
     {
         Event pass_event = Event();
+        if (DEBUGGING)
+            printf("checking if event: \n%s\n occurred", event.stringify().c_str());
+    
         if (did_it_occur(event, pass_event))
         {
             return "yes, it did happen";
         }
     }
-
+    
     if (events.size() != 0)
     {
         return "no, it did not happen";
     }
-
+    
     // can't do a simple hash comparison now. need to check connection equivalence between expression
     return "unknown";
 }
@@ -625,6 +652,9 @@ bool compare_nouns(Noun abstract_noun, Noun concrete_noun)
 
 bool Mind::compare_events(Event event_in_question, Event concrete_event)
 {
+    if (DEBUGGING)
+        printf("\033[1;34mcomparing events\n%s\nand\n%s\033[0m\n", event_in_question.stringify().c_str(), concrete_event.stringify().c_str());
+    
     if (!equals(event_in_question.action_type, concrete_event.action_type))
         return false;
     
@@ -798,11 +828,6 @@ vector<Event> Mind::extract_events(Expression expression, bool real = true)
     return identified_events;
 }
 
-vector<pair<int, string>> Mind::extract_properties()
-{
-    return vector<pair<int, string>>();
-}
-
 int Mind::create_new_object(Predicate is_predicate, bool real)
 {
     if (DEBUGGING)
@@ -847,6 +872,35 @@ int Mind::create_new_object(Predicate is_predicate, bool real)
             printf("adding abstract noun\n");
     }
     return size;
+}
+
+map<int, vector<string>> Mind::extract_concrete_properties(Expression expression)
+{
+    auto property_pairs = map<int, vector<string>>();
+
+    auto object_property_pairs = expression.get_connections(
+        "OBJECT", "object",
+        "HAS_PROPERTY", "object");
+
+    for (auto object_property_pair : object_property_pairs)
+    {
+        Predicate object_predicate = object_property_pair.first;
+        Predicate property_predicate = object_property_pair.second;
+
+        int object_noun_id = stoi(object_predicate.get_argument("id"));
+
+        string property = property_predicate.get_argument("property");
+
+        if (DEBUGGING)
+            printf("adding property %s to object id %d\n", property.c_str(), object_noun_id);
+
+        if (property_pairs.count(object_noun_id) != 0)
+            property_pairs.at(object_noun_id).push_back(property);
+        else
+            property_pairs.emplace(object_noun_id, vector<string> {property});
+    }
+
+    return property_pairs;
 }
 
 Expression Mind::resolve_properties(Expression expression)
@@ -899,25 +953,17 @@ Expression Mind::resolve_properties(Expression expression)
     modified_expression = Expression(modified_expression.predicates);
 
     // then, check object
-    auto object_property_pairs = modified_expression.get_connections(
-        "OBJECT", "object",
-        "HAS_PROPERTY", "object");
-
-    for (auto object_property_pair : object_property_pairs)
+    auto properties_map = extract_concrete_properties(modified_expression);
+    for (auto id_to_props : properties_map)
     {
-        Predicate object_predicate = object_property_pair.first;
-        Predicate property_predicate = object_property_pair.second;
-
-        int object_noun_id = stoi(object_predicate.get_argument("id"));
-
-        string property = property_predicate.get_argument("property");
-
-        if (DEBUGGING)
-            printf("adding property %s to object id %d\n", property.c_str(), object_noun_id);
-
-        concrete_nouns.at(object_noun_id).properties.emplace(property);
+        int ob_id = id_to_props.first;
+        vector<string> props = id_to_props.second;
+        for (auto prop : props)
+        {
+            concrete_nouns.at(ob_id).properties.emplace(prop);
+        }
     }
-
+    
     if (DEBUGGING)
         printf("resolved pos-property expression:\n%s\n", predicate_handler->stringify_expression(modified_expression).c_str());
     

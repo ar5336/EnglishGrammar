@@ -557,7 +557,7 @@ Frames:
         Verb[LinkingVerb] VerbPhrase
             # did a dog jump
 
-        AnaphoricInquisitivePhrase Adjective <HAS_PROPERTY object:AnaphoricInquisitivePhrase->ANAPHORIC.object property:Adjective>
+        AnaphoricInquisitivePhrase Adjective <HAS_PROPERTY object:AnaphoricInquisitivePhrase->ANAPHORIC.anaphoric_object property:Adjective>
             # is the dog that bit the horse ugly
 
         InterrogativePhrase ModalPhrase[MODE] -MODE <ModalPhrase->CAN_DO.actor=InterrogativePhrase->IS.object>

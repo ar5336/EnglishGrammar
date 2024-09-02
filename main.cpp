@@ -22,7 +22,7 @@
 using namespace std;
 using namespace cv;
 
-string initial_utterance = "a quick brown fox jumps over the lazy dog";
+string initial_utterance = "is the dog that jumped ugly";
 
 string current_utterance = "";
 
@@ -49,9 +49,11 @@ vector<string> known_facts = {
 	"ravens are birds",
 	"birds are animals",
 	"horses are mammals",
+	"foxes are mammals",
 	"birds can fly",
 	"animals can breathe",
-	"animals can bite"};
+	"animals can bite",
+	"a quick brown fox jumps over a lazy dog"};
 	// "a raven flew",
 	// "the raven that flew bit a horse"};
 	// "a dog bit a man"};

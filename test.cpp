@@ -2,26 +2,25 @@
 
 
 #define TEST_ASSERT(condition) \
-    do { \
-        if (!(condition)) { \
-            std::cerr << "Assertion failed: " #condition << " in " << __FILE__ \
-                      << " line " << __LINE__ << std::endl; \
-            return false; \
-        } \
-    } while (false)
+    if (!(condition)) { \
+        std::cerr << "\nAssertion failed: " #condition << " in " << __FILE__ \
+                    << " line " << __LINE__ << std::endl; \
+        return false; \
+    } else { \
+        std::cout << "\033[1;32m█\033[0m";\
+    } \
+
 
 #define RUN_TEST(testFunc) \
-    do { \
-        std::cout << "Running test: " #testFunc << std::endl; \
-        if (testFunc()) { \
-            std::cout << "\033[1;32mPASS\033[0m" << std::endl; \
-            passed++; \
-        } else { \
-            std::cout << "\033[1;31mFAIL\033[0m" << std::endl; \
-            failed++; \
-        } \
-        total++; \
-    } while (false)
+    std::cout << "Running test: " #testFunc << std::endl; \
+    if (testFunc()) { \
+        std::cout << "\033[1;32mPASS\033[0m" << std::endl; \
+        passed++; \
+    } else { \
+        std::cout << "\033[1;31mFAIL\033[0m" << std::endl; \
+        failed++; \
+    } \
+    total++; \
 
 int total = 0;
 int passed = 0;
@@ -217,8 +216,8 @@ bool test_parse__properties() {
     // TODO - also processing + tests for predicates
 
     TEST_ASSERT(equals(tester.ask_mind("did a fox jump"), "yes, it did happen"));
-    TEST_ASSERT(equals(tester.ask_mind("was the fox that jumped quick"), "yes, it did happen"));
-
+    TEST_ASSERT(equals(tester.ask_mind("was the fox that jumped quick"), "yes, it does have that property"));
+    TEST_ASSERT(equals(tester.ask_mind("was the fox that jumped ugly"), "no, it does not have the property 'ugly'"));
 
     return true;
 }

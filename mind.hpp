@@ -222,9 +222,9 @@ private:
 
     vector<Event> extract_events(Expression expression, bool real);
 
-    vector<pair<int,string>> extract_names();
+    vector<pair<int, string>> extract_names();
 
-    vector<pair<int,string>> extract_properties();
+    map<int, vector<string>> extract_concrete_properties(Expression expression);
 
     int create_new_object(Predicate is_predicate, bool real = true);
 
