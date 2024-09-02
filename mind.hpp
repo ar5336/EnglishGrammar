@@ -53,7 +53,7 @@ public:
 //     bool does_it_still_match();
 // };
 
-class ConcreteNoun
+class Noun
 {
     // vector<int> noun_profile_ids;
 public:
@@ -71,7 +71,7 @@ public:
     // Point2i location;
     // Point2f size;
 
-    ConcreteNoun(string name, ConceptualEntity* entity_type, int id, bool real);
+    Noun(string name, ConceptualEntity* entity_type, int id, bool real);
 
     string stringify();
     bool real;
@@ -122,8 +122,6 @@ public:
     
     bool has_actor();
 
-    static bool compare(Event event_1, Event event_2);
-
     bool real;
 };
 
@@ -145,7 +143,6 @@ public:
 
     Timeline();
     Timeline(bool real);
-    bool did_it_occur(Event event, Event& og_event);
 
     bool real;
 };
@@ -233,7 +230,9 @@ private:
 
     Expression resolve_properties(Expression expression);
 
-    ConcreteNoun* dereference_noun_id(int noun_id, bool real);
+    Noun* dereference_noun_id(int noun_id, bool real);
+
+    bool compare_events(Event event_1, Event event_2);
 
     int id_counter = 0;
 public:
@@ -247,17 +246,18 @@ public:
 
     void tell(Expression expression);
 
-    vector<ConcreteNoun> concrete_nouns;
-    vector<ConcreteNoun> abstract_nouns;
+    vector<Noun> concrete_nouns;
+    vector<Noun> abstract_nouns;
 
     Timeline timeline;
     Timeline abstract_timeline;
 
     Expression resolve_anaphoras(Expression expression);
 
-    // map<string, ConcreteNoun> concrete_nouns_by_id;
+    bool did_it_occur(Event event, Event& og_event);
 
-    // void create_concrete_noun(ConcreteNoun noun);
+
+    // void create_concrete_noun(Noun noun);
 };
 
 // TODO - create

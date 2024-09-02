@@ -450,7 +450,9 @@ Frames:
             # a dog bit
             # !a dog bite
         NounPhrase[singular] Verb[MainVerb,simple,Transitive] -singular -transitive -object_unfilled <ACTION_2 action:! actor:NounPhrase->IS.object action_type:Verb object:"unknown">
-            # (did) (<a dog bite> (another dog))
+            # did (<a dog bite> (another dog))
+        NounPhrase[singular] Verb[MainVerb,simple,Intransitive] -singular -transitive -object_unfilled <ACTION action:! actor:NounPhrase->IS.object action_type:Verb>
+            # (did) <a dog jump>
         Noun[plural] Verb[MainVerb,simple,Transitive] -plural -intransitive <IS object:! object_count:"inf" noun_class:Noun | ACTION action:!! actor:! action_type:Verb>
             # dogs run
         Noun[singular] Verb[MainVerb,!simple,!continuous,!3PPresent,Transitive] -singular -intransitive <IS object:! object_count:"1" noun_class:Noun | ACTION action:!! actor:! action_type:Verb>
@@ -552,6 +554,11 @@ Frames:
 
         Verb[LinkingVerb] Sentence
             # did a dog bite a person
+        Verb[LinkingVerb] VerbPhrase
+            # did a dog jump
+
+        AnaphoricInquisitivePhrase Adjective <HAS_PROPERTY object:AnaphoricInquisitivePhrase->ANAPHORIC.object property:Adjective>
+            # is the dog that bit the horse ugly
 
         InterrogativePhrase ModalPhrase[MODE] -MODE <ModalPhrase->CAN_DO.actor=InterrogativePhrase->IS.object>
             # which dogs can run
@@ -570,6 +577,9 @@ Frames:
     MatterOfFactPhrase "MoFP"
         # carnivores eat meat
         # (will) a dog eat a dog
+    AnaphoricInquisitivePhrase "anIP"
+        Verb[LinkingVerb,NUMBER] AnaphoricNounPhrase
+            # <is the dog that bit the horse> ugly
     StateQuestionObject "sQOb"
         Verb[ModalVerb,MODE] Noun[Pronoun,NUMBER] -NUMBER -MODE -habilitive 
             # can you, can i

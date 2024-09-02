@@ -97,6 +97,7 @@ void ParserTester::setup_parse()
     tell_mind("horses are mammals");
     tell_mind("horses are mammals");
     tell_mind("dogs are mammals");
+    tell_mind("foxes are mammals");
     tell_mind("fishes are animals");
 }
 
@@ -210,6 +211,18 @@ bool test_parse__event_rephrasings() {
     return true;
 }
 
+bool test_parse__properties() {
+    tester.setup_parse();
+	tester.tell_mind("a quick brown fox jumps over the lazy dog");
+    // TODO - also processing + tests for predicates
+
+    TEST_ASSERT(equals(tester.ask_mind("did a fox jump"), "yes, it did happen"));
+    TEST_ASSERT(equals(tester.ask_mind("was the fox that jumped quick"), "yes, it did happen"));
+
+
+    return true;
+}
+
 
 int test_all() {
     RUN_TEST(test_parse__event);
@@ -217,6 +230,7 @@ int test_all() {
     RUN_TEST(test_parse__event_anaphora_create_event);
     RUN_TEST(test_parse__passive_voice);
     RUN_TEST(test_parse__event_rephrasings);
+    RUN_TEST(test_parse__properties);
 
     std::cout << "\n\nTest Results:\n";
     std::cout << "Total tests: " << total << std::endl;

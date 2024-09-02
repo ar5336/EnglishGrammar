@@ -22,7 +22,7 @@
 using namespace std;
 using namespace cv;
 
-string initial_utterance = "a man got bit by a fast horse";
+string initial_utterance = "a quick brown fox jumps over the lazy dog";
 
 string current_utterance = "";
 

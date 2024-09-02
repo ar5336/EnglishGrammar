@@ -121,7 +121,7 @@ Expression Mind::resolve_anaphoras(Expression expression)
                 param_type = ActionParamType::SUBJECT;
 
         Event pass_event = Event();
-        if (timeline.did_it_occur(event, pass_event))
+        if (did_it_occur(event, pass_event))
         {
             if (DEBUGGING)
             {
@@ -174,7 +174,7 @@ string Mind::ask(Expression expression)
     for (auto event : events)
     {
         Event pass_event = Event();
-        if (timeline.did_it_occur(event, pass_event))
+        if (did_it_occur(event, pass_event))
         {
             return "yes, it did happen";
         }
@@ -189,7 +189,7 @@ string Mind::ask(Expression expression)
     return "unknown";
 }
 
-ConcreteNoun* Mind::dereference_noun_id(int noun_id, bool real = true)
+Noun* Mind::dereference_noun_id(int noun_id, bool real = true)
 {
     if (real)
     {
@@ -597,23 +597,61 @@ bool Event::has_actor()
     return !equals(actor_noun_class, "unknown");
 }
 
-bool unknown_or_match(string arg_1, string arg_2)
+bool do_args_accord(string arg_abstract, string arg_concrete)
 {
-    return (equals(arg_1, "unknown")
-     || equals(arg_2, "unknown")
-     || equals(arg_1, arg_2));
+    return (equals(arg_abstract, "unknown")
+     || equals(arg_abstract, arg_concrete));
+
+     // TODO - add special case for an unknown concrete.
+     //     A> something bit my fish
+     //     B> did a horse bite your fish?
+     //     A> i dunno maybe
 }
 
-bool Event::compare(Event event_1, Event event_2)
+bool compare_nouns(Noun abstract_noun, Noun concrete_noun)
 {
-    if (!equals(event_1.action_type, event_2.action_type))
+    for (auto property : abstract_noun.properties)
+    {
+        if (concrete_noun.properties.count(property) == 0)
+        {
+            return false;
+        }
+    }
+
+    if (!do_args_accord(abstract_noun.name, concrete_noun.name))
+        return false;
+    return true;
+}
+
+bool Mind::compare_events(Event event_in_question, Event concrete_event)
+{
+    if (!equals(event_in_question.action_type, concrete_event.action_type))
         return false;
     
-    if (!unknown_or_match(event_1.actor_noun_class, event_2.actor_noun_class))
+    if (!do_args_accord(event_in_question.actor_noun_class, concrete_event.actor_noun_class))
         return false;
 
-    if (!unknown_or_match(event_1.subject_noun_class, event_2.subject_noun_class))
+    if (!do_args_accord(event_in_question.subject_noun_class, concrete_event.subject_noun_class))
         return false;
+    
+    if (event_in_question.actor_noun_id != -1)
+    {
+        Noun abstract_noun = abstract_nouns[event_in_question.actor_noun_id];
+        Noun concrete_noun = concrete_nouns[concrete_event.actor_noun_id];
+        
+        if (!compare_nouns(abstract_noun, concrete_noun))
+            return false;
+    }
+
+    if (event_in_question.subject_noun_id != -1)
+    {
+        Noun abstract_noun = abstract_nouns[event_in_question.subject_noun_id];
+        Noun concrete_noun = concrete_nouns[concrete_event.subject_noun_id];
+        
+        if (!compare_nouns(abstract_noun, concrete_noun))
+            return false;
+    }
+
     
     return true;
 }
@@ -635,6 +673,25 @@ vector<Event> Mind::extract_events(Expression expression, bool real = true)
             action_predicate.get_argument("action_type"), // action_type
             actor_predicate.get_argument("noun_class"),       // actor
             create_new_object(actor_predicate, real),
+            real ? timeline.actions.size() : abstract_timeline.actions.size());
+
+        identified_events.push_back(event);
+    }
+
+    object_event_pairs = expression.get_connections(
+        "OBJECT", "object",
+        "ACTION", "actor");
+
+    for (auto object_event_pair : object_event_pairs)
+    {
+        Predicate actor_predicate = object_event_pair.first;
+        Predicate action_predicate = object_event_pair.second;
+
+        int actor_id = stoi(actor_predicate.get_argument("id"));
+        auto event = Event(
+            action_predicate.get_argument("action_type"), // action_type
+            dereference_noun_id(actor_id, real)->entity_type->noun,       // actor
+            actor_id,
             real ? timeline.actions.size() : abstract_timeline.actions.size());
 
         identified_events.push_back(event);
@@ -770,7 +827,7 @@ int Mind::create_new_object(Predicate is_predicate, bool real)
         throw runtime_error("noun of class name \'" + noun_class + "\' not found in conceptual schema");
     }
 
-    ConcreteNoun noun = ConcreteNoun(
+    Noun noun = Noun(
         "unknown",
         &conceptual_schema->entities_by_noun.at(noun_class) ,
         size,
@@ -817,8 +874,11 @@ Expression Mind::resolve_properties(Expression expression)
 
         Predicate property_predicate = is_property_pair.second;
 
-        printf("is predicate: %s\n", predicate_handler->stringify_predicate(is_predicate).c_str());
-        printf("property predicate: %s\n", predicate_handler->stringify_predicate(property_predicate).c_str());
+        if (DEBUGGING)
+        {
+            printf("is predicate: %s\n", predicate_handler->stringify_predicate(is_predicate).c_str());
+            printf("property predicate: %s\n", predicate_handler->stringify_predicate(property_predicate).c_str());
+        }
 
         int object_noun_id = create_new_object(is_predicate);
 
@@ -1041,29 +1101,29 @@ Timeline::Timeline(bool real)
     actions = vector<Event>();
 }
 
-bool Timeline::did_it_occur(Event event, Event &og_event)
+bool Mind::did_it_occur(Event abstract_event, Event &og_event)
 {
     if (DEBUGGING)
-        printf("checking if action:\n%s\n did occur\n", event.stringify().c_str());
+        printf("checking if action:\n%s\n did occur\n", abstract_event.stringify().c_str());
     
     // TODO - make this capable of handling multiple matches
-    for (auto occurence : actions)
+    for (auto concrete_event : timeline.actions)
     {
-        if (Event::compare(occurence, event))
+        if (compare_events(abstract_event, concrete_event))
         {
-            og_event = occurence;
+            og_event = concrete_event;
             return true;
         }
     }
     return false;
 }
 
-ConcreteNoun::ConcreteNoun(string name, ConceptualEntity *entity_type, int id, bool real)
+Noun::Noun(string name, ConceptualEntity *entity_type, int id, bool real)
     : name(name), entity_type(entity_type), id(id), real(real)
 {
 }
 
-string ConcreteNoun::stringify()
+string Noun::stringify()
 {
     string str = "";
     str += "Object:\n";
