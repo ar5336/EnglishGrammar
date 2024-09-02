@@ -22,7 +22,7 @@
 using namespace std;
 using namespace cv;
 
-string initial_utterance = "a man got bit by a horse";
+string initial_utterance = "a man got bit by a fast horse";
 
 string current_utterance = "";
 
@@ -48,6 +48,7 @@ vector<string> known_facts = {
 	"mammals are animals",
 	"ravens are birds",
 	"birds are animals",
+	"horses are mammals",
 	"birds can fly",
 	"animals can breathe",
 	"animals can bite"};

@@ -38,8 +38,24 @@ public:
     ConceptualEntity(string noun);
 };
 
+// class NounProfile
+// {
+// public:
+//     ConceptualEntity *entity_type;
+
+//     int id;
+//     string name;
+//     set<string> properties;
+
+//     int current_best_concrete_match;
+//     vector<int> participations;
+
+//     bool does_it_still_match();
+// };
+
 class ConcreteNoun
 {
+    // vector<int> noun_profile_ids;
 public:
     ConceptualEntity *entity_type;
 
@@ -55,9 +71,10 @@ public:
     // Point2i location;
     // Point2f size;
 
-    ConcreteNoun(string name, ConceptualEntity* entity_type, int id);
+    ConcreteNoun(string name, ConceptualEntity* entity_type, int id, bool real);
 
     string stringify();
+    bool real;
 };
 
 class Event
@@ -83,6 +100,7 @@ public:
     int subject_noun_id;
 
     Event();
+
     // constructor for actualized entity
     Event(
         string action_type,
@@ -91,7 +109,7 @@ public:
         string subject_noun_class,
         int subject_noun_id,
         int id);
-    
+
     Event(
         string action_type,
         string actor_noun_class,
@@ -105,6 +123,8 @@ public:
     bool has_actor();
 
     static bool compare(Event event_1, Event event_2);
+
+    bool real;
 };
 
 class Timeline
@@ -122,8 +142,12 @@ public:
     //     string pivot,
     //     string direction // forwars, backward
     // );
+
     Timeline();
+    Timeline(bool real);
     bool did_it_occur(Event event, Event& og_event);
+
+    bool real;
 };
 
 class ConceptualSchema
@@ -162,6 +186,8 @@ public:
 
     bool has_noun(string noun);
 
+    ConceptualEntity get_noun_entity(string noun);
+
     set<string> get_parents(string noun);
 
     // bool try_apply_expression(Expression applicant);
@@ -197,17 +223,17 @@ private:
 
     // vector<string> identify_all_parents(string entityName);
 
-    vector<Event> extract_events(Expression expression, bool modify_nouns);
+    vector<Event> extract_events(Expression expression, bool real);
 
     vector<pair<int,string>> extract_names();
 
     vector<pair<int,string>> extract_properties();
 
-    int create_new_object(Predicate is_predicate);
+    int create_new_object(Predicate is_predicate, bool real = true);
 
     Expression resolve_properties(Expression expression);
 
-    ConcreteNoun* dereference_noun_id(int noun_id);
+    ConcreteNoun* dereference_noun_id(int noun_id, bool real);
 
     int id_counter = 0;
 public:
@@ -222,8 +248,10 @@ public:
     void tell(Expression expression);
 
     vector<ConcreteNoun> concrete_nouns;
+    vector<ConcreteNoun> abstract_nouns;
 
     Timeline timeline;
+    Timeline abstract_timeline;
 
     Expression resolve_anaphoras(Expression expression);
 

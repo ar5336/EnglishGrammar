@@ -60,7 +60,6 @@ bool operator<(const Expression& lhs, const Expression& rhs)
 
 Expression::Expression() {
     prid_to_prid_by_arg = map<int, map<int, tuple<string, string>>>();
-
 }
 
 Expression::Expression(vector<Predicate> predicates) : predicates(predicates) {
@@ -96,6 +95,7 @@ void Expression::make_connections()
             prids_by_type.at(predicate_type).push_back(i);
         }
     }
+
     // for each predicate, index up their variables.
     map<string, vector<int>> arg_name_to_prid;
     for (int prid = 0; prid < predicates.size(); prid++)
@@ -193,13 +193,6 @@ Predicate Expression::operator [](int i) const
 
 tuple<bool, vector<tuple<int, int>>> Expression::has_connection(string pred_1, string arg_1, string pred_2, string arg_2)
 {
-    // if (DEBUGGING)
-    //     printf("getting connections from\n\tpred:'%s' arg:'%s' to\n\tpred:'%s' arg:'%s'\n",
-    //     source_predicate_type.c_str(),
-    //     source_argument.c_str(),
-    //     target_predicate_type.c_str(),
-    //     target_argument.c_str());
-
     if (prids_by_type.count(pred_1) == 0 || prids_by_type.count(pred_2) == 0)
         return make_tuple(false, vector<tuple<int, int>>());
 
@@ -216,6 +209,15 @@ tuple<bool, vector<tuple<int, int>>> Expression::has_connection(string pred_1, s
         {
             auto candidiate_connection = prid_to_prid_by_arg.at(candidate_prid_1);
 
+            string type_1 =  predicates[candidate_prid_1].predicate_template.predicate;
+            string type_2 =  predicates[candidate_prid_2].predicate_template.predicate;
+
+            if (!equals(type_1, pred_1) || !equals(type_2, pred_2))
+            {
+                printf("mismatch between 1 '%s' and 2 '%s'\n", type_1.c_str(), type_2.c_str());
+                continue;
+            }
+            
             if (candidiate_connection.count(candidate_prid_2) != 0)
             {
                 // add to found connections

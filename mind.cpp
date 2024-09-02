@@ -4,6 +4,7 @@ Mind::Mind(PredicateHandler *predicate_handler, ConceptualSchema *conceptual_sch
     : predicate_handler(predicate_handler), conceptual_schema(conceptual_schema)
 {
     timeline = Timeline();
+    abstract_timeline = Timeline(false);
 }
 
 void Mind::tell(Expression expression)
@@ -19,50 +20,17 @@ void Mind::tell(Expression expression)
     expression = resolve_anaphoras(expression);
 
     // properties must be resolved after anaphoras. as anaphoras determine which objects are defined or not
-    expression = resolve_properties(expression);
     if (DEBUGGING)
     {
         printf("finished resolving anaphoras\n");
         printf("%s\n", predicate_handler->stringify_expression(expression).c_str());
     }
+    expression = resolve_properties(expression);
 
-    for (auto event : extract_events(expression, false))
+    auto events = extract_events(expression, true);
+    for (Event event : events)
     {
         timeline.actions.push_back(event);
-
-        // add the uninitialized noun instances to the concrete nouns list
-        string actor_noun_class = event.actor_noun_class;
-        string subject_noun_class = event.subject_noun_class;
-
-        bool is_actor_initialized = event.has_actor();
-        bool create_actor_noun = false;
-        if (is_actor_initialized && concrete_nouns.size() <= event.actor_noun_id)
-        {
-            // throw runtime_error ("unknown noun class '" + actor_noun_class + "'\n");
-            create_actor_noun = true;
-        }
-
-        bool is_subject_initialized = event.has_subject();
-        bool create_subject_noun = false;
-        if (is_subject_initialized && concrete_nouns.size() <= event.subject_noun_id)
-        {
-            // throw runtime_error ("unknown noun class '" + subject_noun_class + "'\n");
-            create_subject_noun = true;
-        }
-
-        if (DEBUGGING)
-        {
-            if (!create_actor_noun)
-                printf("\033[1;32mcreating\033[0m concrete actor noun '%s'\n", actor_noun_class.c_str());
-            if (!create_subject_noun)
-                printf("\033[1;32mcreating\033[0m concrete subject noun '%s'\n", subject_noun_class.c_str());
-        }
-
-        if (is_actor_initialized && create_actor_noun)
-            concrete_nouns.push_back(ConcreteNoun("unknown", &conceptual_schema->entities_by_noun.at(actor_noun_class), id_counter++));
-        
-        if (is_subject_initialized && create_subject_noun)
-            concrete_nouns.push_back(ConcreteNoun("unknown", &conceptual_schema->entities_by_noun.at(subject_noun_class), id_counter++));
     }
 }
 
@@ -202,7 +170,7 @@ string Mind::ask(Expression expression)
     }
 
     // next, resolve against events
-    auto events = extract_events(expression, true);
+    auto events = extract_events(expression, false);
     for (auto event : events)
     {
         Event pass_event = Event();
@@ -215,18 +183,31 @@ string Mind::ask(Expression expression)
     if (events.size() != 0)
     {
         return "no, it did not happen";
-            }
+    }
 
     // can't do a simple hash comparison now. need to check connection equivalence between expression
     return "unknown";
 }
 
-ConcreteNoun* Mind::dereference_noun_id(int noun_id)
+ConcreteNoun* Mind::dereference_noun_id(int noun_id, bool real = true)
 {
-    if (concrete_nouns.size() <= noun_id)
-        throw runtime_error("id would cause sgmentation fault. noun id: " + to_string(noun_id) + ", concrete nouns size: " + to_string(concrete_nouns.size()));
-    
-    return &concrete_nouns.at(noun_id);
+    if (real)
+    {
+        int cs = concrete_nouns.size();
+        if (noun_id < 0 || cs <= noun_id)
+            throw runtime_error("id would cause sgmentation fault. noun id: " + to_string(noun_id) + ", concrete nouns size: " + to_string(concrete_nouns.size()));
+    }
+    else
+    {
+        int as = abstract_nouns.size();
+        if (noun_id < 0 || as <= noun_id)
+            throw runtime_error("id would cause sgmentation fault. noun id: " + to_string(noun_id) + ", abstract nouns size: " + to_string(abstract_nouns.size()));
+    }
+    if (real)
+    {
+        return &concrete_nouns.at(noun_id);
+    }
+    return &abstract_nouns.at(noun_id);
 }
 
 void ConceptualSchema::print_maps()
@@ -426,11 +407,20 @@ std::set<T> getUnion(const std::set<T>& a, const std::set<T>& b)
 ConceptualSchema::ConceptualSchema()
 {
     noun_class_set = set<string>();
+    entities_by_noun = map<string, ConceptualEntity>();
 }
 
 bool ConceptualSchema::has_noun(string noun)
 {
-    return noun_class_set.find(noun) != noun_class_set.end();
+    return noun_class_set.count(noun) != 0;
+}
+
+ConceptualEntity ConceptualSchema::get_noun_entity(string noun)
+{
+    if (!has_noun(noun))
+        throw runtime_error("noun of class name \'" + noun + "\' not found in conceptual schema");
+
+    return entities_by_noun.at(noun);
 }
 
 void ConceptualSchema::add_entity(ConceptualEntity new_node)
@@ -546,7 +536,9 @@ Event::Event()
     actor_noun_id = 1;
     subject_noun_id = 1;
     id = -1;
+
     action_type = "unknown";
+    real = true;
 }
 
 Event::Event(
@@ -564,6 +556,7 @@ Event::Event(
     id(id)
 {
     location = "unknown";
+    real = true;
 }
 
 Event::Event(
@@ -579,6 +572,7 @@ Event::Event(
     subject_noun_class = "unknown";
     subject_noun_id = -1;
     location = "unknown";
+    real = true;
 }
 
 string Event::stringify()
@@ -624,7 +618,7 @@ bool Event::compare(Event event_1, Event event_2)
     return true;
 }
 
-vector<Event> Mind::extract_events(Expression expression, bool modify_nouns = false)
+vector<Event> Mind::extract_events(Expression expression, bool real = true)
 {
     vector<Event> identified_events = vector<Event>();
 
@@ -640,20 +634,10 @@ vector<Event> Mind::extract_events(Expression expression, bool modify_nouns = fa
         auto event = Event(
             action_predicate.get_argument("action_type"), // action_type
             actor_predicate.get_argument("noun_class"),       // actor
-            (int)concrete_nouns.size(),
-            timeline.actions.size());
+            create_new_object(actor_predicate, real),
+            real ? timeline.actions.size() : abstract_timeline.actions.size());
 
-        auto og_event = Event();
-        if (timeline.did_it_occur(event, og_event))
-            identified_events.push_back(Event(
-                action_predicate.get_argument("action_type"), // action_type
-                og_event.actor_noun_class,       // actor
-                og_event.actor_noun_id,
-                timeline.actions.size()));
-        else
-        {
-            identified_events.push_back(event);
-        }
+        identified_events.push_back(event);
     }
 
     if (identified_events.size() != 0)
@@ -702,14 +686,20 @@ vector<Event> Mind::extract_events(Expression expression, bool modify_nouns = fa
             bool is_actor_concrete = equals(actor_predicate.predicate_template.predicate, "OBJECT");
             bool is_object_concrete = equals(object_predicate.predicate_template.predicate, "OBJECT");
             
-            printf("before the storm\n");
-            int actor_id = is_actor_concrete ? stoi(actor_predicate.get_argument("id")) : (int)concrete_nouns.size();
-            string actor_noun_class = is_actor_concrete ? concrete_nouns[actor_id].entity_type->noun : actor_predicate.get_argument("noun_class");
+            if (DEBUGGING)
+            {
+                printf("beginning object creation and dereferencing\n");
+                printf("actor predicate: %s\n", predicate_handler->stringify_predicate(actor_predicate).c_str());
+            }
+            
+            int actor_id = is_actor_concrete ? stoi(actor_predicate.get_argument("id")) : create_new_object(actor_predicate, real);
+            string actor_noun_class = is_actor_concrete ? dereference_noun_id(actor_id, real)->entity_type->noun : actor_predicate.get_argument("noun_class");
 
-            printf("eye of the storm\n");
-            int object_id = is_object_concrete ? stoi(object_predicate.get_argument("id")) : (int)concrete_nouns.size() + 1;
-            string object_noun_class = is_object_concrete ? concrete_nouns[object_id].entity_type->noun : object_predicate.get_argument("noun_class");
-            printf("after the storm\n");
+            int object_id = is_object_concrete ? stoi(object_predicate.get_argument("id")) : create_new_object(object_predicate, real);
+            string object_noun_class = is_object_concrete ? dereference_noun_id(actor_id, real)->entity_type->noun : object_predicate.get_argument("noun_class");
+            
+            if (DEBUGGING)
+                printf("ending object creation and dereferencing\n");
 
             new_event = Event(
                 action_predicate.get_argument("action_type"), // action_type
@@ -717,7 +707,7 @@ vector<Event> Mind::extract_events(Expression expression, bool modify_nouns = fa
                 actor_id,
                 object_noun_class,
                 object_id,
-                timeline.actions.size());
+                real ? timeline.actions.size() : abstract_timeline.actions.size());
             identified_events.push_back(new_event);   // subject
         }
     }
@@ -742,8 +732,8 @@ vector<Event> Mind::extract_events(Expression expression, bool modify_nouns = fa
             "unknown",       // actor
             -1,
             subject_predicate.get_argument("noun_class"),
-            (int)concrete_nouns.size(),
-            timeline.actions.size());
+            create_new_object(subject_predicate, real),
+            real ? timeline.actions.size() : abstract_timeline.actions.size());
 
         identified_events.push_back(new_event);   // subject
     }
@@ -756,28 +746,100 @@ vector<pair<int, string>> Mind::extract_properties()
     return vector<pair<int, string>>();
 }
 
-int Mind::create_new_object(Predicate is_predicate)
+int Mind::create_new_object(Predicate is_predicate, bool real)
 {
+    if (DEBUGGING)
+        printf("creating %s object for predicate %s\n", real ? "real" : "abstract", predicate_handler->stringify_predicate(is_predicate).c_str());
+
     if (!is_predicate.has_argument("noun_class"))
     {
         printf("\033[1;31error: failed to create new object with predicate basis of: %s\033[0m", predicate_handler->stringify_predicate(is_predicate).c_str());
     }
+
     string noun_class = is_predicate.get_argument("noun_class");
-    int size = concrete_nouns.size();
-    concrete_nouns.push_back(ConcreteNoun(
+
+    int size = -1;
+    
+    if (real)
+        size = concrete_nouns.size();
+    else
+        size = abstract_nouns.size();
+
+    if (!conceptual_schema->has_noun(noun_class))
+    {
+        throw runtime_error("noun of class name \'" + noun_class + "\' not found in conceptual schema");
+    }
+
+    ConcreteNoun noun = ConcreteNoun(
         "unknown",
-        &conceptual_schema->entities_by_noun.at(noun_class),
-        size
-    ));
+        &conceptual_schema->entities_by_noun.at(noun_class) ,
+        size,
+        real
+    );
+
+    if (real)
+    {
+        concrete_nouns.push_back(noun);
+        if (DEBUGGING)
+            printf("adding real noun\n");
+    }
+    else 
+    {
+        abstract_nouns.push_back(noun);
+        if (DEBUGGING)
+            printf("adding abstract noun\n");
+    }
     return size;
 }
 
 Expression Mind::resolve_properties(Expression expression)
 {
+
+    // TODO - extract some of this logic into extract_properties. (the extraction part)
+    // and have that be used in the anaphora and tell methods.
+    // for anaphora, to chekc the did_it_occur correctly,
+    // and for the tell to make sure the properties of the described events are logged
+    // resolve properties should only be used at the end.
     Expression modified_expression = expression;
 
-    // first, check object
-    auto object_property_pairs = expression.get_connections(
+    // first check is
+    auto is_property_pairs = expression.get_connections(
+        "IS", "object",
+        "HAS_PROPERTY", "object");
+
+    set<Predicate> modified_predicates;
+    for (auto is_property_pair : is_property_pairs)
+    {
+        Predicate is_predicate = is_property_pair.first;
+
+        if (modified_predicates.count(is_predicate) != 0)
+            continue;
+
+        Predicate property_predicate = is_property_pair.second;
+
+        printf("is predicate: %s\n", predicate_handler->stringify_predicate(is_predicate).c_str());
+        printf("property predicate: %s\n", predicate_handler->stringify_predicate(property_predicate).c_str());
+
+        int object_noun_id = create_new_object(is_predicate);
+
+        string property = property_predicate.get_argument("property");
+
+        if (DEBUGGING)
+            printf("adding property %s to object id %d\n", property.c_str(), object_noun_id);
+
+        concrete_nouns.at(object_noun_id).properties.emplace(property);
+
+        // replace the IS with the OBJECT in the original expression
+        modified_predicates.emplace(is_predicate);
+
+        modified_expression.extract_predicate(is_predicate);
+        modified_expression.predicates.push_back(predicate_handler->construct_predicate("OBJECT", {is_predicate.get_argument("object"), to_string(object_noun_id)}));
+    }
+
+    modified_expression = Expression(modified_expression.predicates);
+
+    // then, check object
+    auto object_property_pairs = modified_expression.get_connections(
         "OBJECT", "object",
         "HAS_PROPERTY", "object");
 
@@ -796,33 +858,9 @@ Expression Mind::resolve_properties(Expression expression)
         concrete_nouns.at(object_noun_id).properties.emplace(property);
     }
 
-    // then check is
-    auto is_property_pairs = expression.get_connections(
-        "IS", "object",
-        "HAS_PROPERTY", "object");
-
-    for (auto is_property_pair : is_property_pairs)
-    {
-        Predicate is_predicate = is_property_pair.first;
-        Predicate property_predicate = is_property_pair.second;
-
-        printf("is predicate: %s\n", predicate_handler->stringify_predicate(is_predicate).c_str());
-        printf("property predicate: %s\n", predicate_handler->stringify_predicate(property_predicate).c_str());
-
-        int object_noun_id = create_new_object(is_predicate);
-
-        string property = property_predicate.get_argument("property");
-
-        if (DEBUGGING)
-            printf("adding property %s to object id %d\n", property.c_str(), object_noun_id);
-
-        concrete_nouns.at(object_noun_id).properties.emplace(property);
-
-        // replace the IS with the OBJECT in the original expression
-        modified_expression.extract_predicate(is_predicate);
-        modified_expression.predicates.push_back(predicate_handler->construct_predicate("OBJECT", {is_predicate.get_argument("object"), to_string(object_noun_id)}));
-    }
-
+    if (DEBUGGING)
+        printf("resolved pos-property expression:\n%s\n", predicate_handler->stringify_expression(modified_expression).c_str());
+    
     return modified_expression;
 }
 
@@ -992,12 +1030,22 @@ ConceptualEntity::ConceptualEntity(string noun) : noun(noun)
 }
 
 Timeline::Timeline()
+    : real(true)
 {
     actions = vector<Event>();
 }
 
-bool Timeline::did_it_occur(Event event, Event& og_event)
+Timeline::Timeline(bool real)
+    : real(real)
 {
+    actions = vector<Event>();
+}
+
+bool Timeline::did_it_occur(Event event, Event &og_event)
+{
+    if (DEBUGGING)
+        printf("checking if action:\n%s\n did occur\n", event.stringify().c_str());
+    
     // TODO - make this capable of handling multiple matches
     for (auto occurence : actions)
     {
@@ -1010,8 +1058,8 @@ bool Timeline::did_it_occur(Event event, Event& og_event)
     return false;
 }
 
-ConcreteNoun::ConcreteNoun(string name, ConceptualEntity *entity_type, int id)
-    : name(name), entity_type(entity_type), id(id)
+ConcreteNoun::ConcreteNoun(string name, ConceptualEntity *entity_type, int id, bool real)
+    : name(name), entity_type(entity_type), id(id), real(real)
 {
 }
 
@@ -1024,4 +1072,4 @@ string ConcreteNoun::stringify()
     str += "  name: " + name + "\n";
     str += "  properties: [" + stringify_set(properties) + "]\n";
     return str;
-}
+};

@@ -93,6 +93,11 @@ void ParserTester::setup_parse()
 	test_predicate_handler.init_stringification();
 
     test_mind = Mind(&test_predicate_handler, &test_conceptual_schema);
+
+    tell_mind("horses are mammals");
+    tell_mind("horses are mammals");
+    tell_mind("dogs are mammals");
+    tell_mind("fishes are animals");
 }
 
 void ParserTester::tell_mind(string utterance)
