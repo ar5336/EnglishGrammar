@@ -17,7 +17,9 @@ void Mind::tell(Expression expression)
 
     // resolve anaphoric references (eventually move this to a WorldModel object along with event extraction)
     expression = resolve_anaphoras(expression);
-    resolve_properties(expression);
+
+    // properties must be resolved after anaphoras. as anaphoras determine which objects are defined or not
+    expression = resolve_properties(expression);
     if (DEBUGGING)
     {
         printf("finished resolving anaphoras\n");
@@ -699,12 +701,15 @@ vector<Event> Mind::extract_events(Expression expression, bool modify_nouns = fa
 
             bool is_actor_concrete = equals(actor_predicate.predicate_template.predicate, "OBJECT");
             bool is_object_concrete = equals(object_predicate.predicate_template.predicate, "OBJECT");
-
+            
+            printf("before the storm\n");
             int actor_id = is_actor_concrete ? stoi(actor_predicate.get_argument("id")) : (int)concrete_nouns.size();
             string actor_noun_class = is_actor_concrete ? concrete_nouns[actor_id].entity_type->noun : actor_predicate.get_argument("noun_class");
 
+            printf("eye of the storm\n");
             int object_id = is_object_concrete ? stoi(object_predicate.get_argument("id")) : (int)concrete_nouns.size() + 1;
             string object_noun_class = is_object_concrete ? concrete_nouns[object_id].entity_type->noun : object_predicate.get_argument("noun_class");
+            printf("after the storm\n");
 
             new_event = Event(
                 action_predicate.get_argument("action_type"), // action_type
@@ -746,8 +751,32 @@ vector<Event> Mind::extract_events(Expression expression, bool modify_nouns = fa
     return identified_events;
 }
 
-void Mind::resolve_properties(Expression expression)
+vector<pair<int, string>> Mind::extract_properties()
 {
+    return vector<pair<int, string>>();
+}
+
+int Mind::create_new_object(Predicate is_predicate)
+{
+    if (!is_predicate.has_argument("noun_class"))
+    {
+        printf("\033[1;31error: failed to create new object with predicate basis of: %s\033[0m", predicate_handler->stringify_predicate(is_predicate).c_str());
+    }
+    string noun_class = is_predicate.get_argument("noun_class");
+    int size = concrete_nouns.size();
+    concrete_nouns.push_back(ConcreteNoun(
+        "unknown",
+        &conceptual_schema->entities_by_noun.at(noun_class),
+        size
+    ));
+    return size;
+}
+
+Expression Mind::resolve_properties(Expression expression)
+{
+    Expression modified_expression = expression;
+
+    // first, check object
     auto object_property_pairs = expression.get_connections(
         "OBJECT", "object",
         "HAS_PROPERTY", "object");
@@ -766,6 +795,35 @@ void Mind::resolve_properties(Expression expression)
 
         concrete_nouns.at(object_noun_id).properties.emplace(property);
     }
+
+    // then check is
+    auto is_property_pairs = expression.get_connections(
+        "IS", "object",
+        "HAS_PROPERTY", "object");
+
+    for (auto is_property_pair : is_property_pairs)
+    {
+        Predicate is_predicate = is_property_pair.first;
+        Predicate property_predicate = is_property_pair.second;
+
+        printf("is predicate: %s\n", predicate_handler->stringify_predicate(is_predicate).c_str());
+        printf("property predicate: %s\n", predicate_handler->stringify_predicate(property_predicate).c_str());
+
+        int object_noun_id = create_new_object(is_predicate);
+
+        string property = property_predicate.get_argument("property");
+
+        if (DEBUGGING)
+            printf("adding property %s to object id %d\n", property.c_str(), object_noun_id);
+
+        concrete_nouns.at(object_noun_id).properties.emplace(property);
+
+        // replace the IS with the OBJECT in the original expression
+        modified_expression.extract_predicate(is_predicate);
+        modified_expression.predicates.push_back(predicate_handler->construct_predicate("OBJECT", {is_predicate.get_argument("object"), to_string(object_noun_id)}));
+    }
+
+    return modified_expression;
 }
 
 void ConceptualSchema::apply_inheritance_rule(Expression expression)

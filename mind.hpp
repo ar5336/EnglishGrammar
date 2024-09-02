@@ -201,7 +201,11 @@ private:
 
     vector<pair<int,string>> extract_names();
 
-    void resolve_properties(Expression expression);
+    vector<pair<int,string>> extract_properties();
+
+    int create_new_object(Predicate is_predicate);
+
+    Expression resolve_properties(Expression expression);
 
     ConcreteNoun* dereference_noun_id(int noun_id);
 
