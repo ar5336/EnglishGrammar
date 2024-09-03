@@ -217,7 +217,13 @@ bool test_parse__properties() {
 
     TEST_ASSERT(equals(tester.ask_mind("did a fox jump"), "yes, it did happen"));
     TEST_ASSERT(equals(tester.ask_mind("was the fox that jumped quick"), "yes, it does have that property"));
+    TEST_ASSERT(equals(tester.ask_mind("was the fox that jumped brown"), "yes, it does have that property"));
     TEST_ASSERT(equals(tester.ask_mind("was the fox that jumped ugly"), "no, it does not have the property 'ugly'"));
+
+	tester.tell_mind("an ugly fish bit a beautiful brown dog");
+    TEST_ASSERT(equals(tester.ask_mind("is the fish that bit the dog ugly"), "yes, it does have that property"));
+    TEST_ASSERT(equals(tester.ask_mind("is the dog that got bit by the fish beautiful"), "yes, it does have that property"));
+    TEST_ASSERT(equals(tester.ask_mind("did a fish bite a dog"), "yes, it did happen"));
 
     return true;
 }

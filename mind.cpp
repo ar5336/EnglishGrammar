@@ -783,7 +783,7 @@ vector<Event> Mind::extract_events(Expression expression, bool real = true)
             string actor_noun_class = is_actor_concrete ? dereference_noun_id(actor_id, real)->entity_type->noun : actor_predicate.get_argument("noun_class");
 
             int object_id = is_object_concrete ? stoi(object_predicate.get_argument("id")) : create_new_object(object_predicate, real);
-            string object_noun_class = is_object_concrete ? dereference_noun_id(actor_id, real)->entity_type->noun : object_predicate.get_argument("noun_class");
+            string object_noun_class = is_object_concrete ? dereference_noun_id(object_id, real)->entity_type->noun : object_predicate.get_argument("noun_class");
             
             if (DEBUGGING)
                 printf("ending object creation and dereferencing\n");
