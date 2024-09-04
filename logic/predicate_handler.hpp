@@ -7,8 +7,8 @@
 #include <set>
 
 #include "predicate.hpp"
-#include "string_operators.hpp"
-#include "global.hpp"
+#include "../string_operators.hpp"
+#include "../global.hpp"
 
 class Expression
 {

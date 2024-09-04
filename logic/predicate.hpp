@@ -7,9 +7,9 @@
 #include <utility>
 #include <set>
 
-#include "string_operators.hpp"
+#include "../string_operators.hpp"
 #include "predicate_template.hpp"
-#include "global.hpp"
+#include "../global.hpp"
 
 enum SpeechActs
 {

@@ -5,7 +5,7 @@
 #include <vector>
 #include <boost/algorithm/string.hpp>
 
-#include "string_operators.hpp"
+#include "../string_operators.hpp"
 #include "frames.hpp"
 #include "grammar.hpp"
 

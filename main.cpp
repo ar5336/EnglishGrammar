@@ -11,12 +11,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "grammar_reader.hpp"
-#include "grammar.hpp"
-#include "displayer.hpp"
-#include "interpretation.hpp"
-#include "mind.hpp"
+#include "grammar/grammar_reader.hpp"
+#include "grammar/grammar.hpp"
+
+#include "logic/interpretation.hpp"
+#include "logic/mind.hpp"
+
 #include "test.hpp"
+#include "displayer.hpp"
 #include "global.hpp"
 
 using namespace std;

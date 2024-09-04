@@ -5,10 +5,10 @@ CC = g++ -g -rdynamic
 CFLAGS =  -I /usr/include/opencv4 -I /usr/include/boost_1_84_0 
 LDFLAGS = `pkg-config --cflags --libs opencv4` 
 
-SOURCES = $(wildcard *.cpp)
+SOURCES = $(shell find . -name '*.cpp')
 EXECUTABLE = parser
 BIN = bin
-OBJECTS = $(SOURCES:%.cpp=$(BIN)/%.o)
+OBJECTS = $(patsubst %.cpp,$(BIN)/%.o,$(SOURCES))
 
 EXECUTABLE_FILES = $(EXECUTABLE:%=$(BIN)/%)
 
@@ -20,7 +20,9 @@ $(EXECUTABLE_FILES): $(OBJECTS)
 	$(CC) $(OBJECTS) $(LDFLAGS) -o $(EXECUTABLE)
 	@echo "Build successful"
 
+# Rule for building object files
 $(OBJECTS): $(BIN)/%.o: %.cpp
+	@mkdir -p $(dir $@)  # Ensure the directory exists
 	$(CC) $(LDFLAGS) $(CFLAGS) -c $< -o $@
 
 clean:

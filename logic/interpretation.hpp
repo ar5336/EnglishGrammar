@@ -3,10 +3,12 @@
 
 #include <string>
 
-#include "frames.hpp"
-#include "parser.hpp"
+#include "../grammar/frames.hpp"
+#include "../grammar/parser.hpp"
+
+#include "../string_operators.hpp"
+
 #include "predicate.hpp"
-#include "string_operators.hpp"
 
 class InterpretationHandler
 {

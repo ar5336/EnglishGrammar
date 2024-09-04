@@ -1,11 +1,11 @@
 #ifndef FRAMES_HPP
 #define FRAMES_HPP
 
-#include "predicate_rule_reader.hpp"
-
 #include <string>
 #include <vector>
 #include <set>
+
+#include "predicate_rule_reader.hpp"
 
 using namespace std;
 

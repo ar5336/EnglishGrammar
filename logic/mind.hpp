@@ -1,13 +1,8 @@
 #ifndef MIND_HPP
 #define MIND_HPP
 
-// #include <string>
-// #include <map>
 #include <utility>
-// #include <set>
-// #include <map>
 #include <vector>
-// #include <tuple>
 #include <stack>
 
 #include "predicate_handler.hpp"

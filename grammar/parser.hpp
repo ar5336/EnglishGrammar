@@ -6,7 +6,7 @@
 
 #include "frames.hpp"
 #include "grammar.hpp"
-#include "string_operators.hpp"
+#include "../string_operators.hpp"
 
 using namespace std;
 

@@ -7,10 +7,9 @@
 #include <vector>
 
 #include "string_operators.hpp"
-// #include "frames.hpp"
-#include "parser.hpp"
-#include "predicate_handler.hpp"
-#include "mind.hpp"
+#include "grammar/parser.hpp"
+#include "logic/predicate_handler.hpp"
+#include "logic/mind.hpp"
 
 using namespace std;
 using namespace cv;
