@@ -247,6 +247,11 @@ Words:
                 mature
                 immature
             Comparable: # absolute comparative superlative
+                short shorter shortest
+                tall taller tallest
+                wide wider widest
+                narrow narrower narrowest
+                heavy heavier heaviest
                 hungry hungrier hungriest
                 new newer newest
                 old older oldest
@@ -406,15 +411,34 @@ Frames:
         Noun[Name] NounPhrase[singular,determined] -singular <NAME object:NounPhrase->IS.object name:Noun>
 
     AnaphoricNounPhrase "AnNP"
-        NounPhrase[NUMBER] AnaphoricActorDescriptivePhrase[transitive] -NUMBER -actor -anaphoric <AnaphoricActorDescriptivePhrase->ACTION_2.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
+        NounPhrase[NUMBER] AnaphoricActionDescriptivePhrase[transitive] -NUMBER -actor -anaphoric <AnaphoricActionDescriptivePhrase->ACTION_2.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the dog that bit the person
-        NounPhrase[NUMBER] AnaphoricActorDescriptivePhrase[intransitive] -NUMBER -actor -anaphoric <AnaphoricActorDescriptivePhrase->ACTION.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
+        NounPhrase[NUMBER] AnaphoricActionDescriptivePhrase[intransitive] -NUMBER -actor -anaphoric <AnaphoricActionDescriptivePhrase->ACTION.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the pig that flew
         NounPhrase AnaphoricSubjectDescriptivePhrase -object -actor_unfilled <AnaphoricSubjectDescriptivePhrase->ACTION_2.object=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the person that got bit
+        NounPhrase[NUMBER] VerbPhrase[NUMBER,transitive,object_unfilled] -NUMBER <VerbPhrase->ACTION_2.object=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
+            # <the man a dog bit>
+        NounPhrase[NUMBER] AnaphoricActorDescriptivePhrase[NUMBER] -NUMBER <AnaphoricActorDescriptivePhrase->ACTION_2.object=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
+            # <the man that a dog bit>
 
         AnaphoricNounPhrase[actor_unfilled] ActorDescriptivePhrase -actor <AnaphoricNounPhrase->ACTION_2.actor=ActorDescriptivePhrase->IS.object>
             # <the man that got bit by the dogs>
+    AnaphoricInquisitivePhrase "anIP"
+        Verb[LinkingVerb,NUMBER] AnaphoricNounPhrase
+            # <is the dog that bit the horse> ugly
+    AnaphoricActionDescriptivePhrase "AnAtDP"
+        Noun[RelativePronoun] VerbPhrase[transitive,actor_unfilled] -transitive -actor_unfilled -descriptive
+            # the dog <that bit a person> is ugly
+        Noun[RelativePronoun] Verb[!Transitive] -intransitive -actor_unfilled <ACTION action:! actor:"unknown" action_type:Verb>
+            # the runner <that fell> is clumsy
+    AnaphoricActorDescriptivePhrase "AnArDP"
+        Noun[RelativePronoun] VerbPhrase[NUMBER,transitive,object_unfilled] -NUBER 
+            # the man <that the dog bit>
+    AnaphoricSubjectDescriptivePhrase "AnSDP"
+        Noun[RelativePronoun] SubjectDescriber -transitive -actor_unfilled -descriptive
+            # the person <that got bit> is ugly
+            # the person <that was bitten> is ugly
     VerbPhrase "VP"
         Verb[MainVerb,TENSE,Transitive] NounPhrase -TENSE -transitive -actor_unfilled <ACTION_2 action:! actor:"unknown" action_type:Verb object:NounPhrase->IS.object>
             # <give the horse> an apple
@@ -528,7 +552,6 @@ Frames:
         PreIndicativePhrase Noun[Pronoun,possessive]
             # that cat is mine
 
-        NounPhrase[NUMBER] VerbPhrase[NUMBER]
         VerbPhrase PrepPhrase <PrepPhrase->PREPOSITION.action=VerbPhrase->ACTION.action>
         Sentence PrepPhrase
         Noun[Pronoun,plural] VerbPhrase
@@ -577,9 +600,7 @@ Frames:
     MatterOfFactPhrase "MoFP"
         # carnivores eat meat
         # (will) a dog eat a dog
-    AnaphoricInquisitivePhrase "anIP"
-        Verb[LinkingVerb,NUMBER] AnaphoricNounPhrase
-            # <is the dog that bit the horse> ugly
+
     StateQuestionObject "sQOb"
         Verb[ModalVerb,MODE] Noun[Pronoun,NUMBER] -NUMBER -MODE -habilitive 
             # can you, can i
@@ -605,11 +626,6 @@ Frames:
             # do the horses
         Verb[LinkingVerb,present,NUMBER] Noun[plural] -present -plurals -existential <IS object:! object_count:"inf" noun_class:Noun>
             # do dogs
-    AnaphoricActorDescriptivePhrase "AnADP"
-        Noun[RelativePronoun] VerbPhrase[transitive,actor_unfilled] -transitive -actor_unfilled -descriptive
-            # the dog <that bit a person> is ugly
-        Noun[RelativePronoun] Verb[!Transitive] -intransitive -actor_unfilled <ACTION action:! actor:"unknown" action_type:Verb>
-            # the runner <that fell> is clumsy
 
     ActorDescriptivePhrase "AtrDP"
         Preposition[Preposition,Actor] NounPhrase
@@ -618,11 +634,6 @@ Frames:
     SubjectActorDescriber "SuAD"
         SubjectDescriber ActorDescriptivePhrase <SubjectDescriber->ACTION_2.actor=ActorDescriptivePhrase->IS.object>
             # a man <got bit | by the dog>
-
-    AnaphoricSubjectDescriptivePhrase "AnSDP"
-        Noun[RelativePronoun] SubjectDescriber -transitive -actor_unfilled -descriptive
-            # the person <that got bit> is ugly
-            # the person <that was bitten> is ugly
 
     SubjectDescriber "SuD"
         Verb[IndicativeVerb,past] Verb[MainVerb,pastPart] -past <ACTION_2 action:! actor:"unknown" action_type:Verb#2 object:"unknown">

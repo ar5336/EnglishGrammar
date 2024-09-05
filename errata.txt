@@ -580,3 +580,34 @@ who has the pen
 need for give to transfer ownership of an item
     remove indirect_object from actor
     add indirect_object to object
+
+========
+    constructing nouns to fit explanations of experience.
+    gods - spirits - atoms
+
+    either explanied through intentionality by analogy
+        as thr warrior strikes his sheild, so does the thunder rumble its warning call
+    or through naturalism
+        as water pours down this hill, the charge travels down the path of least resistance
+
+
+======
+he poured the man a glass of water
+he placed the glass by his side
+"drink" he said
+but the man did not respond
+
+predicate destruction necessary for complicated anaphoric reference such as
+
+"the man that threw a gun in the river"
+    because "the man that threw a gun" will inveitably create an ANAPHORIC predicate that should be deleted.
+
+"a man threw a gun in the river"
+"the police found it the next day"
+
+    conferred concepts
+        the gun was used to commit a crime
+        police investigate that crime
+    
+    these assumptions can be concrete for now. their weights can be adjusted later
+    confirm all suspicions

@@ -99,3 +99,14 @@ Notes:
 [ ] the cell you have selected, show a tree for it.
 
 [X] get highlighting back online
+
+[ ] inferred anaphora
+    for a case like
+
+    "there is a dog in the field"
+    "the dog's fur is silky"
+
+        > new frames for determined vs unditermined
+        base variable determinedness determines anaphoricity
+
+[ ] prepositions attached to events

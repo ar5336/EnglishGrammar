@@ -219,6 +219,8 @@ private:
 
     vector<pair<int, string>> extract_names();
 
+    vector<pair<int, pair<string, string>>> extract_prepositions();
+
     map<int, vector<string>> extract_concrete_properties(Expression expression);
 
     int create_new_object(Predicate is_predicate, bool real = true);

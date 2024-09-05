@@ -828,6 +828,11 @@ vector<Event> Mind::extract_events(Expression expression, bool real = true)
     return identified_events;
 }
 
+vector<pair<int, string>> Mind::extract_names()
+{
+    return vector<pair<int, string>>();
+}
+
 int Mind::create_new_object(Predicate is_predicate, bool real)
 {
     if (DEBUGGING)

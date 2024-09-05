@@ -49,21 +49,6 @@ ParserTester::ParserTester()
     test_mind = Mind(&test_predicate_handler, &test_conceptual_schema);
 }
 
-void test_handler(int sig) {
-    int count = 20;
-    void *array[count];
-    size_t size;
-
-    // get void*'s for all entries on the stack
-    size = backtrace(array, count);
-
-    // print out all the frames to stderr
-    fprintf(stderr, "Error: signal %d:\n", sig);
-    backtrace_symbols_fd(array, size, STDERR_FILENO);
-    exit(1);
-}
-
-
 void ParserTester::setup_parse()
 {
     if(DEBUGGING)
@@ -72,7 +57,7 @@ void ParserTester::setup_parse()
 
     test_grammar = Grammar();
 
-	signal(11, test_handler);   // install our handler
+	signal(11, handler);   // install our handler
 
     GrammarReader test_reader = GrammarReader(&test_grammar, &test_predicate_handler, &test_predicate_template_handler);
 	test_reader.read_grammar("grammar.langdef");
@@ -207,6 +192,11 @@ bool test_parse__event_rephrasings() {
     TEST_ASSERT(equals(tester.ask_mind("did a dog bite a man"), "yes, it did happen"));
 
     TEST_ASSERT(equals(tester.ask_mind("did a man get bit by a dog"), "yes, it did happen"));
+    tester.tell_mind("the man that the dog bit is ugly");
+    tester.tell_mind("the man the dog bit is tall");
+
+    TEST_ASSERT(equals(tester.ask_mind("is the man the dog bit ugly"), "yes, it does have that property"));
+    TEST_ASSERT(equals(tester.ask_mind("is the man the dog bit tall"), "yes, it does have that property"));
     return true;
 }
 
