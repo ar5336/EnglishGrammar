@@ -171,6 +171,7 @@ void GrammarReader::read_syntax_entry()
         }
         Frame new_pattern_frame = Frame(
             pattern_name,
+            current_line_index,
             pattern_nickname,
             pattern_elements,
             features,
@@ -239,12 +240,12 @@ void GrammarReader::read_word_entry()
             if (term_form_names.size() < word_form_index + 1)
             {
                 // no form list
-                new_word_frame = Frame(word_string, type_pruned);
+                new_word_frame = Frame(word_string, current_line_index, type_pruned);
             }
             else
             {
                 string word_form = term_form_names.at(word_form_index);
-                new_word_frame = Frame(base_word_form, type_pruned, word_form);
+                new_word_frame = Frame(base_word_form, current_line_index, type_pruned, word_form);
             }
             grammar->add_to_word_map(new_word_frame, word_string);
         }
@@ -286,22 +287,23 @@ GrammarReader::GrammarReader(
     state = GrammarReaderState::ReadingWords;
 }
 
-void GrammarReader::read_grammar(string fileName)
+void GrammarReader::read_grammar(string file_name)
 {
-
-    fstream newfile;
+    fstream new_file;
     int tab_spaces = 4;
 
     if (DEBUGGING)
         printf("reading grammar\n");
 
-    newfile.open(fileName, ios::in); // open a file to perform read operation using file object
-    if (newfile.is_open())
+    new_file.open(file_name, ios::in); // open a file to perform read operation using file object
+    if (new_file.is_open())
     { // checking whether the file is open
 
-        while (getline(newfile, current_line))
+        while (getline(new_file, current_line))
         { // read data from file object and put it into string.
             // printf("%s\n", current_line.c_str());
+            current_line_index++;
+
             if (current_line.size() == 0)
                 continue;
 
@@ -321,6 +323,7 @@ void GrammarReader::read_grammar(string fileName)
                     term_form_names.clear();
                 }
             }
+            
             previous_indentation = current_indentation;
 
             trim(current_line);
@@ -367,6 +370,7 @@ void GrammarReader::read_grammar(string fileName)
                 }
             }
         }
-        newfile.close(); // close the file object.
+        
+        new_file.close(); // close the file object.
     }
 }

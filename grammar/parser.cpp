@@ -566,7 +566,19 @@ void Parser::update_parse_grid(string new_utterance)
     }
 }
 
-bool Parser::try_get_top_interpretation(Frame& interp_frame)
+// bool Parser::get_top_frame(Frame& interp_frame)
+// {
+//     auto parse_grid_top_cell = parse_grid[parse_grid.size()-1][0];
+//     if (parse_grid_top_cell.size() == 0)
+//     {
+//         return false;
+//     }
+//     interp_frame = parse_grid_top_cell[0];
+
+//     return true;
+// }
+
+bool Parser::try_get_top_frame(Frame& interp_frame)
 {
     auto parse_grid_top_cell = parse_grid[parse_grid.size()-1][0];
     if (parse_grid_top_cell.size() == 0)

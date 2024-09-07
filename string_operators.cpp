@@ -37,6 +37,9 @@ void trim(string &s)
 
 int count_initial_spaces(string str)
 {
+	if (str.size() == 0)
+		return -1;
+		
 	char initial_char = str.at(0);
 	int char_index = 0;
 	while (initial_char == ' ' && char_index < str.size() - 1)

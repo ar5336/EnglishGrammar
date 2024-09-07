@@ -90,7 +90,7 @@ void ParserTester::tell_mind(string utterance)
 	test_parser.update_parse_grid(utterance);
 
     Frame frame = Frame();
-    if (test_parser.try_get_top_interpretation(frame))
+    if (test_parser.try_get_top_frame(frame))
     {
         if (DEBUGGING)
         {
@@ -106,7 +106,7 @@ string ParserTester::ask_mind(string utterance)
     test_parser.update_parse_grid(utterance);
 
     Frame frame = Frame();
-    if (test_parser.try_get_top_interpretation(frame))
+    if (test_parser.try_get_top_frame(frame))
     {
         if (DEBUGGING)
         {
@@ -222,19 +222,137 @@ bool test_parse__properties() {
 //     // did a dog bite a horse that ate some grass isn't working as expected
 // }
 
-void run_integration_test()
+bool run_integration_test()
 {
     tester.setup_parse();
+
+    fstream new_file;
+    new_file.open("grammar.langdef", ios::in); // open a file to perform read operation using file object
+
+    bool reading_frames = false;
+    string current_line = "";
+
+    printf("test\n");
+
+    int current_definition_line = -1;
+    int current_reading_line = -1;
+    if (new_file.is_open())
+    {
+        while (getline(new_file, current_line))
+        {
+            current_reading_line++;
+            // printf("line %d: %s\n", current_reading_line, current_line.c_str());
+
+            if (current_line.size() == 0)
+            {
+                continue;
+            }
+            
+            int initial_spaces = count_initial_spaces(current_line);
+
+            trim(current_line);
+            bool has_hashtag = current_line.at(0) == '#';
+            if (has_hashtag)
+                current_line = current_line.substr(1, current_line.size());
+            trim(current_line);
+
+            bool has_bang = current_line.at(0) == '!';
+            if (has_bang)
+                current_line = current_line.substr(1, current_line.size());
+            trim(current_line);
+
+            bool has_left_bracket = find_in_string(current_line, "<");
+            bool has_right_bracket = find_in_string(current_line, ">");
+
+
+            if (initial_spaces == 7) // syntax definition
+            {
+                if (!has_hashtag)
+                    current_definition_line = current_reading_line;
+            }
+
+            if (initial_spaces == 11) // check for correct indentation
+            {
+
+
+                if (!has_hashtag)
+                {
+                    continue;
+                }
+
+                if (DEBUGGING)
+                {
+                    printf("scanning line %s\n", current_line.c_str());
+                }
+
+                int start_bracket_index = -1;
+                int end_bracket_index = -1;
+
+                vector<string> split_tokens = split_spaces(current_line);
+                trim(current_line);
+                tester.tell_mind(current_line);
+
+                Frame top_frame = Frame();
+                int def_line = -1;
+
+                // also TODO - make sure the brackets cause the actual checking of the parse.
+                // < only appears at the beginning of a token
+                // > only begins at the end of a token
+                // just foreach the tokens and apply these rules
+                // the parse grid will have to be pierced
+                // x = index_of(<)
+                // y = index_of(>) - index_of(<)
+                // inclusive placing of the 
+
+                // also TODO - for parsing the crossbar
+                // # the dog <that | ate> the horse
+                // a method int remove_char_from_tokens(vector<string>& tokens, char chr)
+                //      returns index of pivot give by char
+                // to remove |
+                // and the re-collation of these tokens.
+
+                // TODO - instead of just getting the top frame, check for the existence of your desired frame
+                // we also have tests for negative. so yea.
+                if (tester.test_parser.try_get_top_frame(top_frame))
+                {
+                    if (DEBUGGING)
+                        printf("successfully retrieved top frame: %s\n", top_frame.stringify_as_param().c_str());
+    
+                    def_line = top_frame.definition_line;
+
+                }
+
+                if (DEBUGGING)
+                    printf("'%s' | line fetched from top frame: %d : syntax frame definition line: %d\n",current_line.c_str(), def_line,  current_definition_line);
+
+                if (def_line == -1)
+                    current_definition_line = 1;
+
+                if (has_bang)
+                    TEST_ASSERT(def_line != current_definition_line + 1);
+
+                TEST_ASSERT(def_line == current_definition_line + 1);
+            }
+        }
+    }
+
+    return true;;
 }
 
 
 int test_all() {
+    printf("running unit tests\n");
+
     RUN_TEST(test_parse__event);
     RUN_TEST(test_parse__anaphora_event);
     RUN_TEST(test_parse__event_anaphora_create_event);
     RUN_TEST(test_parse__passive_voice);
     RUN_TEST(test_parse__event_rephrasings);
     RUN_TEST(test_parse__properties);
+
+    printf("running integration tests\n");
+
+    RUN_TEST(run_integration_test);
 
     std::cout << "\n\nTest Results:\n";
     std::cout << "Total tests: " << total << std::endl;

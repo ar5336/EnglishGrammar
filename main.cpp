@@ -1,6 +1,6 @@
 #include <iostream>
 #include </usr/local/include/opencv4/opencv2/highgui.hpp>
-#include </usr/local/include/opencv4/opencv2/tracking.hpp>
+// #include </usr/local/include/opencv4/opencv2/tracking.hpp>
 #include <vector>
 #include <map>
 #include <fstream>
@@ -63,7 +63,7 @@ void parse_utterance(string utterance)
 	parser.update_parse_grid(utterance);
 	
 	Frame interp_frame;
-	if (!parser.try_get_top_interpretation(interp_frame))
+	if (!parser.try_get_top_frame(interp_frame))
 	{
 		printf("failed to interpret given utterance \"%s\"\n", utterance.c_str());
 		return;
@@ -181,7 +181,7 @@ bool check_keypress(char cr)
 			// interpret the sentence
 
 			auto base_frame = Frame();
-			if (parser.try_get_top_interpretation(base_frame)){
+			if (parser.try_get_top_frame(base_frame)){
 				auto interp_handler = InterpretationHandler(&parser, base_frame);
 
 				auto expression = Expression();

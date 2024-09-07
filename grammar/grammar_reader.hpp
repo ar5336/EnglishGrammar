@@ -27,6 +27,7 @@ private:
 
 	GrammarReaderState state;
 	string current_line;
+	int current_line_index;
 
 	int previous_indentation = 0;
 

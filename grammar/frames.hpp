@@ -82,6 +82,7 @@ class Frame
 {
 public:
 	FrameType type;
+	int definition_line;
 
 	string frame_name;
 	string frame_nickname;
@@ -106,6 +107,7 @@ public:
 	// word frame constructor
 	Frame(
 		string frame_name,
+		int definition_line,
 		vector<string> type_heirarchy,
 		string word_form);
 
@@ -118,11 +120,13 @@ public:
 	// featureless word frame constructor
 	Frame(
 		string frame_name,
+		int definition_line,
 		vector<string> type_heirarchy);
 
 	// syntax frame constructor
 	Frame(
 		string frame_name,
+		int definition_line,
 		string frame_nickname,
 		vector<PatternElement> pattern_elements,
 		set<string> feature_set,
@@ -132,6 +136,7 @@ public:
 	// cnf frame constructor
 	Frame(
 		string frame_name,
+		int definition_line,
 		string frame_nickname,
 		PatternElement left,
 		PatternElement right,
@@ -142,6 +147,7 @@ public:
 	// matched frame constructor
 	Frame(
 		string frame_name,
+		int definition_line,
 		string frame_nickname,
 		PatternElement left,
 		PatternElement right,

@@ -18,19 +18,19 @@ private:
 
     string test_utterance;
 
-    Parser test_parser;
-
     Grammar test_grammar;
 
     // Displayer displayer = Displayer("reader");
 
     PredicateTemplateHandler test_predicate_template_handler;
 
-    PredicateHandler test_predicate_handler;
 
     ConceptualSchema test_conceptual_schema;
 
 public:
+    PredicateHandler test_predicate_handler;
+
+    Parser test_parser;
 
     Mind test_mind;
 

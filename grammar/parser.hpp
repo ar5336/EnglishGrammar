@@ -88,7 +88,7 @@ public:
     
     void update_parse_grid(string new_utterance);
 
-    bool try_get_top_interpretation(Frame& interp_frame);
+    bool try_get_top_frame(Frame& interp_frame);
 
     bool try_get_frame_at(FrameCoordinates coords, Frame& result_frame);
 };

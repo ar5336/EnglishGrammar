@@ -64,22 +64,22 @@ Words:
             adult adults
             child children
             gift gifts
-            MassNoun:
-                grease
-                pollen
-                water
-                food
-                grain
-                meat
-                grass
-                code
-                rain
-                hair
-                guts
-                fish
-                land -location
-                sea -location
-                air -location
+        MassNoun:
+            grease
+            pollen
+            water
+            food
+            grain
+            meat
+            grass
+            code
+            rain
+            hair
+            guts
+            fish
+            land -location
+            sea -location
+            air -location
         Pronoun:
             i -1stPerson -singular -active
             me -1stPerson -singular -subjective
@@ -293,7 +293,8 @@ Words:
             your -2ndPerson -plural -possessive
             their -3rdPerson -plural -neuter -possessive
             his -3rdPerson -singular -masculine -possessive
-            hers -3rdPerson -singular -masculine -possessive
+            her -3rdPerson -singular -feminine -possessive
+            hers -3rdPerson -singular -feminine -possessive
     Adverb:
         Descriptive:
             quickly
@@ -388,7 +389,9 @@ Frames:
         NounPhrase[determined] PrepPhrase
 
         Adjective[PossessiveAdjective] Noun -determined
-            # my cat, his cat, her cat
+            # my cat
+            # his cat
+            # her cat
         # Adjective[MainAdjective] Noun[NUMBER] -NUMBER
 
         Noun[plural] PrepPhrase <IS object:! object_count:"inf" noun_class:Noun>
@@ -397,8 +400,9 @@ Frames:
             # cats and dogs
             # cat and fish
 
-        Noun[Pronoun,possessive] NounPhrase[!determined,NUMBER] -determined -NUMBER
-            # my cat, *my the cat ... bad examples
+        #Noun[Pronoun,possessive] NounPhrase[!determined,NUMBER] -determined -NUMBER
+        # my cat 
+        # !my the cat
 
         Determiner[determined] Noun[MassNoun] -determined -singular
             # the water
@@ -411,7 +415,8 @@ Frames:
             # young dogs
 
         # Noun[location] Noun[NUMBER] -NUMBER
-            # land animals, sea animals
+            # land animals
+            # sea animals
 
         Noun[Name] NounPhrase[singular,determined] -singular <NAME object:NounPhrase->IS.object name:Noun>
 
@@ -423,12 +428,12 @@ Frames:
         NounPhrase AnaphoricSubjectDescriptivePhrase -object -actor_unfilled <AnaphoricSubjectDescriptivePhrase->ACTION_2.object=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the person that got bit
         NounPhrase[NUMBER] VerbPhrase[NUMBER,transitive,object_unfilled] -NUMBER <VerbPhrase->ACTION_2.object=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
-            # <the man a dog bit>
+            # the man a dog bit
         NounPhrase[NUMBER] AnaphoricActorDescriptivePhrase[NUMBER] -NUMBER <AnaphoricActorDescriptivePhrase->ACTION_2.object=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
-            # <the man that a dog bit>
+            # the man that a dog bit
 
         AnaphoricNounPhrase[actor_unfilled] ActorDescriptivePhrase -actor <AnaphoricNounPhrase->ACTION_2.actor=ActorDescriptivePhrase->IS.object>
-            # <the man that got bit by the dogs>
+            # the man that got bit by the dogs
     AnaphoricInquisitivePhrase "anIP"
         Verb[LinkingVerb,NUMBER] AnaphoricNounPhrase
             # <is the dog that bit the horse> ugly
@@ -479,9 +484,9 @@ Frames:
             # a dog bit
             # !a dog bite
         NounPhrase[singular] Verb[MainVerb,simple,Transitive] -singular -transitive -object_unfilled <ACTION_2 action:! actor:NounPhrase->IS.object action_type:Verb object:"unknown">
-            # did (<a dog bite> (another dog))
+            # did <a dog bite> another dog
         NounPhrase[singular] Verb[MainVerb,simple,Intransitive] -singular -transitive -object_unfilled <ACTION action:! actor:NounPhrase->IS.object action_type:Verb>
-            # (did) <a dog jump>
+            # did <a dog jump>
         Noun[plural] Verb[MainVerb,simple,Transitive] -plural -intransitive <IS object:! object_count:"inf" noun_class:Noun | ACTION action:!! actor:! action_type:Verb>
             # dogs run
         Noun[singular] Verb[MainVerb,!simple,!continuous,!3PPresent,Transitive] -singular -intransitive <IS object:! object_count:"1" noun_class:Noun | ACTION action:!! actor:! action_type:Verb>
@@ -495,7 +500,7 @@ Frames:
             # eating grass and drinking water
     AuxiliaryPhrase "AxP"
         Verb[AuxiliaryVerb,TENSE] Verb[MainVerb,TENSE] -TENSE
-            # !*i <have run>
+            # !i <have run>
             # i <do run>
             # !the dog has run
             # the dogs have run
@@ -511,9 +516,9 @@ Frames:
             # hit dogs holler
 
         VerbPhrase[transitive,object_unfilled] NounPhrase <VerbPhrase->ACTION_2.object=NounPhrase->IS.object>
-            # [a dog bit | a horse]
+            # <a dog bit | a horse>
         #VerbPhrase[transitive,objectUnfilled] NounPhrase <ACTION_3 action:VerbPhrase->ACTION.action actor:VerbPhrase->IS.object action_type:VerbPhrase->ACTION.action_type object:NounPhrase->IS.object>
-            # [give a man| a fish]
+            # <give a man| a fish>
         VerbPhrase[transitive,object_unfilled] Noun[MassNoun] <IS object:! object_count:"1" noun_class:Noun | VerbPhrase->ACTION_2.object=Noun->IS.object>
             # give a man grass
 
@@ -550,7 +555,8 @@ Frames:
             # horse is running
 
         Noun[plural] ModalPhrase[MODE] -MODE <IS object:! object_count:"inf" noun_class:Noun | ModalPhrase->CAN_DO.actor=!>
-            # dogs can run, !dog can run
+            # dogs can run
+            # !dog can run
         NounPhrase ModalPhrase[MODE] -MODE <ModalPhrase->CAN_DO.actor=NounPhrase->IS.object>
             # a dog can run
 
@@ -698,6 +704,7 @@ Frames:
             # are ugly
     SetDescriptorPhrase "SDP"
         Verb[LinkingVerb,plural] Noun[MainNoun,plural] <IS object:! object_count:"inf" noun_class:Noun | CONTAINS container:! containee:"unknown">
+            # are dogs
     HabilitivePhrase "HP"
         Noun[Pronoun,NUMBER,PERSON] Verb[ModalVerb,ability] -NUMBER <SPECIFIER object:! person:Noun number:Noun | CAN_DO action_type:"unknown" actor:!>
             # TODO - add ability to access Frame features + feature group evaluation results.
@@ -708,3 +715,4 @@ Frames:
             # ugly dog
             # ugly dogs
         Adjective AdjectivePhrase[NUMBER] -NUMBER <HAS_PROPERTY object:AdjectivePhrase->IS.object property:Adjective>
+            # fat ugly dogs

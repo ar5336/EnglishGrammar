@@ -51,6 +51,7 @@ void Grammar::binarize_grammar()
 		set<string> base_frame_feature_set = frame.feature_set;
 		set<string> base_frame_feature_groups = frame.feature_groups;
 		PredicateFormationRules base_frame_formaiton_rules = frame.predicate_formation_rules;
+		int base_frame_origin_index = frame.definition_line;
 
 		// create subframe 0 for pattern elements 0 and 1
 
@@ -71,23 +72,20 @@ void Grammar::binarize_grammar()
 		// create subframes for subsequent elements
 		for (int subframe_index = 0; subframe_index < num_subframes; subframe_index++)
 		{
-			set<string> feature_set;
-			set<string> feature_groups;
+			set<string> feature_set = base_frame_feature_set;
+			set<string> feature_groups = base_frame_feature_groups;
 
-			string frame_name;
-			string frame_nickname;
-			if (subframe_index == 0)
-			{ // the base frame
-				frame_name = base_frame_name;
-				feature_set = base_frame_feature_set;
-				feature_groups = base_frame_feature_groups;
-				frame_nickname = base_frame_nickname;
-			}
-			else
-			{ // a product of binarization
-				frame_name = base_frame_name + to_string(subframe_index);
-				frame_nickname = base_frame_nickname + to_string(subframe_index);
-				feature_groups = base_frame_feature_groups;
+			string frame_name = base_frame_name;
+			string frame_nickname = base_frame_nickname;
+
+			int frame_origin_index = base_frame_origin_index;
+
+			if (subframe_index != 0)
+			{
+				// a product of binarization
+				
+				frame_name += to_string(subframe_index);
+				frame_nickname += to_string(subframe_index);
 			}
 
 			PatternElement pattern_right = base_pattern.at(base_pattern.size() - 1 - subframe_index);
@@ -111,6 +109,7 @@ void Grammar::binarize_grammar()
 
 			Frame new_cnf_frame = Frame(
 				frame_name,
+				frame_origin_index,
 				frame_nickname,
 				pattern_left,
 				pattern_right,

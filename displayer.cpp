@@ -622,7 +622,7 @@ Point2i Displayer::display_multi_line_text(Point pos, string text, Scalar color,
 string Displayer::stringify_frame(Frame frame)
 {
     string string_buildee = "";
-
+    string_buildee += "    def line: " + to_string(frame.definition_line) + "\n";
     if (frame.type == FrameType::Word)
     {
         string_buildee += "WORD FRAME:\n";

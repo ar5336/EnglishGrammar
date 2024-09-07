@@ -22,6 +22,8 @@ public:
     vector<Frame> cnf_frames;
     map<string, vector<Frame>> cnf_map; // frame A > B C becomes map entry {"B C", "A"}
 
+    map<int, Frame> cnf_frames_by_line;
+
     map<string, string> feature_to_feature_group;
     map<string, vector<string>> feature_group_to_features;
     set<string> feature_group_set;

@@ -71,15 +71,18 @@ Frame::Frame() {
     right_match = FrameCoordinates();
 
     type = FrameType::Null;
+    definition_line = 0;
 }
 
 // word frame constructor
 Frame::Frame(
     string frame_name,
+    int definition_line,
     vector<string> type_heirarchy,
     string word_form)
     : 
         frame_name(frame_name),
+        definition_line(definition_line),
         type_heirarchy(type_heirarchy)
 {
     is_binarized = false;
@@ -103,7 +106,8 @@ Frame::Frame(
     vector<string> type_heirarchy,
     vector<string> features)
     : type_heirarchy(type_heirarchy),
-        frame_name(frame_name)
+        frame_name(frame_name),
+        definition_line(definition_line)
 {
     is_binarized = false;
     // pattern and pattern_form are left null
@@ -123,9 +127,11 @@ Frame::Frame(
 // featureless word frame constructor
 Frame::Frame(
     string frame_name,   
+    int definition_line,
     vector<string> type_heirarchy)
     : type_heirarchy(type_heirarchy),
-        frame_name(frame_name)
+        frame_name(frame_name),
+        definition_line(definition_line)
 {
     is_binarized = false;
     for (string type : type_heirarchy)
@@ -139,12 +145,14 @@ Frame::Frame(
 // syntax frame constructor
 Frame::Frame(
     string frame_name,
+    int definition_line,
     string frame_nickname,
     vector<PatternElement> pattern_elements,
     set<string> feature_set,
     set<string> feature_groups,
     PredicateFormationRules formation_rules)
     : frame_name(frame_name),
+        definition_line(definition_line),
         frame_nickname(frame_nickname),
         pattern_elements(pattern_elements),
         feature_set(feature_set),
@@ -159,6 +167,7 @@ Frame::Frame(
 // cnf frame constructor
 Frame::Frame(
     string frame_name,
+    int definition_line,
     string frame_nickname,
     PatternElement left,
     PatternElement right,
@@ -166,6 +175,7 @@ Frame::Frame(
     set<string> feature_groups,
     PredicateFormationRules formation_rules)
     : frame_name(frame_name),
+        definition_line(definition_line),
         frame_nickname(frame_nickname),
         feature_set(feature_set),
         feature_groups(feature_groups),
@@ -187,6 +197,7 @@ Frame::Frame(
 //  matched frame constructor
 Frame::Frame(
     string frame_name,
+    int definition_line,
     string frame_nickname,
     PatternElement left,
     PatternElement right,
@@ -196,6 +207,7 @@ Frame::Frame(
     FrameCoordinates right_match,
     Expression accumulated_expression)
     : frame_name(frame_name),
+        definition_line(definition_line),
         frame_nickname(frame_nickname),
         feature_set(feature_set),
         feature_groups(feature_groups),
@@ -220,6 +232,7 @@ Frame Frame::with_links(
 {
     auto new_frame = Frame(
         frame_name,
+        definition_line,
         frame_nickname,
         pattern_elements[0],
         pattern_elements[1],
@@ -238,6 +251,7 @@ Frame Frame::with_expression(
 {
     auto new_frame = Frame(
         frame_name,
+        definition_line,
         frame_nickname,
         pattern_elements[0],
         pattern_elements[1],
@@ -284,6 +298,7 @@ void Frame::print_out(string title)
 
     printf("\tname: %s\n", frame_name.c_str());
     printf("\tnickname: %s\n", frame_nickname.c_str());
+    printf("\tdefline: %d\n", definition_line);
 
     if (is_word_frame()) {
         printf("\ttype heirarchy: \n\t\t");
