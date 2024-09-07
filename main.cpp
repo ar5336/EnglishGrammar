@@ -14,7 +14,8 @@
 #include "logic/interpretation.hpp"
 #include "logic/mind.hpp"
 
-#include "test.hpp"
+#include "test/test.hpp"
+
 #include "displayer.hpp"
 #include "global.hpp"
 

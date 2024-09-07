@@ -222,6 +222,11 @@ bool test_parse__properties() {
 //     // did a dog bite a horse that ate some grass isn't working as expected
 // }
 
+void run_integration_test()
+{
+    tester.setup_parse();
+}
+
 
 int test_all() {
     RUN_TEST(test_parse__event);
@@ -235,7 +240,7 @@ int test_all() {
     std::cout << "Total tests: " << total << std::endl;
     std::cout << "\033[1;32mPassed: " << passed << "\033[0m" << std::endl;
     if (failed != 0)
-    std::cout << "\033[1;31mFailed: " << failed << "\033[0m" << std::endl;
+        std::cout << "\033[1;31mFailed: " << failed << "\033[0m" << std::endl;
 
     return 0;
 }

@@ -131,6 +131,10 @@ Words:
             greg
             daniel
             dan
+            china
+            russia
+            germany
+            france
         InterrogativePronoun:
             who -animate
             what -indentity
@@ -150,6 +154,7 @@ Words:
                 transfer transferring transferred transfers
                 name naming named names
             Transitive: # simple continuous perfect 3PPresent (pastPart)
+                invade invading invaded invades
                 bite biting bit bites bitten
                 drink drinking diank drinks
                 bring bringing brought brings
@@ -679,7 +684,7 @@ Frames:
         #NounPhrase[NUMBER,!anaphoric]  Verb[LinkingVerb,NUMBER] -NUMBER
             # the dog is
             # my dogs are
-        #NounPhrase[NUMBER,anaphoric]  Verb[LinkingVerb,NUMBER] -NUMBER <>
+        #NounPhrase[NUMBER,anaphoric]  Verb[LinkingVerb,NUMBER] -NUMBER
             # <the dog that bit the person is> ugly
             # <the pigs that flew are> impossible
         #Noun[plural] Verb[LinkingVerb,plural] -plural <IS object:! object_count:"inf" noun_class:Noun>

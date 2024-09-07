@@ -110,3 +110,18 @@ Notes:
         base variable determinedness determines anaphoricity
 
 [ ] prepositions attached to events
+
+[ ] have it ask clarifications
+    "lucy bit sally"
+        "who is lucy"
+        "who is sally"
+
+        lucy -human_name
+        sally -human_name
+
+    "france invaded germany in 1925
+        "what is france"
+        "what is germany"
+    
+        france -country_name
+        germany -country_name

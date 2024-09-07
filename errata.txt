@@ -606,8 +606,36 @@ predicate destruction necessary for complicated anaphoric reference such as
 "the police found it the next day"
 
     conferred concepts
-        the gun was used to commit a crime
+        the gun was used to commit a crime < "a person can kill another person with a gun"
+        // CAN_DO matches onto prerequisites
+            "a person that commited a crime wants to get rid of any evidence"
+            "evidence is any object having to do with a crime"
+            "a weapon used in a crime is evidence of the crime"
+            "weapon used in crime (gun):
+            // is this because i can make a relationship called murder?
+            // ok but these relationships should be more like stereotypes.
+            // suspicious activity is prerequisite or subsequent to a crime
         police investigate that crime
     
     these assumptions can be concrete for now. their weights can be adjusted later
-    confirm all suspicions
+    confirm all suspicions for now
+
+stereotypes stored as expressions?
+    "small dogs are angry"
+    "tall people are mean"
+
+==
+simple timeline manupulation
+
+the basic reversal of time
+
+    i ate the bagel
+    before that, i had toasted the bagel
+
+    i ate the bagel
+    i cleaned the knife
+clockwise sequence is assumed
+
+"i was selling drugs in this neighborhood when you were just a little kid!"
+> why is he saying this?
+    to point out htat hes been doing it for longer than you  tht he si more experienced

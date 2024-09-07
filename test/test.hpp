@@ -5,12 +5,12 @@
 #include <iostream>
 #include <signal.h>
 
-#include "grammar/grammar_reader.hpp"
+#include "../grammar/grammar_reader.hpp"
 
-#include "logic/interpretation.hpp"
-#include "logic/mind.hpp"
+#include "../logic/interpretation.hpp"
+#include "../logic/mind.hpp"
 
-#include "global.hpp"
+#include "../global.hpp"
 
 class ParserTester
 {
