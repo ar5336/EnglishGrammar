@@ -590,6 +590,33 @@ bool Parser::try_get_top_frame(Frame& interp_frame)
     return true;
 }
 
+vector<Frame> Parser::get_interpret_frames()
+{
+    vector<Frame> fetched_frames = vector<Frame>();
+    for (auto frame : parse_grid[parse_grid.size()-1][0])
+    {
+        fetched_frames.push_back(frame);
+    }
+    return fetched_frames;
+}
+
+vector<Frame> Parser::get_interpret_frames(int x_coord, int y_coord)
+{
+    vector<Frame> fetched_frames = vector<Frame>();
+
+    vector<vector<Frame>> target_row = parse_grid[y_coord];
+    if (x_coord >= target_row.size())
+        throw runtime_error("bad x coordinate when accessing interpret frames");
+    
+
+
+    for (auto frame : target_row[x_coord])
+    {
+        fetched_frames.push_back(frame);
+    }
+    return fetched_frames;
+}
+
 bool Parser::try_get_frame_at(FrameCoordinates coords, Frame& result_frame)
 {
     // maybe the problem is the passing by reference here?

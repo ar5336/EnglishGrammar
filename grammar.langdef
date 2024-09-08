@@ -1,6 +1,7 @@
 Words:
     Noun:
         MainNoun: # singular (plural)
+            apple apples
             thing things
             dog dogs
             puppy puppies
@@ -168,6 +169,8 @@ Words:
                 hate hating hated hates
                 love loving loved loves
             Intransitive: # simple continuous perfect 3PPresent (pastPart)
+                holler hollering hollered
+                die dying died dies
                 think thinking thought thinks thunk
                 play playing played plays
                 point pointing pointed points
@@ -194,10 +197,11 @@ Words:
                 sleep sleeping slept sleeps
                 fall falling fell falls
         AuxiliaryVerb:
-            be -continuous
-            have -perfect
-            do -simple
-            will -simple
+            be -continuous -singular -plural
+            has -perfect -singular
+            have -perfect -plural
+            do -simple -singular -plural
+            will -simple -singular -plural
         ModalVerb:
             should -advice
             must -obligation
@@ -252,6 +256,8 @@ Words:
                 mature
                 immature
             Comparable: # absolute comparative superlative
+                bad worse worst
+                good better best
                 short shorter shortest
                 tall taller tallest
                 wide wider widest
@@ -313,9 +319,11 @@ Words:
             a -general
             an -general
             the -determined
-        Demonstrative: # singular plural
-            this these
-            that those
+        Demonstrative:
+            this -determined -singular -proximal
+            these -determined -plural -proximal
+            that -determined -singular -distal
+            those -determined -plural -distal
         Quantifiers:
             any -irregular -amount:0.0 -determined
             some -amount:0.2 -determined
@@ -340,6 +348,7 @@ Words:
             through
             atop
             upon
+            from
         Time:
             when
             before
@@ -349,6 +358,10 @@ Words:
             until
         Actor:
             by
+        Comparison:
+            like
+            unlike
+            than
     Conjunction:
         and
         but
@@ -361,7 +374,7 @@ FeatureGroups:
     PRESENT= 3PPresent simple continuous
     PERSON= 1stPerson 2ndPerson 3rdPerson
     MODE= advice obligation offer futureProbability ability permission
-    TENSE= simple continous perfect 3PPresent pastPart
+    TENSE= simple continuous perfect 3PPresent pastPart
     TRANSITIVITY= Transitive Intransitive
 
 Predicates:
@@ -415,8 +428,8 @@ Frames:
             # young dogs
 
         # Noun[location] Noun[NUMBER] -NUMBER
-            # land animals
-            # sea animals
+        # land animals
+        # sea animals
 
         Noun[Name] NounPhrase[singular,determined] -singular <NAME object:NounPhrase->IS.object name:Noun>
 
@@ -451,17 +464,23 @@ Frames:
             # the person <that was bitten> is ugly
     VerbPhrase "VP"
         Verb[MainVerb,TENSE,Transitive] NounPhrase -TENSE -transitive -actor_unfilled <ACTION_2 action:! actor:"unknown" action_type:Verb object:NounPhrase->IS.object>
-            # <give the horse> an apple
+            # the horse that <bit a man> is ugly
+        Verb[MainVerb,TENSE,SuperTransitive] NounPhrase -TENSE -transitive -actor_unfilled -indirect_object_unfilled <ACTION_3 action:! actor:"unknown" action_type:Verb object:NounPhrase->IS.object indirect_object:"unknown">
+            # the horse that <gave a man> a gift
         Verb[TRANSITIVITY] Adverb -TRANSITIVITY <ACTION action:! actor:"unknown" action_type:Verb | HAS_PROPERTY object:! property:Adverb>
             # run quickly
         Adverb Verb
+            # quickly run
 
-        VerbPhrase[TENSE,NUMBER] PrepPhrase -TENSE -NUMBER 
-        Verb[MainVerb,TENSE] PrepPhrase -TENSE <ACTION action:! actor:"unknown" action_type:Verb>
-
+        # VerbPhrase[Intransitive,NUMBER] PrepPhrase -TENSE -NUMBER <PrepPhrase->PREPOSITION.object=VerbPhrase->ACTION.action>
+        # ran into a river
+        Verb[MainVerb,TENSE,TRANSITIVITY] PrepPhrase -TENSE -TRANSITIVITY <ACTION action:! actor:"unknown" action_type:Verb>
+            # run into the field
         Verb[!perfect] Noun[MassNoun] -singular -actor_unfilled <ACTION action:! actor:"unknown" action_type:Verb | IS object:!! object_count:"inf" noun_class:Noun>
-        Verb[!3PPresent] Noun[MassNoun] -plural -actor_unfilled <ACTION action:! actor:"unknown" action_type:Verb | IS object:!! object_count:"inf" noun_class:Noun>
-            # eat grass, eats grass, eating grass
+        Verb Noun[MassNoun] -plural -actor_unfilled <ACTION action:! actor:"unknown" action_type:Verb | IS object:!! object_count:"inf" noun_class:Noun>
+            # eat grass
+            # eats grass
+            # eating grass
 
         # intransitive
         NounPhrase[plural] Verb[MainVerb,!3PPresent,!Transitive] -plural -intransitive <ACTION action:! actor:NounPhrase->IS.object action_type:Verb>
@@ -471,8 +490,8 @@ Frames:
             # a dog runs
             # !a dog run
         Noun[plural] Verb[MainVerb,simple,!Transitive] -plural -intransitive <IS object:! object_count:"inf" noun_class:Noun | ACTION action:!! actor:! action_type:Verb>
-            # dogs run
-        Noun[singular] Verb[MainVerb,!simple,!continuous,!3PPresent,!Transitive] -singular -intransitive <IS object:! object_count:"1" noun_class:Noun | ACTION action:!! actor:! action_type:Verb>
+            # dogs die
+        Noun[singular] Verb[MainVerb,!simple,!continuous,!Transitive] -singular -intransitive <IS object:! object_count:"1" noun_class:Noun | ACTION action:!! actor:! action_type:Verb>
             # dog runs
 
         # transitive
@@ -487,65 +506,66 @@ Frames:
             # did <a dog bite> another dog
         NounPhrase[singular] Verb[MainVerb,simple,Intransitive] -singular -transitive -object_unfilled <ACTION action:! actor:NounPhrase->IS.object action_type:Verb>
             # did <a dog jump>
-        Noun[plural] Verb[MainVerb,simple,Transitive] -plural -intransitive <IS object:! object_count:"inf" noun_class:Noun | ACTION action:!! actor:! action_type:Verb>
-            # dogs run
-        Noun[singular] Verb[MainVerb,!simple,!continuous,!3PPresent,Transitive] -singular -intransitive <IS object:! object_count:"1" noun_class:Noun | ACTION action:!! actor:! action_type:Verb>
-            # dog runs
+        #Noun[plural] Verb[MainVerb,simple,Transitive] -plural -intransitive <IS object:! object_count:"inf" noun_class:Noun | ACTION action:!! actor:! action_type:Verb>
+        # dogs run
+        Noun[singular] Verb[MainVerb,!simple,Transitive] -singular -intransitive <IS object:! object_count:"1" noun_class:Noun | ACTION action:!! actor:! action_type:Verb>
+            # dog bites
 
         Noun[Pronoun,singular,GENDER,3rdPerson] Verb[3PPresent] -GENDER
-            # he runs, she runs
+            # he runs
+            # she runs
 
         VerbPhrase Conjunction VerbPhrase -plural
             # eats grass and drinks water
             # eating grass and drinking water
+
+        Verb[continuous,Intransitive] PrepPhrase -continuous -actor_unfilled <ACTION action:! actor:"unknown" action_type:Verb>
+            # running in the field
     AuxiliaryPhrase "AxP"
         Verb[AuxiliaryVerb,TENSE] Verb[MainVerb,TENSE] -TENSE
             # !i <have run>
             # i <do run>
-            # !the dog has run
-            # the dogs have run
+            # the dog <has ran>
+            # the dogs <have ran>
     PrepPhrase "PP"
         Preposition Noun
         Preposition[Place] NounPhrase[NUMBER] -NUMBER <PREPOSITION action:! preposition:Preposition object:NounPhrase->IS.object>
             # under the bridge
-        Preposition[Time] VerbPhrase
-            # after running in the race
+        Preposition[Time] VerbPhrase[continuous,actor_unfilled] 
+            # after running in the field
     Sentence "S"
-        AdjectivePhrase[plural] Verb[MainVerb, simple] <ACTION action:! actor:AdjectivePhrase->IS.object action_type:Verb>
+        AdjectivePhrase[plural] Verb[MainVerb,simple] <ACTION action:! actor:AdjectivePhrase->IS.object action_type:Verb>
             # quick dogs run
             # hit dogs holler
 
         VerbPhrase[transitive,object_unfilled] NounPhrase <VerbPhrase->ACTION_2.object=NounPhrase->IS.object>
             # <a dog bit | a horse>
-        #VerbPhrase[transitive,objectUnfilled] NounPhrase <ACTION_3 action:VerbPhrase->ACTION.action actor:VerbPhrase->IS.object action_type:VerbPhrase->ACTION.action_type object:NounPhrase->IS.object>
-            # <give a man| a fish>
-        VerbPhrase[transitive,object_unfilled] Noun[MassNoun] <IS object:! object_count:"1" noun_class:Noun | VerbPhrase->ACTION_2.object=Noun->IS.object>
-            # give a man grass
+        #VerbPhrase[super_transitive,objectUnfilled] NounPhrase <ACTION_3 action:VerbPhrase->ACTION.action actor:VerbPhrase->IS.object action_type:VerbPhrase->ACTION.action_type object:NounPhrase->IS.object>
+        # <give a man | a fish>
+        #VerbPhrase[super_transitive,indirect_object_unfilled] Noun[MassNoun] <IS object:! object_count:"1" noun_class:Noun | VerbPhrase->ACTION_2.object=Noun->IS.object>
+        # give a man grass
 
         Noun[plural] SetDescriptorPhrase <IS object:! object_count:"inf" noun_class:Noun | SetDescriptorPhrase->CONTAINS.containee=!>
             # horses are mammals
         NounPhrase[plural] SetDescriptorPhrase <SetDescriptorPhrase->CONTAINS.containee=NounPhrase->IS.object>
             # the horses are mammals
         #PreIndicativePhrase[plural] Noun[plural] -plural <IS object:! object_count:"inf" noun_class:Noun | CONTAINS container:! containee:PreIndicativePhrase->IS.object>
-            # horses are mammals
+        # horses are mammals
         #PreIndicativePhrase[plural] NounPhrase[plural] -plural <CONTAINS container:NounPhrase->IS.object containee:PreIndicativePhrase->IS.object>
-            # puppies are young dogs
+        # puppies are young dogs
 
         Noun[MainNoun,plural] VerbPhrase[plural] <IS object:! object_count:"inf" noun_class:Noun | VerbPhrase->ACTION.actor=!>
             # dogs eat grass
 
         #PreIndicativePhrase Adjective[Comparable,absolute] <HAS_PROPERTY object:PreIndicativePhrase->IS.object property:Adjective>
-            # i am happy
-            # a dog is happy
+        # i am happy
+        # a dog is happy
         #PreIndicativePhrase Adjective[NonComparable] <HAS_PROPERTY object:PreIndicativePhrase->IS.object property:Adjective>
-            # i am rancorous
+        # i am rancorous
         #PreIndicativePhrase Verb[MainVerb,continuous] -continuous
-            # the dog is running
+        # the dog is running
         HabilitivePhrase Verb[MainVerb,simple]
             # he can run
-
-        StateQuestionObject[NUMBER] VerbPhrase[NUMBER]
-            # can i eat the cookie, can i eat grass
 
         NounPhrase[NUMBER] PostIndicativePhrase[NUMBER]
             # the waters are rising
@@ -560,8 +580,8 @@ Frames:
         NounPhrase ModalPhrase[MODE] -MODE <ModalPhrase->CAN_DO.actor=NounPhrase->IS.object>
             # a dog can run
 
-        PreIndicativePhrase Noun[Pronoun,possessive]
-            # that cat is mine
+        #PreIndicativePhrase Noun[Pronoun,possessive]
+        # that cat is mine
 
         VerbPhrase PrepPhrase <PrepPhrase->PREPOSITION.action=VerbPhrase->ACTION.action>
         Sentence PrepPhrase
@@ -574,17 +594,20 @@ Frames:
             # the dog is ugly
 
         AnaphoricNounPhrase PropertyDescriptorPhrase <PropertyDescriptorPhrase->HAS_PROPERTY.object=AnaphoricNounPhrase->ANAPHORIC.anaphoric_object>
-            # <the dog that bit the person> is ugly
-        AnaphoricNounPhrase VerbPhrase[actor_unfilled,transitive] <VerbPhrase->ACTION_2.actor=AnaphoricNounPhrase->ANAPHORIC.anaphoric_object>
-            # <the horse that bit the fish | ran into the river>
+            # the dog that bit the person | is ugly
+        AnaphoricNounPhrase VerbPhrase[actor_unfilled] <VerbPhrase->ACTION_2.actor=AnaphoricNounPhrase->ANAPHORIC.anaphoric_object>
+            # the horse that bit the fish | ate the fish
 
         NounPhrase SubjectActorDescriber <SubjectActorDescriber->ACTION_2.object=NounPhrase->IS.object>
             # a horse | got bitten by a dog
+
+        Noun[plural] StateQuestionObject[plural,existential] <IS object:! object_count:"inf" noun_class:Noun | CONTAINS container:! containee:StateQuestionObject->IS.object>
+            # puppies are young dogs
     Question "Q"
-        Verb[ModalVerb,MODE] VerbPhrase[NUMBER] -NUMBER -MODE <CAN_DO action_type:VerbPhrase->ACTION.action_type actor:VerbPhrase->IS.object>
-            # will i run
-            # might i run
-            # can dogs run
+        #Verb[ModalVerb,MODE] VerbPhrase -MODE <CAN_DO action_type:VerbPhrase->ACTION.action_type actor:VerbPhrase->IS.object>
+        # will i run
+        # might i run
+        # can dogs run
 
         Verb[LinkingVerb] Sentence
             # did a dog bite a person
@@ -600,8 +623,12 @@ Frames:
         InterrogativePhrase VerbPhrase <VerbPhrase->ACTION.actor=InterrogativeClause->IS.object>
         InterrogativePhrase Verb <VerbPhrase->CAN_DO.actor=InterrogativeClause->IS.object>
 
-        StateQuestionObject[NUMBER,MODE] VerbPhrase[simple] -NUMBER -MODE 
-            # can a fish live in the house
+        StateQuestionObject[NUMBER,MODE] VerbPhrase[simple,Intransitive] -NUMBER -MODE -Intransitive <VerbPhrase->ACTION.actor=StateQuestionObject->IS.object>
+            # can a fish | live in the house
+            # can i | live in the house
+        StateQuestionObject[NUMBER,MODE] VerbPhrase[transitive,actor_unfilled] -NUMBER -MODE -Intransitive <VerbPhrase->ACTION_2.actor=StateQuestionObject->IS.object>
+            # can i | eat the cookie
+            # can the dog | eat the cookie
         StateQuestionObject[MODE] Verb[MainVerb,simple] -MODE <CAN_DO action_type:Verb actor:StateQuestionObject->IS.object | ACTION action:! actor:StateQuestionObject->IS.object action_type:Verb>
             # can a fish run
         StateQuestionObject[categorical] Noun[plural] <CONTAINS container:! containee:StateQuestionObject->IS.object | IS object:! object_count:"inf" noun_class:Noun>
@@ -613,13 +640,19 @@ Frames:
         # (will) a dog eat a dog
 
     StateQuestionObject "sQOb"
-        Verb[ModalVerb,MODE] Noun[Pronoun,NUMBER] -NUMBER -MODE -habilitive 
-            # can you, can i
-            # should i, might i
-
+    # TODO: add transfer of Frame prop to Pred prop
+        # add proper
+        # SPECIFIER object:! person:object_count:NUMBER 
+        Verb[ModalVerb,MODE] Noun[Pronoun,singular,NUMBER] -NUMBER -MODE -habilitive <IS object:! object_count:"1" noun_class:"unknown">
+            # can you
+            # can i
+            # could i
+            # might i
+        Verb[ModalVerb,MODE] Noun[Pronoun,plural,PERSON] -NUMBER -MODE -habilitive <IS object:! object_count:"2" noun_class:"unknown">
+            # might we
         Verb[ModalVerb,MODE] NounPhrase[NUMBER] -NUMBER -MODE -habilitive
             # can a fish
-        Verb[ModalVerb,MODE] NounPhrase[plural] -plural -MODE -habilitive
+        Verb[ModalVerb,MODE] Noun[plural] -plural -MODE -habilitive
             # can dogs
 
         Verb[LinkingVerb,PERSON,NUMBER] Noun[Pronoun,PERSON,NUMBER,!possessive,!subjective] -PERSON -NUMBER -existential
@@ -628,6 +661,9 @@ Frames:
 
         Verb[LinkingVerb,3rdPerson,plural] Noun[plural] -plural -categorical <IS object:! object_count:"inf" noun_class:Noun>
             # are dogs
+
+        Verb[LinkingVerb,3rdPerson,plural] Noun[plural] -plural -categorical <IS object:! object_count:"inf" noun_class:Noun>
+            # are young dogs
 
         Verb[LinkingVerb,NUMBER,PERSON] Noun[Pronoun,NUMBER,PERSON] -PERSON -NUMBER -existential
             # have you
@@ -677,8 +713,10 @@ Frames:
             # is rising
     ModalPhrase "MP"
         Verb[ModalVerb,MODE] Verb[MainVerb] -MODE <CAN_DO action_type:Verb#2 actor:"unknown">
-            # can run -habilitive
-            # may run -futureProbability
+            # can run
+        # TODO: can run -habilitive
+            # may run
+        # may run -futureProbability
     #ComparativeObject "CO"
     #    PreIndicativePhrase Adjective[comparative]
     #        # i am happier
@@ -705,6 +743,8 @@ Frames:
     SetDescriptorPhrase "SDP"
         Verb[LinkingVerb,plural] Noun[MainNoun,plural] <IS object:! object_count:"inf" noun_class:Noun | CONTAINS container:! containee:"unknown">
             # are dogs
+        Verb[LinkingVerb,plural] Nounphrase[plural] <CONTAINS container:NounPhrase->IS.object containee:"unknown">
+            # are young dogs
     HabilitivePhrase "HP"
         Noun[Pronoun,NUMBER,PERSON] Verb[ModalVerb,ability] -NUMBER <SPECIFIER object:! person:Noun number:Noun | CAN_DO action_type:"unknown" actor:!>
             # TODO - add ability to access Frame features + feature group evaluation results.

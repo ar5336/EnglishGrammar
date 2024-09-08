@@ -232,8 +232,6 @@ bool run_integration_test()
     bool reading_frames = false;
     string current_line = "";
 
-    printf("test\n");
-
     int current_definition_line = -1;
     int current_reading_line = -1;
     if (new_file.is_open())
@@ -285,53 +283,84 @@ bool run_integration_test()
                     printf("scanning line %s\n", current_line.c_str());
                 }
 
-                int start_bracket_index = -1;
-                int end_bracket_index = -1;
-
                 vector<string> split_tokens = split_spaces(current_line);
                 trim(current_line);
-                tester.tell_mind(current_line);
 
                 Frame top_frame = Frame();
-                int def_line = -1;
 
-                // also TODO - make sure the brackets cause the actual checking of the parse.
-                // < only appears at the beginning of a token
-                // > only begins at the end of a token
-                // just foreach the tokens and apply these rules
-                // the parse grid will have to be pierced
-                // x = index_of(<)
-                // y = index_of(>) - index_of(<)
-                // inclusive placing of the 
+                int start_bracket_index = 0;
+                int end_bracket_index = split_tokens.size()-1;
 
-                // also TODO - for parsing the crossbar
-                // # the dog <that | ate> the horse
-                // a method int remove_char_from_tokens(vector<string>& tokens, char chr)
-                //      returns index of pivot give by char
-                // to remove |
-                // and the re-collation of these tokens.
-
-                // TODO - instead of just getting the top frame, check for the existence of your desired frame
-                // we also have tests for negative. so yea.
-                if (tester.test_parser.try_get_top_frame(top_frame))
+                vector<string> modified_tokens = vector<string>();
+                for (int i = 0; i < split_tokens.size(); i++)
                 {
-                    if (DEBUGGING)
-                        printf("successfully retrieved top frame: %s\n", top_frame.stringify_as_param().c_str());
-    
-                    def_line = top_frame.definition_line;
+                    string token = split_tokens.at(i);
+                    if (find_in_string(token, "<"))
+                    {
+                        token = remove_char_from_string(token, '<');
 
+                        start_bracket_index = i;
+                    }
+                    else if (find_in_string(token, ">"))
+                    {
+                        token = remove_char_from_string(token, '>');
+                        end_bracket_index = i;
+                    }
+                    modified_tokens.push_back(token);
                 }
 
-                if (DEBUGGING)
-                    printf("'%s' | line fetched from top frame: %d : syntax frame definition line: %d\n",current_line.c_str(), def_line,  current_definition_line);
+                // # the dog <that | ate> the horse
+                // TODO - make the crossbar actiually matter
 
-                if (def_line == -1)
-                    current_definition_line = 1;
+                int frame_boundary_pivot = -1;
 
-                if (has_bang)
-                    TEST_ASSERT(def_line != current_definition_line + 1);
+                vector<string> new_modified_tokens;
+                for (int i = 0; i < modified_tokens.size(); i++)
+                {
+                    string token = modified_tokens.at(i);
+                    if (token.size() == 1 && token.at(0) == '|')
+                    {
+                        // remove the token
+                        end_bracket_index--;
+                        frame_boundary_pivot = i;
+                    } else
+                    {
+                        new_modified_tokens.push_back(token);
+                    }
+                }
 
-                TEST_ASSERT(def_line == current_definition_line + 1);
+                string collated_line = "";
+                for (string token : new_modified_tokens)
+                {
+                    collated_line += (token + " ");
+                }
+                trim(collated_line);
+
+
+                tester.tell_mind(collated_line);
+
+                bool does_have_interpretation = false;
+                Frame matching_frame;
+
+                int def_line = -1;
+
+                auto interp_frames = tester.test_parser.get_interpret_frames(start_bracket_index, end_bracket_index - start_bracket_index);
+                for(auto interp_frame : interp_frames)
+                {
+                    int cur_def_line = interp_frame.definition_line;
+
+                    if (cur_def_line == current_definition_line + 1)
+                    {
+                        matching_frame = interp_frame;
+                        does_have_interpretation = true;
+                        def_line = cur_def_line;
+                    }
+                }
+
+                // if (DEBUGGING)
+                    printf("'%s' | result: %d : expected: %d\n",current_line.c_str(), def_line,  current_definition_line);
+
+                TEST_ASSERT(has_bang xor does_have_interpretation);
             }
         }
     }

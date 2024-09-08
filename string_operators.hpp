@@ -28,6 +28,8 @@ vector<string> split_spaces(string str);
 
 bool find_in_string(string field, string target);
 
+string remove_char_from_string(string str, char chr);
+
 bool is_string_all_chars(string test, char subject);
 
 string stringify_set(set<string> set);

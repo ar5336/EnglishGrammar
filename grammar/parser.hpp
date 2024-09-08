@@ -90,6 +90,10 @@ public:
 
     bool try_get_top_frame(Frame& interp_frame);
 
+    vector<Frame> get_interpret_frames();
+
+    vector<Frame> get_interpret_frames(int x_coord, int y_coord);
+
     bool try_get_frame_at(FrameCoordinates coords, Frame& result_frame);
 };
 

@@ -78,6 +78,17 @@ bool find_in_string(string field, string target)
 	return field.find(target) != string::npos;
 }
 
+string remove_char_from_string(string str, char chr)
+{
+	string result = "";
+	for (char ch : str)
+	{
+		if (ch != chr)
+			result += ch;
+	}
+	return result;
+}
+
 bool is_string_all_chars(string test, char subject)
 {
     for (char ch : test)
