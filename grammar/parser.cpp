@@ -70,7 +70,10 @@ bool Parser::does_frame_have_features(
                 return false;
         }
     }
-
+    
+    // refactor this code. rename consumer to something ebtter like, source. source and product frame. bottom-up
+    // make the feature group tags check with a set of some sort.
+    // TODO2000
     vector<string> feature_group_tags = pattern_element.feature_group_tags;
     // then test for feature groups
     for (string feature_group_tag : feature_group_tags)

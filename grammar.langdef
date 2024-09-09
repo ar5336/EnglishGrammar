@@ -198,7 +198,7 @@ Words:
                 fall falling fell falls
         AuxiliaryVerb:
             be -continuous -singular -plural
-            has -perfect -singular
+            has -perfect -singular -3rdPerson
             have -perfect -plural
             do -simple -singular -plural
             will -simple -singular -plural
@@ -601,7 +601,7 @@ Frames:
         NounPhrase SubjectActorDescriber <SubjectActorDescriber->ACTION_2.object=NounPhrase->IS.object>
             # a horse | got bitten by a dog
 
-        Noun[plural] StateQuestionObject[plural,existential] <IS object:! object_count:"inf" noun_class:Noun | CONTAINS container:! containee:StateQuestionObject->IS.object>
+        Noun[plural] StateQuestionObject[plural,categorical] <IS object:! object_count:"inf" noun_class:Noun | CONTAINS container:StateQuestionObject->IS.object containee:!>
             # puppies are young dogs
     Question "Q"
         #Verb[ModalVerb,MODE] VerbPhrase -MODE <CAN_DO action_type:VerbPhrase->ACTION.action_type actor:VerbPhrase->IS.object>
@@ -657,16 +657,18 @@ Frames:
 
         Verb[LinkingVerb,PERSON,NUMBER] Noun[Pronoun,PERSON,NUMBER,!possessive,!subjective] -PERSON -NUMBER -existential
             # am i
-            # are we
+        # TODO2000- fix the faliure here - reconsider feature grousp
+        # are we
 
-        Verb[LinkingVerb,3rdPerson,plural] Noun[plural] -plural -categorical <IS object:! object_count:"inf" noun_class:Noun>
+        Verb[LinkingVerb,3rdPerson,plural] Noun[MainNoun,plural] -plural -categorical <IS object:! object_count:"inf" noun_class:Noun>
             # are dogs
 
-        Verb[LinkingVerb,3rdPerson,plural] Noun[plural] -plural -categorical <IS object:! object_count:"inf" noun_class:Noun>
+        Verb[LinkingVerb,IndicativeVerb,3rdPerson,plural] NounPhrase[plural] -plural -categorical
             # are young dogs
 
+        # TODO2000- fix the faliure here - reconsider feature grousp
         Verb[LinkingVerb,NUMBER,PERSON] Noun[Pronoun,NUMBER,PERSON] -PERSON -NUMBER -existential
-            # have you
+        # have you
 
         Verb[LinkingVerb,present,NUMBER] NounPhrase[NUMBER] -present -NUMBER -existential
             # is a house
@@ -699,7 +701,7 @@ Frames:
     #    which -select
         Noun[InterrogativePronoun,select] Noun[plural] <IS object:! object_count:"inf" noun_class:Noun#2>
             # <which dogs> are ugly
-            # pragrmatically, this should answer in both the general case (where conditions apply) and the particular case
+        # pragrmatically, this should answer in both the general case (where conditions apply) and the particular case
         Noun[InterrogativePronoun,select] NounPhrase[!determined]
             # which dogs in the city
 
@@ -723,17 +725,17 @@ Frames:
     #PreIndicativePhrase "prIP"
         # TODO - add distinctions between different possession
         #Noun[Pronoun,NUMBER,PERSON]  Verb[LinkingVerb,NUMBER,PERSON] -NUMBER -PERSON <SPECIFIER object:! person:Noun number:Noun | IS object:! object_count:"1" noun_class:"human">
-            # i am
-            # you are
+        # i am
+        # you are
         #NounPhrase[NUMBER,!anaphoric]  Verb[LinkingVerb,NUMBER] -NUMBER
-            # the dog is
-            # my dogs are
+        # the dog is
+        # my dogs are
         #NounPhrase[NUMBER,anaphoric]  Verb[LinkingVerb,NUMBER] -NUMBER
-            # <the dog that bit the person is> ugly
-            # <the pigs that flew are> impossible
+        # <the dog that bit the person is> ugly
+        # <the pigs that flew are> impossible
         #Noun[plural] Verb[LinkingVerb,plural] -plural <IS object:! object_count:"inf" noun_class:Noun>
-            # dogs are
-            # horses are
+        # dogs are
+        # horses are
     ActionDescriptorPhrase "AtnDP"
         Verb[LinkingVerb,NUMBER] Verb[continuous] 
             # are running
@@ -743,11 +745,11 @@ Frames:
     SetDescriptorPhrase "SDP"
         Verb[LinkingVerb,plural] Noun[MainNoun,plural] <IS object:! object_count:"inf" noun_class:Noun | CONTAINS container:! containee:"unknown">
             # are dogs
-        Verb[LinkingVerb,plural] Nounphrase[plural] <CONTAINS container:NounPhrase->IS.object containee:"unknown">
-            # are young dogs
+        # Verb[LinkingVerb,plural] Nounphrase[plural] <CONTAINS container:NounPhrase->IS.object containee:"unknown">
+        # are young dogs
     HabilitivePhrase "HP"
         Noun[Pronoun,NUMBER,PERSON] Verb[ModalVerb,ability] -NUMBER <SPECIFIER object:! person:Noun number:Noun | CAN_DO action_type:"unknown" actor:!>
-            # TODO - add ability to access Frame features + feature group evaluation results.
+        # TODO - add ability to access Frame features + feature group evaluation results.
             # you can
             # he can
     AdjectivePhrase "AP"

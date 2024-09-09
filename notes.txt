@@ -89,9 +89,7 @@ Notes:
             Noun[NUMBER] 
         
 [X] display the complete contents of a cell you have selected
-    S - Sentence
-        -Plural -1stPerson
-
+    S - Sentenceare young dogs
         NounPhrase[singular, determined] VerbPhrase
 
     subsequent clicks cycle through the different frames in the cell
@@ -107,7 +105,7 @@ Notes:
     "the dog's fur is silky"
 
         > new frames for determined vs unditermined
-        base variable determinedness determines anaphoricity
+        base noun's determinedness determines anaphoricity
 
 [ ] prepositions attached to events
 
@@ -125,3 +123,15 @@ Notes:
     
         france -country_name
         germany -country_name
+
+[ ] pronoun resolution
+    "emily has a cat named sally"
+
+    "emily has a cat"
+    "her cat is named sally"
+
+    this includes ambiguity resolution
+        "emily has a cat"
+        "she has very sharp claws"
+
+    

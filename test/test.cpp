@@ -357,7 +357,7 @@ bool run_integration_test()
                     }
                 }
 
-                // if (DEBUGGING)
+                if (DEBUGGING)
                     printf("'%s' | result: %d : expected: %d\n",current_line.c_str(), def_line,  current_definition_line);
 
                 TEST_ASSERT(has_bang xor does_have_interpretation);
