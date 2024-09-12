@@ -118,24 +118,26 @@ Words:
             who -animate
             whom -animate
         Name:
-            steve
-            frank
-            pony
-            billy
-            bobby
-            annie
-            adam
-            clyde
-            alice
-            nancy
-            jimmy
-            greg
-            daniel
-            dan
-            china
-            russia
-            germany
-            france
+            steve -main_name -masculine
+            frank -main_name -masculine
+            pony -main_name -feminine
+            billy -main_name -masculine
+            bobby -main_name -masculine
+            annie -main_name -feminine
+            adam -main_name -masculine
+            clyde -main_name -masculine
+            alice -main_name -feminine
+            nancy -main_name -feminine
+            jimmy -main_name -masculine
+            greg -main_name -masculine
+            daniel -main_name -masculine
+            dan -main_name -masculine
+            emily -main_name -feminine
+            samantha -main_name -feminine
+            china -country_name
+            russia -country_name
+            germany -country_name
+            france -country_name
         InterrogativePronoun:
             who -animate
             what -indentity
@@ -146,6 +148,9 @@ Words:
             whose -belonging
     Verb:
         MainVerb:
+            ActionTransitive: # simple continuous perfect 3PPresent (pastPart)
+                love loving loved loves
+                hate hating hated hates
             ReceptiveTransitive: # simple continuous perfect 3PPresent (pastPart)
                 take taking took takes taken
                 drink drinking diank drinks
@@ -155,6 +160,7 @@ Words:
                 transfer transferring transferred transfers
                 name naming named names
             Transitive: # simple continuous perfect 3PPresent (pastPart)
+                kill killing killed kills
                 invade invading invaded invades
                 bite biting bit bites bitten
                 drink drinking diank drinks
@@ -332,8 +338,12 @@ Words:
             much -amount:0.7 -determined
             most -amount:0.8 -determined
             all -amount:1.0 -determined
+    Postposition:
+        forthwith
+        forthwidth
     Preposition:
         for
+        to
         of
         Place:
             in
@@ -427,9 +437,12 @@ Frames:
         Adjective[MainAdjective] Noun[plural] -plural <IS object:! object_count:"inf" noun_class:Noun | HAS_PROPERTY object:! property:Adjective>
             # young dogs
 
-        # Noun[location] Noun[NUMBER] -NUMBER
-        # land animals
-        # sea animals
+        Noun[MainNoun,!plural] Noun[MainNoun,NUMBER] -NUMBER
+            # pig dogs
+            # pig dog
+        Noun[MassNoun] Noun[MainNoun,NUMBER] -NUMBER
+            # sea animals
+            # land mammal
 
         Noun[Name] NounPhrase[singular,determined] -singular <NAME object:NounPhrase->IS.object name:Noun>
 
@@ -438,7 +451,7 @@ Frames:
             # the dog that bit the person
         NounPhrase[NUMBER] AnaphoricActionDescriptivePhrase[intransitive] -NUMBER -actor -anaphoric <AnaphoricActionDescriptivePhrase->ACTION.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the pig that flew
-        NounPhrase AnaphoricSubjectDescriptivePhrase -object -actor_unfilled <AnaphoricSubjectDescriptivePhrase->ACTION_2.object=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
+        NounPhrase AnaphoriObjectDescriptivePhrase -object -actor_unfilled <AnaphoriObjectDescriptivePhrase->ACTION_2.object=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the person that got bit
         NounPhrase[NUMBER] VerbPhrase[NUMBER,transitive,object_unfilled] -NUMBER <VerbPhrase->ACTION_2.object=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the man a dog bit
@@ -458,14 +471,35 @@ Frames:
     AnaphoricActorDescriptivePhrase "AnArDP"
         Noun[RelativePronoun] VerbPhrase[NUMBER,transitive,object_unfilled] -NUBER 
             # the man <that the dog bit>
-    AnaphoricSubjectDescriptivePhrase "AnSDP"
+    AnaphoriObjectDescriptivePhrase "AnODP"
         Noun[RelativePronoun] SubjectDescriber -transitive -actor_unfilled -descriptive
             # the person <that got bit> is ugly
             # the person <that was bitten> is ugly
+    AnaphoricIndirectObjectDescriptivePhrase "AnIODP"
+        Noun[RelativePronoun] IndirectObjectDescriber -super_transitive -object_unfilled
+            # the man <that | gave the cat> some meat
+    IndirectObjectDescriber "IOD"
+        Verb[SuperTransitive] NounPhrase -super_transitive <ACTION_3 action:! actor:"unknown" action_type:Verb object:Nounphrase->IS.object indirect_object:"unknown">
+            # the man that <gave | the cat> some meat
+    ActorDescriptivePhrase "AtrDP"
+        Preposition[Preposition,Actor] NounPhrase
+            # the man that got bit <by the dog>
+
+    SubjectActorDescriber "SuAD"
+        SubjectDescriber ActorDescriptivePhrase <SubjectDescriber->ACTION_2.actor=ActorDescriptivePhrase->IS.object>
+            # a man <got bit | by the dog>
+
+    SubjectDescriber "SuD"
+        Verb[IndicativeVerb,past] Verb[MainVerb,pastPart] -past <ACTION_2 action:! actor:"unknown" action_type:Verb#2 object:"unknown">
+            # was bitten
+        Verb[IndicativeVerb,past] Verb[MainVerb,perfect] -past <ACTION_2 action:! actor:"unknown" action_type:Verb#2 object:"unknown">
+            # got bit
+        # will be bit
+        # will have been bit
     VerbPhrase "VP"
         Verb[MainVerb,TENSE,Transitive] NounPhrase -TENSE -transitive -actor_unfilled <ACTION_2 action:! actor:"unknown" action_type:Verb object:NounPhrase->IS.object>
             # the horse that <bit a man> is ugly
-        Verb[MainVerb,TENSE,SuperTransitive] NounPhrase -TENSE -transitive -actor_unfilled -indirect_object_unfilled <ACTION_3 action:! actor:"unknown" action_type:Verb object:NounPhrase->IS.object indirect_object:"unknown">
+        Verb[MainVerb,TENSE,SuperTransitive] NounPhrase -TENSE -super_transitive -actor_unfilled -indirect_object_unfilled <ACTION_3 action:! actor:"unknown" action_type:Verb object:NounPhrase->IS.object indirect_object:"unknown">
             # the horse that <gave a man> a gift
         Verb[TRANSITIVITY] Adverb -TRANSITIVITY <ACTION action:! actor:"unknown" action_type:Verb | HAS_PROPERTY object:! property:Adverb>
             # run quickly
@@ -476,11 +510,15 @@ Frames:
         # ran into a river
         Verb[MainVerb,TENSE,TRANSITIVITY] PrepPhrase -TENSE -TRANSITIVITY <ACTION action:! actor:"unknown" action_type:Verb>
             # run into the field
-        Verb[!perfect] Noun[MassNoun] -singular -actor_unfilled <ACTION action:! actor:"unknown" action_type:Verb | IS object:!! object_count:"inf" noun_class:Noun>
-        Verb Noun[MassNoun] -plural -actor_unfilled <ACTION action:! actor:"unknown" action_type:Verb | IS object:!! object_count:"inf" noun_class:Noun>
-            # eat grass
-            # eats grass
-            # eating grass
+        Verb[Transitive,!perfect] Noun[MassNoun] -singular -actor_unfilled -transitive <ACTION_2 action:! actor:"unknown" action_type:Verb object:!!| IS object:!! object_count:"inf" noun_class:Noun>
+            # i <eat grass>
+            # you <eat grass>
+            # they <eat grass>
+            # he <eats grass>
+        Verb[Transitive] Noun[MassNoun] -plural -transitive -actor_unfilled <ACTION_2 action:! actor:"unknown" action_type:Verb object:!! | IS object:!! object_count:"inf" noun_class:Noun>
+            # we <eat grass>
+            # they <eat grass>
+            # them <eating grass>
 
         # intransitive
         NounPhrase[plural] Verb[MainVerb,!3PPresent,!Transitive] -plural -intransitive <ACTION action:! actor:NounPhrase->IS.object action_type:Verb>
@@ -554,7 +592,7 @@ Frames:
         #PreIndicativePhrase[plural] NounPhrase[plural] -plural <CONTAINS container:NounPhrase->IS.object containee:PreIndicativePhrase->IS.object>
         # puppies are young dogs
 
-        Noun[MainNoun,plural] VerbPhrase[plural] <IS object:! object_count:"inf" noun_class:Noun | VerbPhrase->ACTION.actor=!>
+        Noun[MainNoun,plural] VerbPhrase[plural,transitive] <IS object:! object_count:"inf" noun_class:Noun | VerbPhrase->ACTION_2.actor=!>
             # dogs eat grass
 
         #PreIndicativePhrase Adjective[Comparable,absolute] <HAS_PROPERTY object:PreIndicativePhrase->IS.object property:Adjective>
@@ -618,11 +656,14 @@ Frames:
             # is the dog that bit the horse ugly
 
         InterrogativePhrase ModalPhrase[MODE] -MODE <ModalPhrase->CAN_DO.actor=InterrogativePhrase->IS.object>
-            # which dogs can run
-            # which dogs in the city can run
-        InterrogativePhrase VerbPhrase <VerbPhrase->ACTION.actor=InterrogativeClause->IS.object>
-        InterrogativePhrase Verb <VerbPhrase->CAN_DO.actor=InterrogativeClause->IS.object>
-
+            # which dogs | can run
+            # which dogs in the city | can run
+        Noun[InterrogativePronoun,select] Sentence
+            # which | horses eat fish
+        InterrogativePhrase VerbPhrase[super_transitive] <VerbPhrase->ACTION_3.actor=InterrogativePhrase->IS.object>
+            # which horses | give gifts to fish
+        InterrogativePhrase Verb[MainVerb] <CAN_DO action_type:Verb actor:InterrogativePhrase->IS.object>
+            # which dogs | run
         StateQuestionObject[NUMBER,MODE] VerbPhrase[simple,Intransitive] -NUMBER -MODE -Intransitive <VerbPhrase->ACTION.actor=StateQuestionObject->IS.object>
             # can a fish | live in the house
             # can i | live in the house
@@ -676,21 +717,6 @@ Frames:
         Verb[LinkingVerb,present,NUMBER] Noun[plural] -present -plurals -existential <IS object:! object_count:"inf" noun_class:Noun>
             # do dogs
 
-    ActorDescriptivePhrase "AtrDP"
-        Preposition[Preposition,Actor] NounPhrase
-            # the man that got bit <by the dog>
-
-    SubjectActorDescriber "SuAD"
-        SubjectDescriber ActorDescriptivePhrase <SubjectDescriber->ACTION_2.actor=ActorDescriptivePhrase->IS.object>
-            # a man <got bit | by the dog>
-
-    SubjectDescriber "SuD"
-        Verb[IndicativeVerb,past] Verb[MainVerb,pastPart] -past <ACTION_2 action:! actor:"unknown" action_type:Verb#2 object:"unknown">
-            # was bitten
-        Verb[IndicativeVerb,past] Verb[MainVerb,perfect] -past <ACTION_2 action:! actor:"unknown" action_type:Verb#2 object:"unknown">
-            # got bit
-        # will be bit
-        # will have been bit
 
     InterrogativePhrase "IntP"
     #    who -person
