@@ -21,6 +21,7 @@ public:
 
     vector<Frame> cnf_frames;
     map<string, vector<Frame>> cnf_map; // frame A > B C becomes map entry {"B C", "A"}
+    // map<string, vector<Frame>> pattern_element_map;
 
     map<int, Frame> cnf_frames_by_line;
 

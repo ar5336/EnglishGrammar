@@ -71,6 +71,7 @@ Words:
             water
             food
             grain
+            beer
             meat
             grass
             code
@@ -161,6 +162,9 @@ Words:
                 name naming named names
             Transitive: # simple continuous perfect 3PPresent (pastPart)
                 kill killing killed kills
+                write writing wrote writes written
+                code coding coded codes
+                read reading read reads
                 invade invading invaded invades
                 bite biting bit bites bitten
                 drink drinking diank drinks
@@ -330,14 +334,16 @@ Words:
             these -determined -plural -proximal
             that -determined -singular -distal
             those -determined -plural -distal
-        Quantifiers:
+        Quantifier:
             any -irregular -amount:0.0 -determined
             some -amount:0.2 -determined
-            several -amount:0.3 -determined
             enough -amount:0.5 -determined
             much -amount:0.7 -determined
             most -amount:0.8 -determined
             all -amount:1.0 -determined
+            Corpuscular:
+                several -determined
+                couple -undetermined
     Postposition:
         forthwith
         forthwidth
@@ -386,6 +392,7 @@ FeatureGroups:
     MODE= advice obligation offer futureProbability ability permission
     TENSE= simple continuous perfect 3PPresent pastPart
     TRANSITIVITY= Transitive Intransitive
+    DETERMINATION= determined undetermined
 
 Predicates:
     IS              object->    object_count noun_class
@@ -404,9 +411,36 @@ Predicates:
 
 Frames:
     NounPhrase "NP"
-        Determiner Noun[NUMBER] -NUMBER -determined <IS object:! object_count:"1" noun_class:Noun>
+        Determiner[Article] Noun[NUMBER] -NUMBER -determined <IS object:! object_count:"1" noun_class:Noun>
             # the dog
             # the dogs
+
+        Determiner[Demonstrative,NUMBER] Noun[NUMBER] -NUMBER <IS object:! object_count:"1" noun_class:Noun>
+            # this dog
+            # those dogs
+            # these dogs
+            # that dog
+            # !those dog
+            # !this dogs
+
+        Determiner[Quantifier,irregular] Noun[NUMBER] -NUMBER <IS object:! object_count:"1" noun_class:Noun>
+            # any dogs
+            # any dog
+
+        Determiner[Quantifier] Noun[plural] -NUMBER <IS object:! object_count:"1" noun_class:Noun>
+            # some dogs
+            # most dogs
+            # several dogs
+            # !most dog
+
+        Determiner[Quantifier,Corpuscular,determined] Noun[plural] -NUMBER <IS object:! object_count:"1" noun_class:Noun>
+            # several dogs
+
+        Determiner[Quantifier,!Corpuscular] Noun[MassNoun] -NUMBER <IS object:! object_count:"2" noun_class:Noun>
+            # some water
+            # some code
+            # most water
+            # !several water
 
         Determiner AdjectivePhrase[NUMBER] -NUMBER -determined
         NounPhrase[determined] PrepPhrase

@@ -639,3 +639,16 @@ clockwise sequence is assumed
 "i was selling drugs in this neighborhood when you were just a little kid!"
 > why is he saying this?
     to point out htat hes been doing it for longer than you  tht he si more experienced
+
+=======
+
+for increased efficiency (although I would have to do a profiler run on this to identify FR)
+include properties in the cnf_map string
+
+as it stands, it's just
+
+Rule: Verb[present] Noun[plural]
+cnf_map label : "Verb Noun"
+
+but since this map is stored as a map<string vec<Frame>>
+we could jsut make it a nested map<string, map<string, vec<Frame>>

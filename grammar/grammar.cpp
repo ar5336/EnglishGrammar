@@ -16,6 +16,20 @@ void Grammar::add_to_word_map(Frame frame, string word_string)
     }
 }
 
+void insert_frame_into_map(map<string, vector<Frame>>& map, Frame frame, string label)
+{
+	if (map.count(label) != 0)
+	{
+		map.at(label).push_back(frame);
+	}
+	else
+	{
+		vector<Frame> new_frame_vec;
+		new_frame_vec.push_back(frame);
+		map.emplace(label, new_frame_vec);
+	}
+}
+
 //
 //
 //
@@ -35,6 +49,8 @@ void Grammar::binarize_grammar()
 	
 	if (DEBUGGING)
 		printf("binarizing grammar\n");
+
+	set<Frame> monoframes_to_accomodate;
 	
 	for (int frame_index = 0; frame_index < syntax_frames.size(); frame_index++)
 	{
@@ -53,6 +69,14 @@ void Grammar::binarize_grammar()
 		PredicateFormationRules base_frame_formaiton_rules = frame.predicate_formation_rules;
 		int base_frame_origin_index = frame.definition_line;
 
+		// add to frames to always be creating accomodations for
+		if (pattern_length == 1)
+		{
+			// TODO - accomodate_current_frame(frame);
+			monoframes_to_accomodate.insert(frame);
+
+			continue;
+		}
 		// create subframe 0 for pattern elements 0 and 1
 
 		//      AL      - AL > 1 C
@@ -120,16 +144,18 @@ void Grammar::binarize_grammar()
 
 			// add elements to cnf_map
 			string match_pattern = pattern_left.match_string + " " + pattern_right.match_string;
-			if (cnf_map.count(match_pattern) != 0)
-			{
-				cnf_map.at(match_pattern).push_back(new_cnf_frame);
-			}
-			else
-			{
-				vector<Frame> new_frame_vec;
-				new_frame_vec.push_back(new_cnf_frame);
-				cnf_map.emplace(match_pattern, new_frame_vec);
-			}
+
+			insert_frame_into_map(cnf_map, new_cnf_frame, match_pattern);
+
+			// insert_frame_into_map(pattern_element_map, pattern_left, pattern_left.match_string)
+			// besides emplacing in the cnf map, also place in the pattern_element_map
+			// if (pattern_element_map.count())
+			// {
+
+			// }
+			// )
+
+			/*a sequence of frame names that represent the full accomodation of the currently formed predicate
 		}
 	}
 }
