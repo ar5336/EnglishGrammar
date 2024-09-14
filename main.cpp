@@ -1,6 +1,5 @@
 #include <iostream>
 #include </usr/local/include/opencv4/opencv2/highgui.hpp>
-// #include </usr/local/include/opencv4/opencv2/tracking.hpp>
 #include <vector>
 #include <map>
 #include <fstream>
@@ -22,7 +21,7 @@
 using namespace std;
 using namespace cv;
 
-string initial_utterance = "is the dog that jumped ugly";
+string initial_utterance = "";
 
 string current_utterance = "";
 
@@ -52,8 +51,7 @@ vector<string> known_facts = {
 	"foxes are mammals",
 	"birds can fly",
 	"animals can breathe",
-	"animals can bite",
-	"a quick brown fox jumps over a lazy dog"};
+	"animals can bite"};
 	// "a raven flew",
 	// "the raven that flew bit a horse"};
 	// "a dog bit a man"};
@@ -77,7 +75,6 @@ void parse_utterance(string utterance)
 		printf("failed to construct expression for given utternace \"%s\"\n", utterance.c_str());
 		return;
 	}
-
 
 	mind.tell(expression);
 
@@ -229,7 +226,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	signal(11, handler);   // install our handler
+	// signal(11, handler);   // install our handler
 
 	// read the grammar
 	GrammarReader reader = GrammarReader(&grammar, &predicate_handler, &predicate_template_handler);

@@ -9,6 +9,17 @@
 
 class Grammar
 {
+private:
+    // why is this property causing segfaults whenever it is added
+    // map<string, vector<Frame>> pattern_element_map;
+    map<string, vector<pair<PatternElement, Frame>>> monoframes_by_left;
+    map<string, vector<pair<PatternElement, Frame>>> monoframes_by_right;
+    
+    string stringify_monoframe_map(map<string, vector<pair<PatternElement, Frame>>> map);
+
+    void accomodate_monoframe(Frame frame);
+
+    void internalize_frame(Frame frame);
 public:
     map<string, vector<Frame>> word_map;
 
@@ -21,7 +32,6 @@ public:
 
     vector<Frame> cnf_frames;
     map<string, vector<Frame>> cnf_map; // frame A > B C becomes map entry {"B C", "A"}
-    // map<string, vector<Frame>> pattern_element_map;
 
     map<int, Frame> cnf_frames_by_line;
 

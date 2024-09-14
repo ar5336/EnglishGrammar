@@ -53,11 +53,12 @@ void ParserTester::setup_parse()
 {
     if(DEBUGGING)
         printf("setting up parse for test\n");
+
     test_predicate_template_handler = PredicateTemplateHandler();
 
     test_grammar = Grammar();
 
-	signal(11, handler);   // install our handler
+	// signal(11, handler);   // install our handler
 
     GrammarReader test_reader = GrammarReader(&test_grammar, &test_predicate_handler, &test_predicate_template_handler);
 	test_reader.read_grammar("grammar.langdef");
@@ -228,12 +229,16 @@ bool run_integration_test()
 
     fstream new_file;
     new_file.open("grammar.langdef", ios::in); // open a file to perform read operation using file object
+    if (!new_file.is_open()) {
+        throw runtime_error("Failed to open grammar file.");
+        return false;
+    }
 
     bool reading_frames = false;
     string current_line = "";
 
-    int current_definition_line = -1;
-    int current_reading_line = -1;
+    int current_definition_line = 0;
+    int current_reading_line = 0;
     if (new_file.is_open())
     {
         while (getline(new_file, current_line))
@@ -349,7 +354,7 @@ bool run_integration_test()
                 {
                     int cur_def_line = interp_frame.definition_line;
 
-                    if (cur_def_line == current_definition_line + 1)
+                    if (cur_def_line == current_definition_line)
                     {
                         matching_frame = interp_frame;
                         does_have_interpretation = true;
@@ -359,6 +364,10 @@ bool run_integration_test()
 
                 // if (DEBUGGING)
                     printf("'%s' | result: %d : expected: %d\n",current_line.c_str(), def_line,  current_definition_line);
+
+                // // printf("stringified parser: %s\n", tester.test_parser.stringify().c_str());
+
+                // // printf("frame index: %d\n", tester.test_parser.parse_grid[0][0][0].definition_line);
 
                 TEST_ASSERT(has_bang xor does_have_interpretation);
             }

@@ -271,7 +271,7 @@ void ConceptualSchema::print_maps()
 
 vector<pair<string, string>> ConceptualSchema::extract_inheritances(Expression expression)
 {
-    // IS (3) -> CONTAINS -> IS
+    // IS (3) [noun_class] -> CONTAINS -> IS [noun_class]
 
     auto constructed_response = vector<pair<string, string>>();
 

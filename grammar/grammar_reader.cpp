@@ -43,8 +43,14 @@ void GrammarReader::read_syntax_entry()
     
     // determine if you're reading a name / nickname line or a pattern line
     // the second token of a pattern name line is quoted
-    string second_token = split_tokens[1];
-    bool is_pattern_name_line = (second_token.at(0) == '"' && second_token.back() == '"');
+    bool is_pattern_name_line = split_tokens.size() > 1;
+    string second_token = "";
+
+    if (is_pattern_name_line)
+    {
+        second_token = split_tokens[1];
+        is_pattern_name_line = (second_token.at(0) == '"' && second_token.back() == '"');
+    }
 
     if (is_pattern_name_line)
     {
@@ -59,6 +65,8 @@ void GrammarReader::read_syntax_entry()
             return;
         }
         // is a pattern frame
+        if (DEBUGGING)
+            printf("constructing pattern frame\n");
 
         vector<PatternElement> pattern_elements;
         set<string> features;
@@ -223,7 +231,7 @@ void GrammarReader::read_word_entry()
             string feature_name = split_tokens[i];
             features.push_back(feature_name.substr(1, feature_name.size()));
         }
-        Frame new_word_frame = Frame(word_string, type_pruned, features);
+        Frame new_word_frame = Frame(word_string, current_line_index, type_pruned, features);
 
         grammar->add_to_word_map(new_word_frame, word_string);
     }
@@ -282,7 +290,10 @@ GrammarReader::GrammarReader(
     Grammar *grammar_ptr,
     PredicateHandler *predicate_handler_ptr,
     PredicateTemplateHandler *predicate_template_handler)
-    : grammar(grammar_ptr), predicate_handler(predicate_handler_ptr), predicate_template_handler(predicate_template_handler)
+    : grammar(grammar_ptr),
+    predicate_handler(predicate_handler_ptr),
+    predicate_template_handler(predicate_template_handler),
+    current_line_index(0)
 {
     state = GrammarReaderState::ReadingWords;
 }

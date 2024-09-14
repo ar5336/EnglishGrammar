@@ -147,7 +147,7 @@ bool Parser::try_get_matched_frames(
     // printf("finding matching frames - '%s'\n", match_string.c_str());
 
     // printf("match string: %s\n", match_string.c_str());
-    if (!(grammar.cnf_map.find(match_string) == grammar.cnf_map.end()))
+    if (grammar.cnf_map.count(match_string) != 0)
     {
         vector<Frame> frames_to_doublecheck = grammar.cnf_map.at(match_string);
 
@@ -219,9 +219,10 @@ Expression Parser::apply_formation_rules_on_expression(PredicateFormationRules f
 {
     // make sure that both left and right frame are matched
 
-    if (! ((left_frame.is_matched() || left_frame.is_word_frame()) &&
-          ((right_frame.is_matched() || right_frame.is_word_frame()))))
-          throw runtime_error("both frames should be matched during predicate formation");
+    // TODO - add check for "derived_from_monoframe" since we want to check for those
+    // if (! ((left_frame.is_matched() || left_frame.is_word_frame()) &&
+    //       ((right_frame.is_matched() || right_frame.is_word_frame()))))
+    //       throw runtime_error("both frames should be matched during predicate formation");
 
     // first, combine the two expressions
     Expression combined_expression = Expression::combine_expressions(left_frame.accumulated_expression, right_frame.accumulated_expression);
@@ -485,6 +486,11 @@ void Parser::update_parse_grid(string new_utterance)
 {
     current_utterance = new_utterance;
 
+    if (DEBUGGING)
+    {
+        printf("parsing utterance %s\n", new_utterance.c_str());
+    }
+
     // tokenize the utterance
     vector<string> split_tokens;
     split_tokens = split_spaces(current_utterance);
@@ -516,8 +522,8 @@ void Parser::update_parse_grid(string new_utterance)
             vector<Frame> word_frames_identified = grammar.word_map.at(token);
             for (Frame word_frame : word_frames_identified)
             {
-                if (word_frame.type != FrameType::Word)
-                    throw runtime_error("syntax frame on word frame row not allowed");
+                // if (word_frame.type != FrameType::Word)
+                //     throw runtime_error("syntax frame on word frame row not allowed");
 
                 parse_grid[0][token_index].push_back(word_frame);
             }
@@ -629,4 +635,31 @@ bool Parser::try_get_frame_at(FrameCoordinates coords, Frame& result_frame)
         return true;
     }
     return false;
+}
+
+string Parser::stringify()
+{
+    string buildee = "";
+    for (int row = 1; row < parse_grid.size(); row++)
+    {\
+        buildee += "|";
+        for (int col = 0; col < parse_grid.size() - row; col++)
+        {
+            vector<Frame> matches = parse_grid[row][col];
+            bool is_more_than_one = matches.size() > 1;
+            if (matches.size() != 0)
+            {
+                buildee += " ";
+                buildee += matches[0].frame_nickname;
+                buildee += is_more_than_one ? "*" : " ";
+            }
+            else
+            {
+                buildee += "     ";
+            }
+
+            buildee += "|\n";
+        }
+    }
+    return buildee;
 }

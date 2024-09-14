@@ -1,4 +1,5 @@
-CC = g++ -g -rdynamic
+CC = g++ 
+#-g -rdynamic
 
 # put -Wall back when you're ready
 # -Wextra when you're very ready

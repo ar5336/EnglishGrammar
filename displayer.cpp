@@ -421,7 +421,7 @@ void Displayer::display()
                     // display word
 
                     bool is_word = row == 0;
-                    string cell_text = is_word ? frame.get_part_of_speech() : frame.frame_nickname;
+                    string cell_text = (is_word) ? (frame.derived_from_monoframe ? frame.frame_nickname : frame.get_part_of_speech()) : frame.frame_nickname;
 
                     display_text(
                         ticker_cell_text,
@@ -643,6 +643,7 @@ string Displayer::stringify_frame(Frame frame)
         string right_frame_str = right_frame.stringify_as_param();
 
         string_buildee += "MATCHED FRAME:\n";
+        string_buildee += "    frame name: " + frame.frame_name + "\n";
         string_buildee += "    features: [" + stringify_set(frame.feature_set) + "]\n";
         string_buildee += "    left match: " + left_frame_str + "\n";
         string_buildee += "    right match: " + right_frame_str + "\n";

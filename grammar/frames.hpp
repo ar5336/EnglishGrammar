@@ -62,6 +62,8 @@ public:
 		PatternNecessity necessity,
 		vector<FeatureTag> feature_tags,
 		vector<string> feature_group_tags);
+
+	string stringify();
 };
 
 class FrameCoordinates
@@ -101,6 +103,8 @@ public:
 
 	Expression accumulated_expression;
 
+	bool derived_from_monoframe;
+
 	// default constructor
 	Frame();
 
@@ -114,6 +118,7 @@ public:
 	// word frame with multiple features
 	Frame(
 		string frame_name,
+		int definition_line,
 		vector<string> type_heirarchy,
 		vector<string> features);
 
@@ -174,6 +179,10 @@ public:
 	Frame with_expression(Expression expression);
 
 	void print_out(string title);
+
+	string stringify_pre_binarization();
 };
+
+bool operator<(const Frame& lhs, const Frame& rhs);
 
 #endif

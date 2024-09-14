@@ -152,6 +152,7 @@ Words:
             ActionTransitive: # simple continuous perfect 3PPresent (pastPart)
                 love loving loved loves
                 hate hating hated hates
+                remember remembering remembered remembers
             ReceptiveTransitive: # simple continuous perfect 3PPresent (pastPart)
                 take taking took takes taken
                 drink drinking diank drinks
@@ -415,6 +416,9 @@ Frames:
             # the dog
             # the dogs
 
+        Noun[plural] <IS object:! object_count:"inf" noun_class:Noun>
+            # dogs
+
         Determiner[Demonstrative,NUMBER] Noun[NUMBER] -NUMBER <IS object:! object_count:"1" noun_class:Noun>
             # this dog
             # those dogs
@@ -561,8 +565,8 @@ Frames:
         NounPhrase[singular] Verb[MainVerb,!simple,!Transitive] -singular -intransitive <ACTION action:! actor:NounPhrase->IS.object action_type:Verb>
             # a dog runs
             # !a dog run
-        Noun[plural] Verb[MainVerb,simple,!Transitive] -plural -intransitive <IS object:! object_count:"inf" noun_class:Noun | ACTION action:!! actor:! action_type:Verb>
-            # dogs die
+        #Noun[plural] Verb[MainVerb,simple,!Transitive] -plural -intransitive <IS object:! object_count:"inf" noun_class:Noun | ACTION action:!! actor:! action_type:Verb>
+        # dogs die
         Noun[singular] Verb[MainVerb,!simple,!continuous,!Transitive] -singular -intransitive <IS object:! object_count:"1" noun_class:Noun | ACTION action:!! actor:! action_type:Verb>
             # dog runs
 
@@ -600,8 +604,9 @@ Frames:
             # the dog <has ran>
             # the dogs <have ran>
     PrepPhrase "PP"
-        Preposition Noun
-        Preposition[Place] NounPhrase[NUMBER] -NUMBER <PREPOSITION action:! preposition:Preposition object:NounPhrase->IS.object>
+        Preposition Noun[MassNoun]
+            # under water
+        Preposition[Place] NounPhrase <PREPOSITION action:! preposition:Preposition object:NounPhrase->IS.object>
             # under the bridge
         Preposition[Time] VerbPhrase[continuous,actor_unfilled] 
             # after running in the field
@@ -617,10 +622,11 @@ Frames:
         #VerbPhrase[super_transitive,indirect_object_unfilled] Noun[MassNoun] <IS object:! object_count:"1" noun_class:Noun | VerbPhrase->ACTION_2.object=Noun->IS.object>
         # give a man grass
 
-        Noun[plural] SetDescriptorPhrase <IS object:! object_count:"inf" noun_class:Noun | SetDescriptorPhrase->CONTAINS.containee=!>
-            # horses are mammals
+        #Noun[plural] SetDescriptorPhrase <IS object:! object_count:"inf" noun_class:Noun | SetDescriptorPhrase->CONTAINS.containee=!>
+        # horses are mammals
         NounPhrase[plural] SetDescriptorPhrase <SetDescriptorPhrase->CONTAINS.containee=NounPhrase->IS.object>
             # the horses are mammals
+            # horses are mammals
         #PreIndicativePhrase[plural] Noun[plural] -plural <IS object:! object_count:"inf" noun_class:Noun | CONTAINS container:! containee:PreIndicativePhrase->IS.object>
         # horses are mammals
         #PreIndicativePhrase[plural] NounPhrase[plural] -plural <CONTAINS container:NounPhrase->IS.object containee:PreIndicativePhrase->IS.object>

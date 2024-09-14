@@ -27,6 +27,29 @@ PatternElement::PatternElement(
 		  feature_tags(feature_tags),
 		  feature_group_tags(feature_group_tags) { }
 
+string PatternElement::stringify()
+{
+    string buildee = "";
+    buildee += "match_string: " + match_string + "\n";
+    buildee += "pattern_true_match_type: " + pattern_true_match_type + "\n";
+    buildee += "necessity: " + to_string(static_cast<int>(necessity)) + "\n";
+    buildee += "feature_tags: [";
+    for (int i = 0; i < feature_tags.size(); i++)
+    {
+        auto feature_tag = feature_tags[i];
+        buildee += feature_tag.feature_name;
+        buildee += i == feature_tags.size() - 1 ? "," : "";
+    }
+    buildee += "]\n";
+    buildee += "feature group tags: [";
+    for (int i = 0; i < feature_group_tags.size(); i++)
+    {
+        buildee += feature_group_tags[i];
+        buildee += i == feature_group_tags.size() - 1 ? "," : "";
+    }
+    buildee += "]\n";
+    return buildee;
+}
 
 // ======== FRAMELINK ========
 
@@ -52,6 +75,24 @@ void FrameCoordinates::print_out()
 
 // ======== FRAME ========
 
+string Frame::stringify_pre_binarization()
+{
+    string buildee = "";
+
+    buildee += "name: " + frame_name + "\n";
+
+    buildee += "patterns: [";
+    for (int i = 0; i < pattern_elements.size(); i++)
+    {
+        auto pattern = pattern_elements[i];
+        buildee += pattern.match_string;
+        buildee += i == pattern_elements.size() -1 ? "," : "";
+    }
+    buildee += "]\n";
+    
+    return buildee;
+}
+
 string Frame::stringify_as_param()
 {
     if (is_word_frame())
@@ -72,6 +113,7 @@ Frame::Frame() {
 
     type = FrameType::Null;
     definition_line = 0;
+    derived_from_monoframe = false;
 }
 
 // word frame constructor
@@ -98,11 +140,13 @@ Frame::Frame(
     right_match = FrameCoordinates();
 
     type = FrameType::Word;
+    derived_from_monoframe = false;
 }
 
 // word frame with multiple features
 Frame::Frame(
     string frame_name,
+    int definition_line,
     vector<string> type_heirarchy,
     vector<string> features)
     : type_heirarchy(type_heirarchy),
@@ -122,6 +166,7 @@ Frame::Frame(
     }
 
     type = FrameType::Word;
+    derived_from_monoframe = false;
 }
 
 // featureless word frame constructor
@@ -140,6 +185,7 @@ Frame::Frame(
     }
 
     type = FrameType::Word;
+    derived_from_monoframe = false;
 }
 
 // syntax frame constructor
@@ -162,6 +208,7 @@ Frame::Frame(
     is_binarized = false;
 
     type = FrameType::Syntax;
+    derived_from_monoframe = false;
 }
 
 // cnf frame constructor
@@ -192,6 +239,7 @@ Frame::Frame(
     // right_match = &(Frame());
 
     type = FrameType::Binarized;
+    derived_from_monoframe = false;
 }
 
 //  matched frame constructor
@@ -224,6 +272,7 @@ Frame::Frame(
     // right_match = &(Frame());
     // left_match = left_match;
     type = FrameType::Matched;
+    derived_from_monoframe = false;
 }
 
 Frame Frame::with_links(
@@ -330,4 +379,12 @@ void Frame::print_out(string title)
 
     printf("\tright match coords:\n");
     right_match.print_out();
+}
+
+bool operator<(const Frame &lhs, const Frame &rhs)
+{
+    return
+        tie(lhs.type, lhs.frame_name, lhs.feature_set, lhs.is_binarized, lhs.accumulated_expression)
+            <
+        tie(rhs.type, rhs.frame_name, rhs.feature_set, rhs.is_binarized, rhs.accumulated_expression);
 }
