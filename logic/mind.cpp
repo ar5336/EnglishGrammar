@@ -19,6 +19,9 @@ void Mind::tell(Expression expression)
     // resolve anaphoric references (eventually move this to a WorldModel object along with event extraction)
     expression = resolve_anaphoras(expression);
 
+    if (DEBUGGING)
+        printf("done resolving anaphora for statemnt\n");
+
     // properties must be resolved after anaphoras. as anaphoras determine which objects are defined or not
     if (DEBUGGING)
     {
@@ -28,10 +31,14 @@ void Mind::tell(Expression expression)
     expression = resolve_properties(expression);
 
     auto events = extract_events(expression, true);
+    if (DEBUGGING)
+        printf("done extracting events for statemnt\n");
+    
     for (Event event : events)
     {
         timeline.actions.push_back(event);
     }
+    printf("flag\n");
 }
 
 enum ActionParamType
@@ -824,6 +831,9 @@ vector<Event> Mind::extract_events(Expression expression, bool real = true)
 
         identified_events.push_back(new_event);   // subject
     }
+
+    if (DEBUGGING)
+        printf("returning identified events");
 
     return identified_events;
 }

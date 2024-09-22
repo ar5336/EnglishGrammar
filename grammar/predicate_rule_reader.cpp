@@ -22,9 +22,7 @@ ParameterCreationType determine_type(string argument)
 }
 
 PredicateRuleReader::PredicateRuleReader(PredicateHandler *predicate_handler) : predicate_handler(predicate_handler)
-{
-    // the predicate handler will definitely need to know the predicate classes, and as such should be assigned the taks of reading off predicate.txt
-};
+{ };
 
 PredicateFormationRules::PredicateFormationRules()
 {
@@ -154,6 +152,11 @@ PatternElementPredicateAccessor::PatternElementPredicateAccessor(PredicateHandle
 
     predicate_name = predicate_and_parameter[0];
     parameter_name = predicate_and_parameter[1];
+}
+
+string PatternElementPredicateAccessor::stringify()
+{
+    return syntax_frame_name + "->" + predicate_name + "." + parameter_name;
 }
 
 PredicateModifier::PredicateModifier()

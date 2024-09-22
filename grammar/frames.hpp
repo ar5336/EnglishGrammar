@@ -28,6 +28,7 @@ enum FrameType
 	Syntax = 2,
 	Binarized = 3,
 	Matched = 4,
+	Derived = 5,
 	Reconstructed = 5, // not yet implemented
 };
 
@@ -103,7 +104,9 @@ public:
 
 	Expression accumulated_expression;
 
-	bool derived_from_monoframe;
+	// this param is synechodche for the matched basis frame, which has no coordinates (yet)
+	// if we want to access more than just the frame name, maybe the frame features
+	int original_frame_index;
 
 	// default constructor
 	Frame();
@@ -167,6 +170,8 @@ public:
     	FrameCoordinates to_right);
 
 	string stringify_as_param();
+
+	string stringify_pattern_elements();
 
 	string get_part_of_speech();
 

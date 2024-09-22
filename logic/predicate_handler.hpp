@@ -7,6 +7,7 @@
 #include <set>
 
 #include "predicate.hpp"
+
 #include "../string_operators.hpp"
 #include "../global.hpp"
 

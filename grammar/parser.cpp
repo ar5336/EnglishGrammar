@@ -1,40 +1,5 @@
 #include "parser.hpp"
 
-VariableNamer::VariableNamer() {
-    current_index = 0;
-    prestige = 0;
-    existing_names = set<string>();
-}
-
-string VariableNamer::generate_name()
-{
-    if (current_index < 25)
-    {
-        current_index++;
-    }
-    else{
-        prestige++;
-        current_index = 0;
-    }
-
-    char result = alphabet[current_index];
-
-    string result_string = string(1,  result); 
-
-    if (prestige >= 1){
-        return result_string + to_string(prestige);
-    } else {
-        return result_string;
-    }
-
-    // throw runtime_error("failed to generate name");
-}
-
-void VariableNamer::reset()
-{
-    current_index = 0;
-}
-
 bool Parser::does_frame_have_features(
     Frame candidate_frame,
     bool is_left,
@@ -71,7 +36,9 @@ bool Parser::does_frame_have_features(
         }
     }
     
-    // refactor this code. rename consumer to something ebtter like, source. source and product frame. bottom-up
+    // this is where the overlapping logic for featuregroups has to come in.
+
+    // refactor this code. rename consumer to something better like, source. source and product frame. bottom-up
     // make the feature group tags check with a set of some sort.
     // TODO2000
     vector<string> feature_group_tags = pattern_element.feature_group_tags;
@@ -115,32 +82,83 @@ bool Parser::does_frame_have_features(
     return true;
 }
 
+void Parser::load_frame(FrameCoordinates coords, Frame new_frame)
+{
+    vector<Frame> frames_to_add = vector<Frame>{new_frame};
+    // if (DEBUGGING)
+    // 	printf("checking if %s is in monoframes_by_right\n", word_frame.frame_name.c_str());
+
+    // for (string feature : new_frame.feature_set)
+    // {
+
+        
+    // frames_to_add.push_back(new_frame);
+        
+    // printf("new frame: %s\n", new_frame.stringify_pre_binarization().c_str());
+    if (grammar.monoframes_by_pattern_element.count(new_frame.frame_name) != 0)
+    {
+        printf("A MATCH HAS OCCURED\n");
+        // add all product monoframes to this word mapping
+        // for (auto pattern_and_monoframe : grammar.monoframes_by_right.at(new_frame.frame_name))
+        // {
+        //     Frame result_frame = pattern_and_monoframe.second;
+        //     PatternElement pattern_element = pattern_and_monoframe.first;
+
+        //     result_frame.type = FrameType::Derived;
+
+        //     // check if features match here.
+        //     // for now just check features, will support feature groups for verbs
+        //     // printf("result_frame frame: %s", result_frame.stringify_pre_binarization().c_str());
+        //     result_frame.accumulated_expression = PredicateRuleApplier::apply_formation_rules_on_expression(
+        //     	RuleApplierContext(predicate_handler, variable_namer),
+        //     	result_frame.predicate_formation_rules,
+        //     	result_frame.accumulated_expression,
+        //     	vector<Frame>{result_frame}
+        //     );
+
+        //     // if (DEBUGGING)
+        //         // printf("adding a frame %s\n", result_frame.pattern_elements[0].stringify().c_str());
+        //     frames_to_add.push_back(result_frame);
+        //     // add_to_word_map(result_frame, match_string);
+        // }
+    }
+    // }
+
+    for (auto frame_to_add : frames_to_add)
+    {
+        printf("PUTTING IN THE BACK SOMETHIGN TERRIBLE, namely frame: %s\n", frame_to_add.stringify_pre_binarization().c_str());
+        parse_grid[coords.row][coords.col].push_back(frame_to_add);
+    }
+
+
+}
+
 bool Parser::try_get_matched_frames(
-    Frame left_consumer_frame,
-    Frame right_consumer_frame,
+    Frame left_candidate_frame,
+    Frame right_candidate_frame,
     vector<Frame> &matched_frames)
 {
     // update to vector<Frame>
     string left_string;
-    if (left_consumer_frame.is_word_frame())
+    if (left_candidate_frame.is_word_frame())
     {
         // is a word
-        left_string = left_consumer_frame.get_part_of_speech();
+        left_string = left_candidate_frame.get_part_of_speech();
     }
     else
     {
-        left_string = left_consumer_frame.frame_name;
+        left_string = left_candidate_frame.frame_name;
     }
 
     string right_string;
-    if (right_consumer_frame.is_word_frame())
+    if (right_candidate_frame.is_word_frame())
     {
         // is a word
-        right_string = right_consumer_frame.get_part_of_speech();
+        right_string = right_candidate_frame.get_part_of_speech();
     }
     else
     {
-        right_string = right_consumer_frame.frame_name;
+        right_string = right_candidate_frame.frame_name;
     }
 
     string match_string = left_string + " " + right_string;
@@ -156,6 +174,11 @@ bool Parser::try_get_matched_frames(
         {
             Frame candidate_frame = frames_to_doublecheck[frame_index];
 
+            if (candidate_frame.type == FrameType::Derived)
+            {
+                printf("the derived frame is: %s\n", candidate_frame.stringify_pre_binarization().c_str());
+            }
+
             // perform checks on PoS type and features
 
             // feature tag check
@@ -165,13 +188,12 @@ bool Parser::try_get_matched_frames(
             vector<FeatureTag> left_feature_tags = left_pattern_element.feature_tags;
             vector<FeatureTag> right_feature_tags = right_pattern_element.feature_tags;
 
-
-            if (does_frame_have_features(left_consumer_frame, true, candidate_frame) && does_frame_have_features(right_consumer_frame, false, candidate_frame))
+            if (does_frame_have_features(left_candidate_frame, true, candidate_frame) && does_frame_have_features(right_candidate_frame, false, candidate_frame))
             {
-                Expression new_expression = apply_formation_rules_on_expression(
+                Expression new_expression = apply_formation_rules_on_frames(
                                             candidate_frame.predicate_formation_rules,
-                                            left_consumer_frame,
-                                            right_consumer_frame) ;
+                                            left_candidate_frame,
+                                            right_candidate_frame) ;
                 matched_frames.push_back(
                     candidate_frame.with_links(
                         left_frame_coordinates,
@@ -186,267 +208,16 @@ bool Parser::try_get_matched_frames(
 
 }
 
-bool try_get_word_frame(string accessor, Frame left_frame, Frame right_frame, Frame &word_frame)
+Expression Parser::apply_formation_rules_on_frames(PredicateFormationRules formation_rule, Frame left_frame, Frame right_frame)
 {
-    
-    string frame_name = accessor;
-
-    Frame identified_frame;
-    if (left_frame.feature_set.count(frame_name) != 0)
-    {
-        identified_frame = left_frame;
-    }
-    else if (right_frame.feature_set.count(frame_name) != 0)
-    {
-        identified_frame = right_frame;
-    }
-    else 
-    {
-        printf("\033[1;31mdisaster\033[0m: neither of the identified frames could be matched to when accessing word frame '%s'\n", frame_name.c_str());
-        return false;
-    }
-
-    if (identified_frame.is_word_frame()){
-        word_frame = identified_frame;
-        return true;
-    }
-
-    word_frame = Frame();
-    return false;
-}
-
-Expression Parser::apply_formation_rules_on_expression(PredicateFormationRules formation_rule, Frame left_frame, Frame right_frame)
-{
-    // make sure that both left and right frame are matched
-
-    // TODO - add check for "derived_from_monoframe" since we want to check for those
-    // if (! ((left_frame.is_matched() || left_frame.is_word_frame()) &&
-    //       ((right_frame.is_matched() || right_frame.is_word_frame()))))
-    //       throw runtime_error("both frames should be matched during predicate formation");
-
     // first, combine the two expressions
     Expression combined_expression = Expression::combine_expressions(left_frame.accumulated_expression, right_frame.accumulated_expression);
     // auto expression_predicates = combined_expressions.predicates;
 
-    string wildcard_value = variable_namer.generate_name();
+    auto context = RuleApplierContext(predicate_handler, variable_namer);
 
-    vector<Predicate> predicates_to_destroy;
-    // mark the designated predicate types for destruction, but don't destroy them yet
-    for (string predicate_type_to_destroy : formation_rule.predicate_types_to_destroy)
-    {
-        vector<Predicate> predicates_marked_for_destruction = Expression::extract_predicate_types(combined_expression, {predicate_type_to_destroy});
-        for (auto predicate : predicates_marked_for_destruction)
-        {
-            predicates_to_destroy.push_back(predicate);
-        }
-    }
-
-    // apply the modification rules before the formation rules. note - not hard decision may be changed
-    // vector<Predicate> modified_predicates;
-    for (int i = 0; i < formation_rule.predicate_modifiers.size(); i++)
-    {
-        PredicateModifier modifier = formation_rule.predicate_modifiers[i];
-
-        PatternElementPredicateAccessor assignee = modifier.left_equal;
-
-        ParameterCreationType operand_type = modifier.right_type;
-        string operand_variable = "retrieval_failed";
-
-        switch(operand_type)
-        {
-            case WILDCARD:
-                operand_variable = wildcard_value;
-                break;
-            case STRING:
-            case WORD_FRAME:
-                operand_variable = modifier.right_equal_string;
-                break;
-            case FRAME_PREDICATE_PROPERTY:
-                PatternElementPredicateAccessor operand = modifier.right_frame_predicate_property;
-                operand_variable = get_argument_accessor(left_frame, right_frame, operand);
-                break;
-        }
-
-
-        combined_expression = set_argument_accessor(combined_expression, left_frame, right_frame, assignee, operand_variable);
-    }
-
-    // TODO - create a PredicateFormationContext to keep track of variable names that have already been used
-    vector<Predicate> created_predicates;
-    for (int i = 0; i < formation_rule.predicate_creators.size(); i++)
-    {
-        PredicateCreator creator = formation_rule.predicate_creators[i];
-
-        auto predicate_template = creator.predicate;
-
-        int word_frame_index = 0;
-        auto word_frame_accessors = creator.word_frame_accessors;
-
-        int pattern_predicate_index = 0;
-        auto pattern_predicate_acessors = creator.pattern_predicate_accessors;
-
-        int parameter_string_index = 0;
-        auto parameter_strings = creator.param_strings;
-
-        vector<string> calculated_arguments = vector<string>();
-
-        for (auto creation_type : creator.parameter_creation_types)
-        {
-            if (creation_type == ParameterCreationType::STRING)
-            {
-                calculated_arguments.push_back(parameter_strings[parameter_string_index]);
-                parameter_string_index++;
-                continue;
-            }
-            else if (creation_type == ParameterCreationType::WORD_FRAME)
-            {
-                string word_frame_accessor = word_frame_accessors[word_frame_index];
-
-                if (find_in_string(word_frame_accessor, "#"))
-                {
-                    // check if Verb#2 is present or something like that
-                    auto left_and_right = split_character(word_frame_accessor, "#");
-                    if (left_and_right.size() != 2)
-                    {
-                        throw runtime_error("place number after '#' when indicating non-first PatternElement");
-                    }
-
-                    int right_int = stoi(left_and_right[1]);
-
-                    if (right_int >= 0){
-                        // TODO - support more indeces, but this will require De-Binarization.
-                        // And as such can be replaced by parenthetical nicknames when the time comes.
-                        calculated_arguments.push_back(right_frame.frame_name);
-                        word_frame_index++;
-                    } else
-                    {
-                        throw runtime_error("unsupported pattern element index '" + to_string(right_int) + "'");
-                    }
-
-                }
-                else 
-                {
-                    Frame word_frame = Frame();
-                    if (try_get_word_frame(word_frame_accessor, left_frame, right_frame, word_frame))
-                    {
-                        calculated_arguments.push_back(word_frame.frame_name);
-                    } else {
-                        calculated_arguments.push_back("retrieval_failed");
-                    }
-
-                    word_frame_index++;
-                }
-                
-                continue;
-            }
-            else if (creation_type == ParameterCreationType::FRAME_PREDICATE_PROPERTY)
-            {
-                PatternElementPredicateAccessor pattern_argument_accessor = pattern_predicate_acessors[pattern_predicate_index];
-
-                calculated_arguments.push_back(get_argument_accessor(left_frame, right_frame, pattern_argument_accessor));
-                pattern_predicate_index++;
-                continue;
-            }
-            else if (creation_type == ParameterCreationType::WILDCARD)
-            {
-                calculated_arguments.push_back(wildcard_value);
-                continue;
-            }
-        }
-
-        created_predicates.push_back(predicate_handler->construct_predicate(predicate_template.predicate, calculated_arguments));
-    }
-
-    // delete predicates slated for destruction
-    for (auto predicate_to_destroy : predicates_to_destroy)
-    {
-        combined_expression.extract_predicate(predicate_to_destroy);
-    }
-
-    // add the created predicates to the expression
-    return Expression::combine_expressions(combined_expression, Expression(created_predicates));
+    return PredicateRuleApplier::apply_formation_rules_on_expression(context, formation_rule, combined_expression, vector<Frame>{left_frame, right_frame});
 }
-
-bool Parser::try_get_predicate(Frame left_frame, Frame right_frame, PatternElementPredicateAccessor accessor, Predicate& result_predicate)
-{
-    string frame_name = accessor.syntax_frame_name;
-
-    Frame identified_frame;
-    if (equals(left_frame.frame_name, frame_name))
-    {
-        identified_frame = left_frame;
-    }
-    else if (equals(right_frame.frame_name, frame_name))
-    {
-        identified_frame = right_frame;
-    }
-    else 
-    {
-        // throw runtime_error("neither frame '"+left_frame.frame_name+"' nor frame '"+right_frame.frame_name+"' match accessor frame '"+frame_name+"'");
-        return false;
-    }
-
-    string predicate_name = accessor.predicate_name;
-
-    Predicate result_pred = Predicate();
-    if (Expression::try_get_predicate_by_name(identified_frame.accumulated_expression, predicate_name, result_pred))
-    {
-        result_predicate = result_pred;
-        return true;
-    }
-
-    if (DEBUGGING)
-        printf("failed to find match for accessor %s->%s.%s in expression : %s\n", 
-        accessor.syntax_frame_name.c_str(), accessor.predicate_name.c_str(), accessor.parameter_name.c_str(),
-        predicate_handler->stringify_expression(identified_frame.accumulated_expression).c_str());
-    return false;
-}
-
-string Parser::get_argument_accessor(Frame left_frame, Frame right_frame, PatternElementPredicateAccessor accessor)
-{
-    Predicate original_predicate = Predicate();
-    if (!try_get_predicate(left_frame, right_frame, accessor, original_predicate))
-    {
-        // throw runtime_error("failed to fetch predicate for accessor '"+accessor.syntax_frame_name+"->"+accessor.predicate_name+"'");
-        return "unknown";
-    }
-
-    string accessor_paramter_name = accessor.parameter_name;
-
-    if (DEBUGGING)
-    {
-        printf("\033[1;34maccessing\033[0m parameter '%s' in predicate '%s'\n", accessor_paramter_name.c_str(), original_predicate.predicate_template.predicate.c_str());
-    }
-    string argument = original_predicate.get_argument(accessor_paramter_name);
-
-    return argument;
-}
-
-Expression Parser::set_argument_accessor(
-    Expression combined_expression,
-    Frame left_frame,
-    Frame right_frame,
-    PatternElementPredicateAccessor argument_accessor,
-    string operand_variable)
-{
-    Predicate original_predicate;
-    if (!try_get_predicate(left_frame, right_frame, argument_accessor, original_predicate))
-    {
-        printf("\033[1;31mdisaster\033[0m: failed to access assignee of predicate modifier rule\n");
-        return combined_expression;
-    }
-
-    combined_expression.extract_predicate(original_predicate);
-
-    // create new expression with argument assigned
-    Predicate modified_predicate = original_predicate.with_modified_argument(argument_accessor.parameter_name, operand_variable);
-
-    vector<Predicate> new_predicates = combined_expression.predicates;
-    new_predicates.push_back(modified_predicate);
-
-    return Expression(new_predicates);
-}
-
 
 vector<Frame> Parser::find_matching_frames(vector<Frame> left_frames, vector<Frame> right_frames)
 {
@@ -454,30 +225,55 @@ vector<Frame> Parser::find_matching_frames(vector<Frame> left_frames, vector<Fra
     for (int left_index = 0; left_index < left_frames.size(); left_index++)
     {
         Frame left_frame = left_frames.at(left_index);
-        for (int right_index = 0; right_index < right_frames.size(); right_index++)
-        {
-            Frame right_frame = right_frames.at(right_index);
 
-            left_frame_coordinates.num = left_index;
-            right_frame_coordinates.num = right_index;
-
-            vector<Frame> matched_frames;
-            if (try_get_matched_frames(left_frame, right_frame, matched_frames))
+        // if (right_frames.size() == 0)
+        // {
+        //     // this is a derived monoframe
+        //     vector<Frame> matched_frames;
+            
+        //     if (try_get_matched_frames(left_frame, right_frame, matched_frames))
+        //     {
+        //         for (int match_index = 0; match_index < matched_frames.size(); match_index++)
+        //         {
+        //             matching_frames.push_back(matched_frames.at(match_index));
+        //         }
+        //     }
+        // }
+        // else 
+        // {
+            for (int right_index = 0; right_index < right_frames.size(); right_index++)
             {
-                for (int match_index = 0; match_index < matched_frames.size(); match_index++)
+                Frame right_frame = right_frames.at(right_index);
+
+                left_frame_coordinates.num = left_index;
+                right_frame_coordinates.num = right_index;
+
+                vector<Frame> matched_frames;
+                if (try_get_matched_frames(left_frame, right_frame, matched_frames))
                 {
-                    matching_frames.push_back(matched_frames.at(match_index));
+                    for (int match_index = 0; match_index < matched_frames.size(); match_index++)
+                    {
+                        matching_frames.push_back(matched_frames.at(match_index));
+                    }
                 }
             }
-        }
+        // }
     }
 
     return matching_frames;
 }
 
-Parser::Parser(Grammar grammar) : grammar(grammar)
+// void Parser::get_matching_words(vector<Frame> word_frames, Frame consumer_frame, vector<Frame> &matching_frames)
+// {
+//     for (auto word_frame : word_frames)
+//     {
+//         find_matching_frames()
+//     }
+//     return vector<Frame>();
+// }
+
+Parser::Parser(Grammar grammar, VariableNamer* variable_namer) : grammar(grammar), variable_namer(variable_namer)
 {
-    variable_namer = VariableNamer();
 }
 
 Parser::Parser() {}
@@ -503,11 +299,14 @@ void Parser::update_parse_grid(string new_utterance)
         vector<vector<Frame>> new_row;
         for (int col = 0; col < token_count - row; col++)
         {
-            vector<Frame> new_cell;
+            vector<Frame> new_cell = vector<Frame>(30);
             new_row.push_back(new_cell);
         }
         new_grid.push_back(new_row);
     }
+
+    if (DEBUGGING)
+        printf("parse grid initialized\n");
 
     parse_grid = new_grid;
 
@@ -515,20 +314,88 @@ void Parser::update_parse_grid(string new_utterance)
     for (int token_index = 0; token_index < token_count; token_index++)
     {
         string token = split_tokens[token_index];
-        bool does_match = !(grammar.word_map.find(token) == grammar.word_map.end());
+        bool does_match = grammar.word_map.count(token) != 0;
 
         if (does_match)
         {
             vector<Frame> word_frames_identified = grammar.word_map.at(token);
+            // printf("does match: %s\n", word_frames_identified[0].stringify_as_param().c_str());
             for (Frame word_frame : word_frames_identified)
             {
-                // if (word_frame.type != FrameType::Word)
-                //     throw runtime_error("syntax frame on word frame row not allowed");
+                printf("accessing %s\n", word_frame.stringify_as_param().c_str());
 
-                parse_grid[0][token_index].push_back(word_frame);
+                // if(word_frame.type == FrameType::Derived)
+                //     printf("predicate: %s\n", predicate_handler->stringify_expression(word_frame.accumulated_expression).c_str());
+
+                printf("wordframe type %d\n", word_frame.type);
+                printf("flag\n");
+                if (word_frame.type != FrameType::Word && word_frame.type != FrameType::Derived)
+                    throw runtime_error("syntax frame on word frame row not allowed");
+                
+                // if (word_frame.type == FrameType::Derived)
+                // {
+                //     auto derived_frame = word_frame;
+                //     // do the matching
+                //     // PatternElement pat_element = word_frame.pattern_elements[0];
+                //     // string match_type = word_frame.pattern_elements[0].match_string;
+
+                //     // for (Frame other_word_frame : word_frames_identified)
+                //     // {
+                //         // printf("other word frame: %s, matchType; %s\n", other_word_frame.frame_name.c_str(), match_type.c_str());
+                //         // if (other_word_frame.feature_set.count(match_type) != 0)
+                //         // {
+                //     printf("matched on derived type %s\n", derived_frame.stringify_pre_binarization().c_str());
+
+                //     auto word_frames_of_matching_type = find_matching_frames(word_frames_identified, vector<Frame>());
+
+                //     for (auto matching_word_frame : word_frames_of_matching_type)
+                //     {
+
+                //         // if (grammar.monoframe_to_base_frame_map.count(derived_frame) != 0)
+                //         // {
+                //         // word_frame = grammar.monoframe_to_base_frame_map[derived_frame];
+                //         printf("THE WORD FRAME IS: %s\n", word_frame.stringify_pre_binarization().c_str());
+
+                //         // printf("the ")
+                        
+                //         derived_frame.accumulated_expression = PredicateRuleApplier::apply_formation_rules_on_expression(
+                //             RuleApplierContext(predicate_handler, variable_namer),
+                //             derived_frame.predicate_formation_rules,
+                //             derived_frame.accumulated_expression,
+                //             vector<Frame> {matching_word_frame}
+                //         );
+
+                //         printf("EXPRESSION: %s\n===================================================\n", predicate_handler->stringify_expression(derived_frame.accumulated_expression).c_str());
+
+                //         derived_frame.type = FrameType::Derived;
+
+                //         // find the index of the frame mentioned
+                //         // derived_frame.left_match = FrameCoordinates(0, token_index, )
+
+                //         // um, hoOW do i get access to the base word frame? 
+                //         // add a new property to 
+                //         printf("adding derived word frame\n");
+                //         // parse_grid[0][token_index].push_back(derived_frame);
+
+                //             // }
+                //         // }
+
+                //         // }
+                //         load_frame(FrameCoordinates(0, token_index, -1), derived_frame);
+                //         // parse_grid[0][token_index].push_back(derived_frame);
+                //     }
+                // }
+                // else {
+                load_frame(FrameCoordinates(0, token_index, -1), word_frame);
+                    // parse_grid[0][token_index].push_back(word_frame);
+                // }
+
             }
         }
     }
+
+    if (DEBUGGING)
+        printf("bottom row of parse grid populated");
 
     if (token_count < 2)
         return;
@@ -568,24 +435,13 @@ void Parser::update_parse_grid(string new_utterance)
                 for (Frame matching_frame : matching_frames)
                 {
                     // printf("adding matched frame named %s. to row %d, col %d\n", matched_frame.frame_name.c_str(), row, col);
-                    parse_grid[row][col].push_back(matching_frame);
+                    load_frame(FrameCoordinates(row, col, -1), matching_frame);
+                    // parse_grid[row][col].push_back(matching_frame);
                 }
             }
         }
     }
 }
-
-// bool Parser::get_top_frame(Frame& interp_frame)
-// {
-//     auto parse_grid_top_cell = parse_grid[parse_grid.size()-1][0];
-//     if (parse_grid_top_cell.size() == 0)
-//     {
-//         return false;
-//     }
-//     interp_frame = parse_grid_top_cell[0];
-
-//     return true;
-// }
 
 bool Parser::try_get_top_frame(Frame& interp_frame)
 {

@@ -1,12 +1,25 @@
 #include "grammar.hpp"
 
-Grammar::Grammar() : monoframes_by_left(map<string, vector<pair<PatternElement, Frame>>>()) {
-	// pattern_element_map = map<string, vector<Frame>>();
+
+class Parser;
+
+// Grammar::Grammar() : monoframes_by_left(map<string, vector<pair<PatternElement, Frame>>>()) {
+// 	// pattern_element_map = map<string, vector<Frame>>();
+// }
+
+Grammar::Grammar(PredicateHandler *predicate_handler, VariableNamer *variable_namer)
+	: predicate_handler(predicate_handler), variable_namer(variable_namer)
+{
+}
+
+Grammar::Grammar()
+{
+	// throw runtime_error("attempting to initialize grammar without variable namer and predicate handler");
 }
 
 void Grammar::add_to_word_map(Frame frame, string word_string)
 {
-    if (!(word_map.find(word_string) == word_map.end()))
+    if ((word_map.count(word_string) != 0))
     {
         word_map.at(word_string).push_back(frame);
     }
@@ -36,7 +49,8 @@ void Grammar::internalize_frame(Frame frame)
 {
 	cnf_frames.push_back(frame);
 
-	// add elements to cnf_map
+	// add elements to cnf_ma
+
 	string match_pattern = frame.pattern_elements[0].match_string + " " + frame.pattern_elements[1].match_string;
 
 	insert_frame_into_map(cnf_map, frame, match_pattern);
@@ -54,26 +68,35 @@ void Grammar::accomodate_monoframe(Frame frame)
 	PatternElement element = frame.pattern_elements[0];
 	string right = element.match_string;
 
+	frame.original_frame_index = accomodated_monoframes.size();
+
+	auto expression = Expression();
+	auto context = RuleApplierContext(predicate_handler, variable_namer);
+	frame.accumulated_expression = PredicateRuleApplier::apply_formation_rules_on_expression(context, frame.predicate_formation_rules, expression, vector<Frame>{frame});
+
+	accomodated_monoframes.push_back(frame);
+
+
 	// Frame NP -> [N]
 	// left:NP
 	// right:N
 
-	if (monoframes_by_left.count(left))
+	if (monoframes_by_frame_name.count(left))
 	{
-		monoframes_by_left.at(left).push_back(make_pair(element, frame));
+		monoframes_by_frame_name.at(left).push_back(make_pair(element, frame));
 	}
 	else
 	{
-		monoframes_by_left.emplace(left, vector<pair<PatternElement, Frame>>{make_pair(element, frame)});
+		monoframes_by_frame_name.emplace(left, vector<pair<PatternElement, Frame>>{make_pair(element, frame)});
 	}
 
-	if (monoframes_by_right.count(right))
+	if (monoframes_by_pattern_element.count(right))
 	{
-		monoframes_by_right.at(right).push_back(make_pair(element, frame));
+		monoframes_by_pattern_element.at(right).push_back(make_pair(element, frame));
 	}
 	else
 	{
-		monoframes_by_right.emplace(right, vector<pair<PatternElement, Frame>>{make_pair(element, frame)});
+		monoframes_by_pattern_element.emplace(right, vector<pair<PatternElement, Frame>>{make_pair(element, frame)});
 	}
 
 	// TODO - retroactively accomodate all past unaccomodated monoframes
@@ -220,32 +243,47 @@ void Grammar::binarize_grammar()
 			// accomodate monoframes that directly depend on the left pattern\
 			// probably should be disabled when the left patter is generated
 
-			if (monoframes_by_left.count(pattern_left.match_string) != 0)
-			{
-				// insert duplicate frames
-				vector<pair<PatternElement, Frame>> elements_to_substitute = monoframes_by_left.at(pattern_left.match_string);
+			// for now only the left frame is accomodated
+			// if (monoframes_by_left.count(pattern_left.match_string) != 0)
+			// {
+			// 	// insert duplicate frames
+			// 	vector<pair<PatternElement, Frame>> elements_to_substitute = monoframes_by_left.at(pattern_left.match_string);
 
-				for (pair<PatternElement, Frame> element_frame : elements_to_substitute)
-				{
-					auto element = element_frame.first;
-					auto frame = element_frame.second;
+			// 	for (pair<PatternElement, Frame> element_frame : elements_to_substitute)
+			// 	{
+			// 		auto element = element_frame.first;
+			// 		auto frame = element_frame.second;
 					
-					if (DEBUGGING)
-						printf("replaceing %s with %s\n for frame #%d\n", pattern_left.stringify().c_str(), element.stringify().c_str(), new_cnf_frame.definition_line);
 	
-					Frame accomodated_new_cnf_frame = Frame(
-						frame_name,
-						frame_origin_index,
-						frame_nickname,
-						element,
-						pattern_right,
-						feature_set,
-						feature_groups,
-						formation_rules);
+			// 		Frame accomodated_new_cnf_frame = Frame(
+			// 			frame_name,
+			// 			frame_origin_index,
+			// 			frame_nickname,
+			// 			element,
+			// 			pattern_right,
+			// 			feature_set,
+			// 			feature_groups,
+			// 			formation_rules);
 					
-					internalize_frame(accomodated_new_cnf_frame);
-				}
-			}
+			// 		// replace all instances of right with left.
+			// 		// replace all NP with N
+
+					
+					
+
+			// 		// somehow store a map of which derived frames match to which word frames. then use it in the parser.
+			// 		// to accomodate just
+			// 		accomodated_new_cnf_frame.type = FrameType::Derived;
+			// 		printf("derived frame: %s\n", accomodated_new_cnf_frame.stringify_pre_binarization().c_str());
+			// 		printf("base frame: %s\n", new_cnf_frame.stringify_pre_binarization().c_str());
+			// 		// monoframe_to_base_frame_map.emplace(accomodated_new_cnf_frame, new_cnf_frame);
+					
+			// 		// if (DEBUGGING)
+			// 			// printf("replaceing %s with %s\n for frame #%d\n", pattern_left.stringify().c_str(), element.stringify().c_str(), new_cnf_frame.definition_line);
+
+			// 		internalize_frame(accomodated_new_cnf_frame);
+			// 	}
+			// }
 			
 
 			// insert_frame_into_map(pattern_element_map, pattern_left, pattern_left.match_string)
@@ -262,40 +300,53 @@ void Grammar::binarize_grammar()
 
 	// now, utilize the parent_to_child_map to create alternate "word frame" constructions
 	// 	e.g. "dogs" -> N, +NP
-	for (auto word_mapping : word_map)
-	{
-		string match_string = word_mapping.first;
-		vector<Frame> word_frames = word_mapping.second;
+	// for (auto word_mapping : word_map)
+	// {
+	// 	string match_string = word_mapping.first;
+	// 	vector<Frame> word_frames = word_mapping.second;
 
-		for (auto word_frame : word_frames)
-		{
-			// if (DEBUGGING)
-			// 	printf("checking if %s is in monoframes_by_right\n", word_frame.frame_name.c_str());
+	// 	for (auto word_frame : word_frames)
+	// 	{
+	// 		// if (DEBUGGING)
+	// 		// 	printf("checking if %s is in monoframes_by_right\n", word_frame.frame_name.c_str());
 
-			for (string feature : word_frame.feature_set)
-			{
+	// 		for (string feature : word_frame.feature_set)
+	// 		{
 			
-				if (monoframes_by_right.count(feature) != 0)
-				{
-					// add all product monoframes to this word mapping
-					for (auto pattern_and_monoframe : monoframes_by_right.at(feature))
-					{
-						if (DEBUGGING)
-							printf("adding a a non-word frame like you wouldn't believe\n");
+	// 			if (monoframes_by_right.count(feature) != 0)
+	// 			{
+	// 				// add all product monoframes to this word mapping
+	// 				for (auto pattern_and_monoframe : monoframes_by_right.at(feature))
+	// 				{
 
-						Frame result = pattern_and_monoframe.second;
-						result.derived_from_monoframe = true;
-						add_to_word_map(result, match_string);
-					}
-				}
-			}
-		}
-	}
+	// 					Frame result = pattern_and_monoframe.second;
+	// 					PatternElement pattern_element = pattern_and_monoframe.first;
+
+	// 					result.type = FrameType::Derived;
+
+	// 					// check if features match here.
+	// 					// for now just check features, will support feature groups for verbs
+	// 					// printf("result frame: %s", result.stringify_pre_binarization().c_str());
+	// 					// PredicateRuleApplier::apply_formation_rules_on_expression(
+	// 					// 	RuleApplierContext(predicate_handler, variable_namer),
+	// 					// 	result.predicate_formation_rules,
+	// 					// 	result.accumulated_expression,
+	// 					// 	vector<Frame>{result}
+	// 					// );
+
+	// 					// if (DEBUGGING)
+	// 						// printf("adding a frame %s\n", result.pattern_elements[0].stringify().c_str());
+	// 					add_to_word_map(result, match_string);
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	if (DEBUGGING)
 	{
-		printf("monoframes_by_left: %s\n", stringify_monoframe_map(monoframes_by_left).c_str());
-		printf("monoframes_by_rihgt: %s\n", stringify_monoframe_map(monoframes_by_right).c_str());
+		printf("monoframes_by_left: %s\n", stringify_monoframe_map(monoframes_by_frame_name).c_str());
+		printf("monoframes_by_rihgt: %s\n", stringify_monoframe_map(monoframes_by_pattern_element).c_str());
 
 		printf("done binarizing grammar\n");
 	}

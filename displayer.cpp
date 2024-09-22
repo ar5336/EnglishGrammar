@@ -417,11 +417,33 @@ void Displayer::display()
                 Point ticker_cell_text = bottom_left;
                 for (int frame_index = 0; frame_index < frames_in_cell.size(); frame_index++)
                 {
-                    Frame frame = frames_in_cell.at(frame_index);
+                    Frame frame = frames_in_cell[frame_index];
                     // display word
 
                     bool is_word = row == 0;
-                    string cell_text = (is_word) ? (frame.derived_from_monoframe ? frame.frame_nickname : frame.get_part_of_speech()) : frame.frame_nickname;
+                    printf("help\n");
+                    string cell_text;
+                    if (is_word)
+                    {
+                        printf("the frame at row %d, col %d, ind %d: %s\n", row, col, frame_index, frame.stringify_pre_binarization().c_str());
+                        if (frame.type == FrameType::Derived)
+                        {
+                            // printf("the mooment of horror\n");
+                            cell_text = frame.frame_name;
+                            // printf("is upon us\n");
+                        }
+                        else
+                        {
+                            printf("why is it here\n");
+                            cell_text = frame.get_part_of_speech();
+                        }
+                    }
+                    else
+                    {
+                        cell_text = frame.frame_nickname;
+                    }
+                    // string cell_text = (is_word) ? (frame.type == FrameType::Derived ? frame.frame_nickname : frame.get_part_of_speech()) : frame.frame_nickname;
+                    printf("no help\n");
 
                     display_text(
                         ticker_cell_text,
@@ -650,6 +672,19 @@ string Displayer::stringify_frame(Frame frame)
         string_buildee += "    accumulated expression:\n" + predicate_handler->stringify_expression(frame.accumulated_expression) + "\n";
 
         return string_buildee;
+    }
+    if (frame.type == FrameType::Derived)
+    {
+        printf("displaying derived frame\n");
+        string_buildee += "DERIVED FRAME:\n";
+        string_buildee += "    frame name: " + frame.frame_name + "\n";
+        string_buildee += "    features: [" + stringify_set(frame.feature_set) + "]\n";
+        // string_buildee += "    left match: " + left_frame_str + "\n";
+        // string_buildee += "    right match: " + right_frame_str + "\n";
+
+        string_buildee += "    accumulated expression:\n" + predicate_handler->stringify_expression(frame.accumulated_expression) + "\n";
+        return string_buildee;
+
     }
     return string_buildee;
 }

@@ -6,26 +6,11 @@
 
 #include "frames.hpp"
 #include "grammar.hpp"
+#include "predicate_rule_applier.hpp"
+#include "variable_namer.hpp"
 #include "../string_operators.hpp"
 
 using namespace std;
-
-class VariableNamer
-{
-private: 
-    string alphabet = "abcdefghijklmnopqrstuvwxyz";
-    int current_index;
-    int prestige;
-
-public:
-    set<string> existing_names;
-
-    VariableNamer();
-
-    string generate_name();
-
-    void reset();
-};
 
 class Parser
 {
@@ -35,7 +20,6 @@ private:
     FrameCoordinates left_frame_coordinates;
     FrameCoordinates right_frame_coordinates;
 
-    VariableNamer variable_namer;
 
     bool does_frame_have_features(
         Frame candidate_frame,
@@ -49,7 +33,7 @@ private:
 
     vector<Frame> find_matching_frames(vector<Frame> left_frames, vector<Frame> right_frames);
 
-    Expression apply_formation_rules_on_expression(PredicateFormationRules formation_rule, Frame left_frame, Frame right_frame);
+    Expression apply_formation_rules_on_frames(PredicateFormationRules formation_rule, Frame left_frame, Frame right_frame);
 
     Expression apply_predicate_creation_rule(PredicateCreator creator);
 
@@ -62,16 +46,19 @@ private:
         PatternElementPredicateAccessor argument_accessor,
         string operand_variable);
 
-    bool try_get_predicate(Frame left_frame, Frame right_frame, PatternElementPredicateAccessor accessor, Predicate& result_predicate);
+    // bool try_get_predicate(Frame left_frame, Frame right_frame, PatternElementPredicateAccessor accessor, Predicate& result_predicate);
+    void load_frame(FrameCoordinates coords, Frame new_frame);
 
 public:
+    // needs to be accessed for preprocessing in grammar construction
+    Expression apply_formation_rules_on_expression(PredicateFormationRules formation_rule, Frame left_frame, Frame right_frame);
+
     // rows of columns of lists of frames
     //  r3  X
     //  r2  X  X
     //  r1  X  X  X
     //  r0  X  X  X  X
     //      c0 c1 c2 c3
-
     //       VP
     //   NP
     //  A   N    V
@@ -79,10 +66,11 @@ public:
     vector<vector<vector<Frame>>> parse_grid;
 
     PredicateHandler* predicate_handler;
+    VariableNamer* variable_namer;
 
     string current_utterance;
 
-    Parser(Grammar grammar);
+    Parser(Grammar grammar, VariableNamer* variable_namer);
 
     Parser();
     

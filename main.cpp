@@ -27,19 +27,21 @@ string current_utterance = "";
 
 Parser parser;
 
-Grammar grammar = Grammar();
 
 Displayer displayer = Displayer("reader");
 
 PredicateTemplateHandler predicate_template_handler = PredicateTemplateHandler();
 
 PredicateHandler predicate_handler = PredicateHandler(&predicate_template_handler);
+VariableNamer variable_namer = VariableNamer();
 
+Grammar grammar = Grammar(&predicate_handler, &variable_namer);
 ConceptualSchema conceptual_schema = ConceptualSchema();
 
 Mind mind = Mind(&predicate_handler, &conceptual_schema);
 
 bool is_shift_pressed = false;
+
 
 vector<string> known_facts = {
 	"dogs are mammals",
@@ -58,7 +60,9 @@ vector<string> known_facts = {
 
 void parse_utterance(string utterance)
 {
+	printf("flag2.9\n");
 	parser.update_parse_grid(utterance);
+	printf("flag3\n");
 	
 	Frame interp_frame;
 	if (!parser.try_get_top_frame(interp_frame))
@@ -77,7 +81,7 @@ void parse_utterance(string utterance)
 	}
 
 	mind.tell(expression);
-
+	printf("flag2\n");
 }
 
 void parse_known_facts()
@@ -235,7 +239,7 @@ int main(int argc, char **argv)
 	// translate the read frames into cnf frames
 	grammar.binarize_grammar();
 
-	parser = Parser(grammar);
+	parser = Parser(grammar, &variable_namer);
 
 	predicate_handler.predicate_template_handler = &predicate_template_handler;
 

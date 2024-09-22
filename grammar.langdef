@@ -180,7 +180,7 @@ Words:
                 hate hating hated hates
                 love loving loved loves
             Intransitive: # simple continuous perfect 3PPresent (pastPart)
-                holler hollering hollered
+                holler hollering hollered hollers
                 die dying died dies
                 think thinking thought thinks thunk
                 play playing played plays
@@ -191,7 +191,6 @@ Words:
                 swim swimming swam swims swum
                 shake shaking shook shakes shaken
                 breathe breathing breathed breathes
-                fly flying flew flies flew
                 bark barking barked barks
                 stir stirring stirred stirs
                 stand standing stood stands
@@ -416,7 +415,7 @@ Frames:
             # the dog
             # the dogs
 
-        Noun[plural] <IS object:! object_count:"inf" noun_class:Noun>
+        Noun[plural,MainNoun] -plural <IS object:! object_count:"inf" noun_class:Noun>
             # dogs
 
         Determiner[Demonstrative,NUMBER] Noun[NUMBER] -NUMBER <IS object:! object_count:"1" noun_class:Noun>
@@ -632,7 +631,7 @@ Frames:
         #PreIndicativePhrase[plural] NounPhrase[plural] -plural <CONTAINS container:NounPhrase->IS.object containee:PreIndicativePhrase->IS.object>
         # puppies are young dogs
 
-        Noun[MainNoun,plural] VerbPhrase[plural,transitive] <IS object:! object_count:"inf" noun_class:Noun | VerbPhrase->ACTION_2.actor=!>
+        NounPhrase[plural] VerbPhrase[plural,transitive] <IS object:! object_count:"inf" noun_class:Noun | VerbPhrase->ACTION_2.actor=!>
             # dogs eat grass
 
         #PreIndicativePhrase Adjective[Comparable,absolute] <HAS_PROPERTY object:PreIndicativePhrase->IS.object property:Adjective>
@@ -741,7 +740,7 @@ Frames:
         # TODO2000- fix the faliure here - reconsider feature grousp
         # are we
 
-        Verb[LinkingVerb,3rdPerson,plural] Noun[MainNoun,plural] -plural -categorical <IS object:! object_count:"inf" noun_class:Noun>
+        Verb[LinkingVerb,3rdPerson,plural] NounPhrase[plural] -plural -categorical <IS object:! object_count:"inf" noun_class:Noun>
             # are dogs
 
         Verb[LinkingVerb,IndicativeVerb,3rdPerson,plural] NounPhrase[plural] -plural -categorical
@@ -809,7 +808,8 @@ Frames:
         Verb[LinkingVerb,NUMBER] Adjective -unfilled_property_object <HAS_PROPERTY object:"unknown" property:Adjective>
             # are ugly
     SetDescriptorPhrase "SDP"
-        Verb[LinkingVerb,plural] Noun[MainNoun,plural] <IS object:! object_count:"inf" noun_class:Noun | CONTAINS container:! containee:"unknown">
+        #Verb[LinkingVerb,plural] Noun[MainNoun,plural] <IS object:! object_count:"inf" noun_class:Noun | CONTAINS container:! containee:"unknown">
+        Verb[LinkingVerb,plural] NounPhrase[plural] <IS object:! object_count:"inf" noun_class:Noun | CONTAINS container:! containee:"unknown">
             # are dogs
         # Verb[LinkingVerb,plural] Nounphrase[plural] <CONTAINS container:NounPhrase->IS.object containee:"unknown">
         # are young dogs

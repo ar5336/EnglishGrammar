@@ -34,6 +34,8 @@ ParserTester::ParserTester()
 {
     test_utterance = "";
 
+    test_variable_namer = VariableNamer();
+
     test_parser = Parser();
 
     test_grammar = Grammar();
@@ -56,7 +58,10 @@ void ParserTester::setup_parse()
 
     test_predicate_template_handler = PredicateTemplateHandler();
 
-    test_grammar = Grammar();
+    test_variable_namer = VariableNamer();
+
+    test_predicate_handler = PredicateHandler(&test_predicate_template_handler);
+    test_grammar = Grammar(&test_predicate_handler, &test_variable_namer);
 
 	// signal(11, handler);   // install our handler
 
@@ -66,11 +71,10 @@ void ParserTester::setup_parse()
  	// translate the read frames into cnf frames
 	test_grammar.binarize_grammar();
 
-    test_predicate_handler = PredicateHandler(&test_predicate_template_handler);
 
     test_conceptual_schema = ConceptualSchema();
 
-	test_parser = Parser(test_grammar);
+	test_parser = Parser(test_grammar, &test_variable_namer);
 	test_predicate_handler.predicate_template_handler = &test_predicate_template_handler;
 	test_parser.predicate_handler = &test_predicate_handler;
 

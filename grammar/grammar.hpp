@@ -6,14 +6,15 @@
 #include <map>
 
 #include "frames.hpp"
+#include "variable_namer.hpp"
+#include "predicate_rule_applier.hpp"
+// #include "parser.hpp"
 
 class Grammar
 {
 private:
-    // why is this property causing segfaults whenever it is added
-    // map<string, vector<Frame>> pattern_element_map;
-    map<string, vector<pair<PatternElement, Frame>>> monoframes_by_left;
-    map<string, vector<pair<PatternElement, Frame>>> monoframes_by_right;
+    PredicateHandler* predicate_handler;
+    VariableNamer* variable_namer;
     
     string stringify_monoframe_map(map<string, vector<pair<PatternElement, Frame>>> map);
 
@@ -21,7 +22,15 @@ private:
 
     void internalize_frame(Frame frame);
 public:
+    // map<Frame, Frame> monoframe_to_base_frame_map;
+    vector<Frame> accomodated_monoframes;
     map<string, vector<Frame>> word_map;
+
+    // for dogs, NP : N[plural]]
+    // left: NP -> (N[plural]:NP[plural])
+    map<string, vector<pair<PatternElement, Frame>>> monoframes_by_frame_name;
+    // right:N -> (N[plural]:NP[plural])
+    map<string, vector<pair<PatternElement, Frame>>> monoframes_by_pattern_element;
 
     // map<string, string> base_pos_to_type_map; // not used yet - good for advanced parsing efficiency
     // map<string, set<Frame>> pos_map;		  // not used yet - good for advanced parsing efficiency
@@ -41,6 +50,8 @@ public:
 
     // map<int, vector<Frame>> pattern_length_map; // unused yet
     // map<set<string>, vector<Frame>> pattern_map; // not used at the moment - good for efficiency when parsing
+
+    Grammar(PredicateHandler* predicate_handler, VariableNamer *variable_namer);
 
     Grammar();
 

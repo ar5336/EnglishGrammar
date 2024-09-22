@@ -18,6 +18,8 @@ private:
 
     string test_utterance;
 
+    VariableNamer test_variable_namer;
+
     Grammar test_grammar;
 
     // Displayer displayer = Displayer("reader");

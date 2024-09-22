@@ -24,6 +24,7 @@ public:
     string parameter_name;
 
     // string access_parameter(pair<Frame, Frame> frames, string frame_name);
+    string stringify();
 };
 
 // class WordFrameAccessor

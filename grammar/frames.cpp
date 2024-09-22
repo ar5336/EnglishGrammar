@@ -80,16 +80,39 @@ string Frame::stringify_pre_binarization()
     string buildee = "";
 
     buildee += "name: " + frame_name + "\n";
+    buildee += "nickname: " + frame_nickname + "\n";
 
+    buildee += "type: ";
+    switch (type)
+    {
+        case FrameType::Binarized:
+            buildee += "binarized\n";
+            break;
+        case FrameType::Matched:
+            buildee += "matched\n";
+            break;
+        case FrameType::Word:
+            buildee += "word\n";
+            break;
+        case FrameType::Syntax:
+            buildee += "syntax\n";
+            break;
+        case FrameType::Derived:
+            buildee += "derived\n";
+            break;
+        default:
+            buildee += "null\n";
+            break;
+    }
     buildee += "patterns: [";
     for (int i = 0; i < pattern_elements.size(); i++)
     {
         auto pattern = pattern_elements[i];
         buildee += pattern.match_string;
-        buildee += i == pattern_elements.size() -1 ? "," : "";
+        buildee += i < pattern_elements.size() -1 ? "," : "";
     }
     buildee += "]\n";
-    
+    buildee += "id: " + to_string(definition_line) + "\n";
     return buildee;
 }
 
@@ -103,6 +126,11 @@ string Frame::stringify_as_param()
     {
         return frame_name;
     }
+    if (type == FrameType::Derived)
+    {
+        return frame_name + " " + to_string(pattern_elements.size());
+    }
+    
     return "BLARG";
 }
 
@@ -113,7 +141,6 @@ Frame::Frame() {
 
     type = FrameType::Null;
     definition_line = 0;
-    derived_from_monoframe = false;
 }
 
 // word frame constructor
@@ -140,7 +167,6 @@ Frame::Frame(
     right_match = FrameCoordinates();
 
     type = FrameType::Word;
-    derived_from_monoframe = false;
 }
 
 // word frame with multiple features
@@ -166,7 +192,6 @@ Frame::Frame(
     }
 
     type = FrameType::Word;
-    derived_from_monoframe = false;
 }
 
 // featureless word frame constructor
@@ -185,7 +210,6 @@ Frame::Frame(
     }
 
     type = FrameType::Word;
-    derived_from_monoframe = false;
 }
 
 // syntax frame constructor
@@ -208,7 +232,6 @@ Frame::Frame(
     is_binarized = false;
 
     type = FrameType::Syntax;
-    derived_from_monoframe = false;
 }
 
 // cnf frame constructor
@@ -239,7 +262,6 @@ Frame::Frame(
     // right_match = &(Frame());
 
     type = FrameType::Binarized;
-    derived_from_monoframe = false;
 }
 
 //  matched frame constructor
@@ -272,7 +294,6 @@ Frame::Frame(
     // right_match = &(Frame());
     // left_match = left_match;
     type = FrameType::Matched;
-    derived_from_monoframe = false;
 }
 
 Frame Frame::with_links(
