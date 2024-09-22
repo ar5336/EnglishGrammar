@@ -84,6 +84,9 @@ vector<Predicate> Expression::get_predicates()
 
 void Expression::make_connections()
 {
+    if (DEBUGGING)
+        printf("making connections\n");
+        
     for (int i = 0; i < predicates.size(); i++)
     {
         string predicate_type = predicates[i].predicate_template.predicate;
@@ -247,10 +250,16 @@ Expression Expression::combine_expressions(Expression expression1, Expression ex
     vector<Predicate> total_predicates = expression1.predicates;
     vector<Predicate> predicates_2 = expression2.predicates;
 
+    if (DEBUGGING)
+        printf("expression combination initialized\n");
+    
     for (Predicate pred : predicates_2)
     {
         total_predicates.push_back(pred);
     }
+
+    if (DEBUGGING)
+        printf("expression combination ended\n");
 
     return Expression(total_predicates);
 }

@@ -38,7 +38,6 @@ void Mind::tell(Expression expression)
     {
         timeline.actions.push_back(event);
     }
-    printf("flag\n");
 }
 
 enum ActionParamType

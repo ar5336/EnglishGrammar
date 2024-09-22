@@ -5,6 +5,14 @@ FeatureTag::FeatureTag(string name, FeatureTagType type)
 
 // ======== PATTERN ELEMENT ========
 
+PatternElement::PatternElement(const PatternElement& other)
+        : match_string(other.match_string),
+            pattern_true_match_type(other.pattern_true_match_type),
+            necessity(other.necessity),
+            feature_tags(other.feature_tags), // std::vector handles its own memory
+            feature_group_tags(other.feature_group_tags) {} // std::vector handles its own memory
+
+
 // default constructor
 PatternElement::PatternElement()
 		: necessity(PatternNecessity::Required) { }
@@ -108,7 +116,14 @@ string Frame::stringify_pre_binarization()
     for (int i = 0; i < pattern_elements.size(); i++)
     {
         auto pattern = pattern_elements[i];
-        buildee += pattern.match_string;
+        buildee += pattern.match_string + "[";
+        for (int j = 0; j < pattern.feature_tags.size(); j++)
+        {
+            auto feature_tag = pattern.feature_tags[j];
+            buildee += feature_tag.feature_name;
+            buildee += i < pattern.feature_tags.size() -1 ? "," : "";
+        }
+        buildee += "]";
         buildee += i < pattern_elements.size() -1 ? "," : "";
     }
     buildee += "]\n";
@@ -191,6 +206,8 @@ Frame::Frame(
         feature_set.insert(type);
     }
 
+    pattern_elements = vector<PatternElement>();
+
     type = FrameType::Word;
 }
 
@@ -208,6 +225,8 @@ Frame::Frame(
     {
         feature_set.insert(type);
     }
+
+    pattern_elements = vector<PatternElement>();
 
     type = FrameType::Word;
 }
@@ -296,6 +315,34 @@ Frame::Frame(
     type = FrameType::Matched;
 }
 
+// matched monoframe constructor
+Frame::Frame(
+    string frame_name,
+    int definition_line,
+    string frame_nickname,
+    PatternElement mono_element,
+    set<string> feature_set,
+    set<string> feature_groups,
+    FrameCoordinates left_match,
+    Expression accumulated_expression)
+    : frame_name(frame_name),
+        definition_line(definition_line),
+        frame_nickname(frame_nickname),
+        feature_set(feature_set),
+        feature_groups(feature_groups),
+        left_match(left_match),
+        accumulated_expression(accumulated_expression)
+{
+    is_binarized = true;
+    pattern_elements.push_back(mono_element);
+    // features not implemented for syntax frames yet
+
+    // left_match = NULL;
+    // right_match = &(Frame());
+    // left_match = left_match;
+    type = FrameType::Matched;
+}
+
 Frame Frame::with_links(
     FrameCoordinates to_left,
     FrameCoordinates to_right)
@@ -319,6 +366,29 @@ Frame Frame::with_links(
 Frame Frame::with_expression(
     Expression new_expression)
 {
+    if (DEBUGGING)
+        printf("adding expression to frame %s\n", this->stringify_pre_binarization().c_str());
+
+    if (pattern_elements.size() == 1)
+    {
+        auto new_frame = Frame(
+            frame_name,
+            definition_line,
+            frame_nickname,
+            pattern_elements[0],
+            feature_set,
+            feature_groups,
+            left_match,
+            new_expression
+        );
+
+        return new_frame;
+    }
+
+    if (pattern_elements.size() != 2)
+    {
+        throw runtime_error("bad pattern elements");
+    }
     auto new_frame = Frame(
         frame_name,
         definition_line,
@@ -352,7 +422,7 @@ bool Frame::is_word_frame()
 
 bool Frame::is_matched()
 {
-    return !left_match.is_empty() && !right_match.is_empty();
+    return !left_match.is_empty();// && !right_match.is_empty();
 }
 
 

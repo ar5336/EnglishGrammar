@@ -60,9 +60,7 @@ vector<string> known_facts = {
 
 void parse_utterance(string utterance)
 {
-	printf("flag2.9\n");
 	parser.update_parse_grid(utterance);
-	printf("flag3\n");
 	
 	Frame interp_frame;
 	if (!parser.try_get_top_frame(interp_frame))
@@ -81,7 +79,6 @@ void parse_utterance(string utterance)
 	}
 
 	mind.tell(expression);
-	printf("flag2\n");
 }
 
 void parse_known_facts()

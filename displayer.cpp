@@ -407,7 +407,7 @@ void Displayer::display()
                     rectangle(image, top_left, bottom_right, GRID_BOXES);
                 }
 
-                vector<Frame> frames_in_cell = parser->parse_grid.at(row).at(col);
+                vector<Frame> frames_in_cell = parser->parse_grid[row][col];
 
                 float cell_font_scale = .5f;
 
@@ -421,20 +421,22 @@ void Displayer::display()
                     // display word
 
                     bool is_word = row == 0;
-                    printf("help\n");
+                    if (frame.frame_name.size() == 0)
+                    {
+                        if (DEBUGGING)
+                            printf("disaster: skipping bad frame at row %d, col %d, ind %d: %s\n", row, col, frame_index, frame.stringify_pre_binarization().c_str());
+                        continue;
+                    }
                     string cell_text;
                     if (is_word)
                     {
-                        printf("the frame at row %d, col %d, ind %d: %s\n", row, col, frame_index, frame.stringify_pre_binarization().c_str());
-                        if (frame.type == FrameType::Derived)
+                        // printf("the frame at row %d, col %d, ind %d: %s\n", row, col, frame_index, frame.stringify_pre_binarization().c_str());
+                        if (frame.pattern_elements.size() != 0)
                         {
-                            // printf("the mooment of horror\n");
                             cell_text = frame.frame_name;
-                            // printf("is upon us\n");
                         }
                         else
                         {
-                            printf("why is it here\n");
                             cell_text = frame.get_part_of_speech();
                         }
                     }
@@ -443,7 +445,6 @@ void Displayer::display()
                         cell_text = frame.frame_nickname;
                     }
                     // string cell_text = (is_word) ? (frame.type == FrameType::Derived ? frame.frame_nickname : frame.get_part_of_speech()) : frame.frame_nickname;
-                    printf("no help\n");
 
                     display_text(
                         ticker_cell_text,
@@ -658,8 +659,10 @@ string Displayer::stringify_frame(Frame frame)
         Frame left_frame = Frame();
         Frame right_frame = Frame();
 
-        if (!parser->try_get_frame_at(frame.left_match, left_frame) || !parser->try_get_frame_at(frame.right_match, right_frame))
-            throw runtime_error("frame coordinate deref error during string stringification");
+        if (!parser->try_get_frame_at(frame.left_match, left_frame))
+            throw runtime_error("can not access left coordinate of frame");
+
+        bool has_right = parser->try_get_frame_at(frame.right_match, right_frame);
 
         string left_frame_str = left_frame.stringify_as_param();
         string right_frame_str = right_frame.stringify_as_param();
@@ -668,7 +671,7 @@ string Displayer::stringify_frame(Frame frame)
         string_buildee += "    frame name: " + frame.frame_name + "\n";
         string_buildee += "    features: [" + stringify_set(frame.feature_set) + "]\n";
         string_buildee += "    left match: " + left_frame_str + "\n";
-        string_buildee += "    right match: " + right_frame_str + "\n";
+        string_buildee += has_right ? "    right match: " + right_frame_str + "\n" : "";
         string_buildee += "    accumulated expression:\n" + predicate_handler->stringify_expression(frame.accumulated_expression) + "\n";
 
         return string_buildee;

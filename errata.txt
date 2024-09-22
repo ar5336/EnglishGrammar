@@ -652,3 +652,24 @@ cnf_map label : "Verb Noun"
 
 but since this map is stored as a map<string vec<Frame>>
 we could jsut make it a nested map<string, map<string, vec<Frame>>
+
+===
+
+
+im approaching thiss from entirely the wrong direction. I need to create honset to god binary frames
+
+but will need defined behavior for missing predicates.
+
+ok so whenever in the parser, you match a derived frame against a 
+
+
+
+===
+all the matching has to be done parse-side.
+
+diff behavior for word frames and syntax frames, but only a bit.
+
+acutally no. yeah
+whenever you load a frame, check if it matches any monoframe pattern elements
+
+turns out i was initializing a shit load of blank frames when building the parse grid shrug

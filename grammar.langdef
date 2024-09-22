@@ -658,9 +658,9 @@ Frames:
             # a dog can run
 
         #PreIndicativePhrase Noun[Pronoun,possessive]
-        # that cat is mine
+            # that cat is mine
 
-        VerbPhrase PrepPhrase <PrepPhrase->PREPOSITION.action=VerbPhrase->ACTION.action>
+        VerbPhrase[intransitive] PrepPhrase <PrepPhrase->PREPOSITION.action=VerbPhrase->ACTION.action>
         Sentence PrepPhrase
         Noun[Pronoun,plural] VerbPhrase
 

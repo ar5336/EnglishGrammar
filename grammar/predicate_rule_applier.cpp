@@ -144,12 +144,18 @@ Expression PredicateRuleApplier::apply_formation_rules_on_expression(
         {
             if (creation_type == ParameterCreationType::STRING)
             {
+                if (DEBUGGING)
+                    printf("creation type string\n");
+    
                 calculated_arguments.push_back(parameter_strings[parameter_string_index]);
                 parameter_string_index++;
                 continue;
             }
             else if (creation_type == ParameterCreationType::WORD_FRAME)
             {
+
+                if (DEBUGGING)
+                    printf("processing word frame accessors: [%s]\n", stringify_vector(word_frame_accessors).c_str());
                 string word_frame_accessor = word_frame_accessors[word_frame_index];
 
                 if (find_in_string(word_frame_accessor, "#"))
@@ -167,7 +173,7 @@ Expression PredicateRuleApplier::apply_formation_rules_on_expression(
                         throw runtime_error("unsupported pattern element index '" + to_string(right_int) + "'");
                     else
                     {
-                        calculated_arguments.push_back(frames[right_int].frame_name);
+                        calculated_arguments.push_back(frames[right_int-1].frame_name);
                         word_frame_index++;
                     }
                 }
@@ -176,18 +182,25 @@ Expression PredicateRuleApplier::apply_formation_rules_on_expression(
                     Frame word_frame = Frame();
                     if (try_get_word_frame(context, word_frame_accessor, frames, word_frame))
                     {
+                        if (DEBUGGING)
+                            printf("found word frame: %s\n", word_frame.stringify_pre_binarization().c_str());
                         calculated_arguments.push_back(word_frame.frame_name);
                     } else {
                         calculated_arguments.push_back("retrieval_failed");
                     }
-
                     word_frame_index++;
                 }
                 
+                if (DEBUGGING)
+                    printf("done retrieving word frame\n");
+
                 continue;
             }
             else if (creation_type == ParameterCreationType::FRAME_PREDICATE_PROPERTY)
             {
+                if (DEBUGGING)
+                    printf("creation type property\n");
+
                 PatternElementPredicateAccessor pattern_argument_accessor = pattern_predicate_acessors[pattern_predicate_index];
 
                 calculated_arguments.push_back(get_argument_accessor(context, frames, pattern_argument_accessor));
@@ -196,22 +209,41 @@ Expression PredicateRuleApplier::apply_formation_rules_on_expression(
             }
             else if (creation_type == ParameterCreationType::WILDCARD)
             {
+                if (DEBUGGING)
+                    printf("creation type wildcard\n");
+                
                 calculated_arguments.push_back(wildcard_value);
                 continue;
             }
+
+            if (DEBUGGING)
+                printf("no creation type?\n");
         }
+
+        if (DEBUGGING)
+            printf("adding created predicates\n");
 
         created_predicates.push_back(context.predicate_handler->construct_predicate(predicate_template.predicate, calculated_arguments));
     }
 
+    if (DEBUGGING)
+        printf("deleting slated predicates\n");
+        
     // delete predicates slated for destruction
     for (auto predicate_to_destroy : predicates_to_destroy)
     {
         expression.extract_predicate(predicate_to_destroy);
     }
 
+    if (DEBUGGING)
+        printf("collating new expression\n");
+
     // add the created predicates to the expression
-    return Expression::combine_expressions(expression, Expression(created_predicates));
+    auto collated_expression = Expression::combine_expressions(expression, Expression(created_predicates));
+
+    if (DEBUGGING)
+        printf("collated expression: %s\n", context.predicate_handler->stringify_expression(collated_expression).c_str());
+    return collated_expression;
 }
 
 Expression PredicateRuleApplier::set_argument_accessor(
@@ -241,82 +273,55 @@ Expression PredicateRuleApplier::set_argument_accessor(
 
 bool PredicateRuleApplier::try_get_word_frame(RuleApplierContext context, string accessor, vector<Frame> frames, Frame &word_frame)
 {
-    printf("==============trying to access: %s\n", accessor.c_str());
 
-    string framestr;
-    for (auto frame : frames)
-    {
-        framestr += "[name:\"" + frame.frame_name +"\",";
-        framestr += "[";
-        for (string feature : frame.feature_set)
-        {
-            framestr += feature + ",";
-        }
-        framestr += "]";
-        framestr += frame.stringify_pre_binarization();
-    }
-    framestr += "]";
-    printf("frames: %s\n", framestr.c_str());
+    // string framestr;
+    // for (auto frame : frames)
+    // {
+    //     framestr += "[name:\"" + frame.frame_name +"\",";
+    //     framestr += "[";
+    //     for (string feature : frame.feature_set)
+    //     {
+    //         framestr += feature + ",";
+    //     }
+    //     framestr += "]";
+    //     framestr += frame.stringify_pre_binarization();
+    // }
+    // framestr += "]";
+    // printf("frames: %s\n", framestr.c_str());
     string frame_name = accessor;
 
-    Frame identified_frame;
+    Frame identified_frame = Frame();
     bool has_identified_frame = false;
     for (auto frame : frames)
     {
+        if (DEBUGGING)
+            printf("checking '%s' == '%s'\n", stringify_set(frame.feature_set).c_str(), frame_name.c_str());
+    
         if (frame.feature_set.count(frame_name) != 0)
         {
             if (has_identified_frame)
             {
                 throw runtime_error("unresolvable ambiguity when accessing word frame '" + accessor + "'");
             }
-
+            if (DEBUGGING)
+                printf("found match in '%s',\n", frame_name.c_str());
+    
             identified_frame = frame;
             has_identified_frame = true;
         }
     }
 
-    if (identified_frame.is_word_frame())
+    // printf("done cycling frames\n");
+
+    if (has_identified_frame && identified_frame.is_word_frame())
     {
         word_frame = identified_frame;
+        // printf("returning word frame %s\n", word_frame.stringify_pre_binarization().c_str());
         return true;
     }
 
-
-    printf("failed to get frame for accessor: %s\n", accessor.c_str());
-    word_frame = Frame();
-    return false;
-}
-
-static bool try_get_word_frame(
-    RuleApplierContext context,
-    string accessor,
-    Frame left_frame,
-    Frame right_frame,
-    Frame &word_frame)
-{
-    
-    string frame_name = accessor;
-
-    Frame identified_frame;
-    if (left_frame.feature_set.count(frame_name) != 0)
-    {
-        identified_frame = left_frame;
-    }
-    else if (right_frame.feature_set.count(frame_name) != 0)
-    {
-        identified_frame = right_frame;
-    }
-    else 
-    {
-        printf("\033[1;31mdisaster\033[0m: neither of the identified frames could be matched to when accessing word frame '%s'\n", frame_name.c_str());
-        return false;
-    }
-
-    if (identified_frame.is_word_frame()){
-        word_frame = identified_frame;
-        return true;
-    }
-
+    if (DEBUGGING)
+        printf("\033[1;31mfailed\033[0m to get frame for accessor: %s\n", accessor.c_str());
     word_frame = Frame();
     return false;
 }

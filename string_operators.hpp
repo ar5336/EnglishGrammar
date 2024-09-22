@@ -34,6 +34,8 @@ bool is_string_all_chars(string test, char subject);
 
 string stringify_set(set<string> set);
 
+string stringify_vector(vector<string> vector);
+
 string stringify_stoi_map(map<string,int> map);
 
 string stringify_bool_vec(vector<bool> vec);

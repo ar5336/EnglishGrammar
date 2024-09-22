@@ -113,6 +113,20 @@ string stringify_set(set<string> set)
     return feature_string;
 }
 
+string stringify_vector(vector<string> vector)
+{
+    string feature_string = "";
+    for (string string : vector)
+    {
+        feature_string += string;
+        feature_string += ", ";
+    }
+
+    if (vector.size() > 0)
+        return feature_string.substr(0, feature_string.length()-2);
+    return feature_string;
+}
+
 string stringify_stoi_map(map<string, int> map)
 {
 	string result = "";

@@ -50,6 +50,8 @@ public:
 	vector<FeatureTag> feature_tags;
 	vector<string> feature_group_tags;
 
+	PatternElement(const PatternElement& other);
+
 	// default constructor
 	PatternElement();
 
@@ -106,7 +108,7 @@ public:
 
 	// this param is synechodche for the matched basis frame, which has no coordinates (yet)
 	// if we want to access more than just the frame name, maybe the frame features
-	int original_frame_index;
+	// int original_frame_index;
 
 	// default constructor
 	Frame();
@@ -163,6 +165,17 @@ public:
 		set<string> feature_groups,
 		FrameCoordinates left_match,
 		FrameCoordinates right_match,
+		Expression accumulated_expression);
+
+	// matched monoframe constructor
+	Frame(
+		string frame_name,
+		int definition_line,
+		string frame_nickname,
+		PatternElement mono_element,
+		set<string> feature_set,
+		set<string> feature_groups,
+		FrameCoordinates left_match,
 		Expression accumulated_expression);
 	
 	Frame with_links(

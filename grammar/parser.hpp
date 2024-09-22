@@ -49,6 +49,8 @@ private:
     // bool try_get_predicate(Frame left_frame, Frame right_frame, PatternElementPredicateAccessor accessor, Predicate& result_predicate);
     void load_frame(FrameCoordinates coords, Frame new_frame);
 
+    vector<Frame> get_frames_at(FrameCoordinates coords);
+
 public:
     // needs to be accessed for preprocessing in grammar construction
     Expression apply_formation_rules_on_expression(PredicateFormationRules formation_rule, Frame left_frame, Frame right_frame);
