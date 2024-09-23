@@ -206,6 +206,14 @@ Words:
                 live living lived lives
                 sleep sleeping slept sleeps
                 fall falling fell falls
+        StateVerb: # simple continuous perfect 3PPresent (pastPart)
+            hate hating hated hates
+            believe believing believed believes
+            love loving loved loves
+            fear fearing feared fears
+            know knowing knowed knows
+            deny denying denied denies
+            remember remembering remembered remembers
         AuxiliaryVerb:
             be -continuous -singular -plural
             has -perfect -singular -3rdPerson
@@ -417,6 +425,8 @@ Frames:
 
         Noun[plural,MainNoun] -plural <IS object:! object_count:"inf" noun_class:Noun>
             # dogs
+        Noun[singular,MainNoun] -singular <IS object:! object_count:"1" noun_class:Noun>
+            # dog
 
         Determiner[Demonstrative,NUMBER] Noun[NUMBER] -NUMBER <IS object:! object_count:"1" noun_class:Noun>
             # this dog
@@ -446,12 +456,15 @@ Frames:
             # !several water
 
         Determiner AdjectivePhrase[NUMBER] -NUMBER -determined
+            # the ugly dog
+            # the fat man
         NounPhrase[determined] PrepPhrase
 
-        Adjective[PossessiveAdjective] Noun -determined
+        Adjective[PossessiveAdjective] NounPhrase[!determined] -determined
             # my cat
             # his cat
             # her cat
+            # !my the cat
         # Adjective[MainAdjective] Noun[NUMBER] -NUMBER
 
         Noun[plural] PrepPhrase <IS object:! object_count:"inf" noun_class:Noun>
@@ -460,8 +473,12 @@ Frames:
             # cats and dogs
             # cat and fish
 
-        #Noun[Pronoun,possessive] NounPhrase[!determined,NUMBER] -determined -NUMBER
+        Noun[Pronoun,active,1stPerson] -active
+            # i
+
+        #Adjective[possessive] NounPhrase[!determined,NUMBER] -determined -NUMBER 
         # my cat 
+        # my ugly cat
         # !my the cat
 
         Determiner[determined] Noun[MassNoun] -determined -singular
@@ -482,6 +499,9 @@ Frames:
             # land mammal
 
         Noun[Name] NounPhrase[singular,determined] -singular <NAME object:NounPhrase->IS.object name:Noun>
+
+        AdjectivePhrase
+            # ugly dogs
 
     AnaphoricNounPhrase "AnNP"
         NounPhrase[NUMBER] AnaphoricActionDescriptivePhrase[transitive] -NUMBER -actor -anaphoric <AnaphoricActionDescriptivePhrase->ACTION_2.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
@@ -555,7 +575,6 @@ Frames:
         Verb[Transitive] Noun[MassNoun] -plural -transitive -actor_unfilled <ACTION_2 action:! actor:"unknown" action_type:Verb object:!! | IS object:!! object_count:"inf" noun_class:Noun>
             # we <eat grass>
             # they <eat grass>
-            # them <eating grass>
 
         # intransitive
         NounPhrase[plural] Verb[MainVerb,!3PPresent,!Transitive] -plural -intransitive <ACTION action:! actor:NounPhrase->IS.object action_type:Verb>
@@ -610,7 +629,8 @@ Frames:
         Preposition[Time] VerbPhrase[continuous,actor_unfilled] 
             # after running in the field
     Sentence "S"
-        AdjectivePhrase[plural] Verb[MainVerb,simple] <ACTION action:! actor:AdjectivePhrase->IS.object action_type:Verb>
+        NounPhrase[plural] Verb[MainVerb,simple] <ACTION action:! actor:AdjectivePhrase->IS.object action_type:Verb>
+            # dogs bark
             # quick dogs run
             # hit dogs holler
 
@@ -658,7 +678,7 @@ Frames:
             # a dog can run
 
         #PreIndicativePhrase Noun[Pronoun,possessive]
-            # that cat is mine
+        # that cat is mine
 
         VerbPhrase[intransitive] PrepPhrase <PrepPhrase->PREPOSITION.action=VerbPhrase->ACTION.action>
         Sentence PrepPhrase
@@ -732,16 +752,17 @@ Frames:
             # might we
         Verb[ModalVerb,MODE] NounPhrase[NUMBER] -NUMBER -MODE -habilitive
             # can a fish
-        Verb[ModalVerb,MODE] Noun[plural] -plural -MODE -habilitive
             # can dogs
+        #Verb[ModalVerb,MODE] Noun[plural] -plural -MODE -habilitive
+        # can dogs
 
         Verb[LinkingVerb,PERSON,NUMBER] Noun[Pronoun,PERSON,NUMBER,!possessive,!subjective] -PERSON -NUMBER -existential
             # am i
         # TODO2000- fix the faliure here - reconsider feature grousp
         # are we
 
-        Verb[LinkingVerb,3rdPerson,plural] NounPhrase[plural] -plural -categorical <IS object:! object_count:"inf" noun_class:Noun>
-            # are dogs
+        #Verb[LinkingVerb,3rdPerson,plural] NounPhrase[plural] -plural -categorical <IS object:! object_count:"inf" noun_class:Noun>
+        # are dogs
 
         Verb[LinkingVerb,IndicativeVerb,3rdPerson,plural] NounPhrase[plural] -plural -categorical
             # are young dogs
@@ -818,9 +839,12 @@ Frames:
         # TODO - add ability to access Frame features + feature group evaluation results.
             # you can
             # he can
+    AdjectiveSet "As"
+        Adjective <HAS_PROPERTY object:"unknown" property:Adjective>
+        Adjective Adjective
     AdjectivePhrase "AP"
-        Adjective Noun[NUMBER] -NUMBER <IS object:! object_count:"1" noun_class:Noun | HAS_PROPERTY object:! property:Adjective>
+        AdjectiveSet NounPhrase[NUMBER] -NUMBER <IS object:! object_count:"1" noun_class:Noun | HAS_PROPERTY object:! property:Adjective>
             # ugly dog
             # ugly dogs
-        Adjective AdjectivePhrase[NUMBER] -NUMBER <HAS_PROPERTY object:AdjectivePhrase->IS.object property:Adjective>
-            # fat ugly dogs
+        # Adjective AdjectivePhrase[NUMBER] -NUMBER <HAS_PROPERTY object:AdjectivePhrase->IS.object property:Adjective>
+        # fat ugly dogs
