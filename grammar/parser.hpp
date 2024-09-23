@@ -46,7 +46,6 @@ private:
         PatternElementPredicateAccessor argument_accessor,
         string operand_variable);
 
-    // bool try_get_predicate(Frame left_frame, Frame right_frame, PatternElementPredicateAccessor accessor, Predicate& result_predicate);
     void load_frame(FrameCoordinates coords, Frame new_frame);
 
     vector<Frame> get_frames_at(FrameCoordinates coords);

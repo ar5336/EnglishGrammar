@@ -25,11 +25,11 @@ private:
         vector<Frame> frames,
         PatternElementPredicateAccessor accessor);
 
-    static bool try_get_predicate(
+    static bool try_get_predicates(
         RuleApplierContext context,
         vector<Frame> frames,
         PatternElementPredicateAccessor accessor,
-        Predicate& result_predicate);
+        vector<Predicate> &result_predicates);
     
     static Expression set_argument_accessor(
         RuleApplierContext context,

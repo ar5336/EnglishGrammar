@@ -86,7 +86,7 @@ void Expression::make_connections()
 {
     if (DEBUGGING)
         printf("making connections\n");
-        
+
     for (int i = 0; i < predicates.size(); i++)
     {
         string predicate_type = predicates[i].predicate_template.predicate;
@@ -264,17 +264,17 @@ Expression Expression::combine_expressions(Expression expression1, Expression ex
     return Expression(total_predicates);
 }
 
-bool Expression::try_get_predicate_by_name(Expression expression, string predicate_name, Predicate &result_predicate)
+bool Expression::try_get_predicates_by_name(Expression expression, string predicate_name, vector<Predicate> &result_predicates)
 {
+    result_predicates = vector<Predicate>();
     for (Predicate pred : expression.predicates)
     {
         if (equals(pred.predicate_template.predicate, predicate_name))
         {
-            result_predicate = pred;
-            return true;
+            result_predicates.push_back(pred);
         }
     }
-    return false;
+    return result_predicates.size() > 0;
 }
 
 Predicate Expression::extract_predicate(Predicate original)

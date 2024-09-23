@@ -65,6 +65,7 @@ Words:
             adult adults
             child children
             gift gifts
+            street streets
         MassNoun:
             grease
             pollen
@@ -425,8 +426,12 @@ Frames:
 
         Noun[plural,MainNoun] -plural <IS object:! object_count:"inf" noun_class:Noun>
             # dogs
-        Noun[singular,MainNoun] -singular <IS object:! object_count:"1" noun_class:Noun>
+        Noun[singular,MainNoun] -singular -undetermined <IS object:! object_count:"1" noun_class:Noun>
             # dog
+
+        Noun[Pronoun,singular,active] -singular -pronoun -active <IS object:! object_count:"1" noun_class:"person">
+            # i
+            # he
 
         Determiner[Demonstrative,NUMBER] Noun[NUMBER] -NUMBER <IS object:! object_count:"1" noun_class:Noun>
             # this dog
@@ -460,28 +465,22 @@ Frames:
             # the fat man
         NounPhrase[determined] PrepPhrase
 
-        Adjective[PossessiveAdjective] NounPhrase[!determined] -determined
+        Adjective[PossessiveAdjective] NounPhrase[!pronoun,!determined] -determined
             # my cat
             # his cat
             # her cat
-            # !my the cat
-        # Adjective[MainAdjective] Noun[NUMBER] -NUMBER
 
         Noun[plural] PrepPhrase <IS object:! object_count:"inf" noun_class:Noun>
-
+            # dogs in the city
         Noun Conjunction Noun -plural
             # cats and dogs
             # cat and fish
 
-        Noun[Pronoun,active,1stPerson] -active
-            # i
-
-        #Adjective[possessive] NounPhrase[!determined,NUMBER] -determined -NUMBER 
+        #Noun[Pronoun,possessive] NounPhrase[!determined,NUMBER] -determined -NUMBER
         # my cat 
-        # my ugly cat
         # !my the cat
 
-        Determiner[determined] Noun[MassNoun] -determined -singular
+        Determiner[determined] Noun[MassNoun] -determined -singular <IS object:! object_count:"mass" noun_class:Noun>
             # the water
             # that grease
 
@@ -500,9 +499,6 @@ Frames:
 
         Noun[Name] NounPhrase[singular,determined] -singular <NAME object:NounPhrase->IS.object name:Noun>
 
-        AdjectivePhrase
-            # ugly dogs
-
     AnaphoricNounPhrase "AnNP"
         NounPhrase[NUMBER] AnaphoricActionDescriptivePhrase[transitive] -NUMBER -actor -anaphoric <AnaphoricActionDescriptivePhrase->ACTION_2.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the dog that bit the person
@@ -517,6 +513,8 @@ Frames:
 
         AnaphoricNounPhrase[actor_unfilled] ActorDescriptivePhrase -actor <AnaphoricNounPhrase->ACTION_2.actor=ActorDescriptivePhrase->IS.object>
             # the man that got bit by the dogs
+        NounPhrase[NUMBER,determined] AnaphoricIndirectObjectObjectDescriptivePhrase <AnaphoricIndirectObjectObjectDescriptivePhrase->ACTION_3.actor=NounPhrase->IS.object>
+            # the dog that gave the fish some food
     AnaphoricInquisitivePhrase "anIP"
         Verb[LinkingVerb,NUMBER] AnaphoricNounPhrase
             # <is the dog that bit the horse> ugly
@@ -528,16 +526,16 @@ Frames:
     AnaphoricActorDescriptivePhrase "AnArDP"
         Noun[RelativePronoun] VerbPhrase[NUMBER,transitive,object_unfilled] -NUBER 
             # the man <that the dog bit>
+    AnaphoricIndirectObjectObjectDescriptivePhrase "AnIOODP"
+        AnaphoricIndirectObjectDescriptivePhrase NounPhrase[determined] <AnaphoricIndirectObjectDescriptivePhrase->ACTION_3.indirect_object=NounPhrase->IS.object>
+            # the man <that gave the cat | some meat>
     AnaphoriObjectDescriptivePhrase "AnODP"
         Noun[RelativePronoun] SubjectDescriber -transitive -actor_unfilled -descriptive
             # the person <that got bit> is ugly
             # the person <that was bitten> is ugly
     AnaphoricIndirectObjectDescriptivePhrase "AnIODP"
-        Noun[RelativePronoun] IndirectObjectDescriber -super_transitive -object_unfilled
+        Noun[RelativePronoun] VerbPhrase[super_transitive,indirect_object_unfilled] -super_transitive -object_unfilled
             # the man <that | gave the cat> some meat
-    IndirectObjectDescriber "IOD"
-        Verb[SuperTransitive] NounPhrase -super_transitive <ACTION_3 action:! actor:"unknown" action_type:Verb object:Nounphrase->IS.object indirect_object:"unknown">
-            # the man that <gave | the cat> some meat
     ActorDescriptivePhrase "AtrDP"
         Preposition[Preposition,Actor] NounPhrase
             # the man that got bit <by the dog>
@@ -575,6 +573,7 @@ Frames:
         Verb[Transitive] Noun[MassNoun] -plural -transitive -actor_unfilled <ACTION_2 action:! actor:"unknown" action_type:Verb object:!! | IS object:!! object_count:"inf" noun_class:Noun>
             # we <eat grass>
             # they <eat grass>
+            # them <eating grass>
 
         # intransitive
         NounPhrase[plural] Verb[MainVerb,!3PPresent,!Transitive] -plural -intransitive <ACTION action:! actor:NounPhrase->IS.object action_type:Verb>
@@ -629,8 +628,7 @@ Frames:
         Preposition[Time] VerbPhrase[continuous,actor_unfilled] 
             # after running in the field
     Sentence "S"
-        NounPhrase[plural] Verb[MainVerb,simple] <ACTION action:! actor:AdjectivePhrase->IS.object action_type:Verb>
-            # dogs bark
+        AdjectivePhrase[plural] Verb[MainVerb,simple] <ACTION action:! actor:AdjectivePhrase->IS.object action_type:Verb>
             # quick dogs run
             # hit dogs holler
 
@@ -829,7 +827,6 @@ Frames:
         Verb[LinkingVerb,NUMBER] Adjective -unfilled_property_object <HAS_PROPERTY object:"unknown" property:Adjective>
             # are ugly
     SetDescriptorPhrase "SDP"
-        #Verb[LinkingVerb,plural] Noun[MainNoun,plural] <IS object:! object_count:"inf" noun_class:Noun | CONTAINS container:! containee:"unknown">
         Verb[LinkingVerb,plural] NounPhrase[plural] <IS object:! object_count:"inf" noun_class:Noun | CONTAINS container:! containee:"unknown">
             # are dogs
         # Verb[LinkingVerb,plural] Nounphrase[plural] <CONTAINS container:NounPhrase->IS.object containee:"unknown">
@@ -839,12 +836,9 @@ Frames:
         # TODO - add ability to access Frame features + feature group evaluation results.
             # you can
             # he can
-    AdjectiveSet "As"
-        Adjective <HAS_PROPERTY object:"unknown" property:Adjective>
-        Adjective Adjective
     AdjectivePhrase "AP"
-        AdjectiveSet NounPhrase[NUMBER] -NUMBER <IS object:! object_count:"1" noun_class:Noun | HAS_PROPERTY object:! property:Adjective>
+        Adjective Noun[NUMBER] -NUMBER <IS object:! object_count:"1" noun_class:Noun | HAS_PROPERTY object:! property:Adjective>
             # ugly dog
             # ugly dogs
-        # Adjective AdjectivePhrase[NUMBER] -NUMBER <HAS_PROPERTY object:AdjectivePhrase->IS.object property:Adjective>
-        # fat ugly dogs
+        Adjective AdjectivePhrase[NUMBER] -NUMBER <HAS_PROPERTY object:AdjectivePhrase->IS.object property:Adjective>
+            # fat ugly dogs

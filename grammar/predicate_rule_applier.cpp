@@ -5,8 +5,8 @@ string PredicateRuleApplier::get_argument_accessor(
     vector<Frame> frames,
     PatternElementPredicateAccessor accessor)
 {
-    Predicate original_predicate = Predicate();
-    if (!try_get_predicate(context, frames, accessor, original_predicate))
+    vector<Predicate> predicates_to_modify = vector<Predicate>();
+    if (!try_get_predicates(context, frames, accessor, predicates_to_modify))
     {
         printf("\033[1;31mdisaster\033[0m: failed to access argument with accessor %s\n", accessor.stringify().c_str());
         return "unknown";
@@ -14,22 +14,30 @@ string PredicateRuleApplier::get_argument_accessor(
 
     string accessor_paramter_name = accessor.parameter_name;
 
+
+    auto original_predicate = predicates_to_modify[0];
     if (DEBUGGING)
     {
         printf("\033[1;34maccessing\033[0m parameter '%s' in predicate '%s'\n", accessor_paramter_name.c_str(), original_predicate.predicate_template.predicate.c_str());
     }
+
+    if (predicates_to_modify.size() > 1)
+        printf("\033[1;31mdisaster\033[0m: impermissibile ambiguity in argument accessor %s\n", accessor.stringify().c_str());
+
     string argument = original_predicate.get_argument(accessor_paramter_name);
 
     return argument;
 }
 
-bool PredicateRuleApplier::try_get_predicate(
+bool PredicateRuleApplier::try_get_predicates(
     RuleApplierContext context,
     vector<Frame> frames,
     PatternElementPredicateAccessor accessor,
-    Predicate& result_predicate)
+    vector<Predicate>& result_predicates)
 {
     string frame_name = accessor.syntax_frame_name;
+
+    result_predicates = vector<Predicate>();
 
     Frame identified_frame;
     bool has_identified_frame = false;
@@ -50,12 +58,8 @@ bool PredicateRuleApplier::try_get_predicate(
 
     string predicate_name = accessor.predicate_name;
 
-    Predicate result_pred = Predicate();
-    if (Expression::try_get_predicate_by_name(identified_frame.accumulated_expression, predicate_name, result_pred))
-    {
-        result_predicate = result_pred;
+    if (Expression::try_get_predicates_by_name(identified_frame.accumulated_expression, predicate_name, result_predicates))
         return true;
-    }
 
     if (DEBUGGING)
         printf("\033[1;31mfailed\033[0m to find match for accessor %s->%s.%s in expression : %s\n", 
@@ -253,20 +257,32 @@ Expression PredicateRuleApplier::set_argument_accessor(
     PatternElementPredicateAccessor argument_accessor,
     string operand_variable)
 {
-    Predicate original_predicate;
-    if (!try_get_predicate(context, frames, argument_accessor, original_predicate))
+    vector<Predicate> predicates_to_modify;
+    if (!try_get_predicates(context, frames, argument_accessor, predicates_to_modify))
     {
         printf("\033[1;31mdisaster\033[0m: failed to access assignee of predicate modifier rule\n");
         return expression;
     }
 
-    expression.extract_predicate(original_predicate);
+        // // if (predicates_to_modify.size() > 1)
+        // // printf("\033[1;31mdisaster\033[0m: impermissibile ambiguity in argument accessor %s\n", accessor.stringify().c_str());
 
+    vector<Predicate> new_predicates;
+    for (auto original_predicate : predicates_to_modify)
+    {
+        expression.extract_predicate(original_predicate);
+
+        Predicate modified_predicate = original_predicate.with_modified_argument(argument_accessor.parameter_name, operand_variable);
+        new_predicates.push_back(modified_predicate);
+    }
+
+    // no add all the
+    for (auto original_expression_predicate : expression.predicates)
+    {
+        new_predicates.push_back(original_expression_predicate);
+    }
     // create new expression with argument assigned
-    Predicate modified_predicate = original_predicate.with_modified_argument(argument_accessor.parameter_name, operand_variable);
 
-    vector<Predicate> new_predicates = expression.predicates;
-    new_predicates.push_back(modified_predicate);
 
     return Expression(new_predicates);
 }

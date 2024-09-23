@@ -61,7 +61,7 @@ public:
 
     static Expression combine_expressions(Expression expression1, Expression expression2);
 
-    static bool try_get_predicate_by_name(Expression expression, string predicate_name, Predicate& result_predicate);
+    static bool try_get_predicates_by_name(Expression expression, string predicate_name, vector<Predicate>& result_predicates);
 
     Predicate operator [](int i) const;
 };
