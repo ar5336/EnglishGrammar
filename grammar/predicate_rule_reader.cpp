@@ -139,7 +139,9 @@ PatternElementPredicateAccessor::PatternElementPredicateAccessor(PredicateHandle
     vector<string> parts = split_character(token, "->");
     // verify that the split is correct 
 
-    assert(parts.size() == 2);
+    // assert(parts.size() == 2);
+    if (parts.size() != 2)
+        throw runtime_error("token '" + token + " improperty split by '->' into " + to_string(parts.size()) + " parts: [" + stringify_vector(parts) + "]");
 
     syntax_frame_name = parts[0];
     // verify that predicate is actual pedicate
@@ -148,7 +150,8 @@ PatternElementPredicateAccessor::PatternElementPredicateAccessor(PredicateHandle
 
     string leftover_token = parts[1];
     vector<string> predicate_and_parameter = split_character(leftover_token, ".");
-    assert(predicate_and_parameter.size() == 2);
+    if (predicate_and_parameter.size() != 2)
+        throw runtime_error("token '" + token + " improperty split by '->' into " + to_string(parts.size()) + " parts: [" + stringify_vector(parts) + "]");
 
     predicate_name = predicate_and_parameter[0];
     parameter_name = predicate_and_parameter[1];

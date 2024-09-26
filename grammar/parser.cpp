@@ -105,7 +105,7 @@ void Parser::load_frame(FrameCoordinates coords, Frame new_frame)
             if (!does_frame_have_features(new_frame, /*is_left*/true, candidate_monoframe))
             {
                 if (DEBUGGING)
-                    printf("monoframe match does not stick");
+                    printf("monoframe match does not match by features\n");
             
                 continue;
             }
@@ -413,9 +413,13 @@ vector<Frame> Parser::get_interpret_frames(int x_coord, int y_coord)
 
 bool Parser::try_get_frame_at(FrameCoordinates coords, Frame& result_frame)
 {
-    // maybe the problem is the passing by reference here?
     if (!coords.is_empty())
     {
+        int size = parse_grid[coords.row][coords.col].size();
+
+        if (coords.num >= size)
+            return false;
+
         result_frame = parse_grid[coords.row][coords.col][coords.num];
         return true;
     }

@@ -80,6 +80,10 @@ void FrameCoordinates::print_out()
     printf("\t\t row: %d, col: %d, num: %d\n", row, col, num);
 }
 
+string FrameCoordinates::stringify()
+{
+    return "[" + to_string(row), + "," + to_string(col) + "," + to_string(num) + "]";
+}
 
 // ======== FRAME ========
 
@@ -472,6 +476,13 @@ void Frame::print_out(string title)
     right_match.print_out();
 }
 
+bool operator<(const FrameCoordinates &lhs, const FrameCoordinates &rhs)
+{
+    return
+        tie(lhs.row, lhs.col, lhs.num)
+            <
+        tie(rhs.row, rhs.col, rhs.num);
+}
 bool operator<(const Frame &lhs, const Frame &rhs)
 {
     return

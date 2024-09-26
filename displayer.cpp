@@ -222,7 +222,7 @@ Displayer::Displayer(string screen_name)
         image = Mat(IMAGE_SIZE, CV_8UC3, cv::Scalar(0));
         start_text_corner = Point(10, image.rows * 3 / 4);
         start_grid_corner = start_text_corner + Point(0, -60);
-        start_predicate_corner = Point(image.cols *7/10, image.rows * 1/4);
+        start_predicate_corner = Point(image.cols *7/10, image.rows * 4/5);
         start_individual_frame_corner = Point(image.cols *1/30, image.rows * 1/5);
 
         // HIGHLIGHT = CV_RGB(50, 25, 0);
@@ -340,7 +340,9 @@ void Displayer::display()
 
     // measure off the tokens of the text to determine the placemnts of the edges of the cells
 
+
     int index_within_cell = 0;
+    set<pair<FrameCoordinates, FrameCoordinates>> frame_coords_to_connect;
     if (!parser->parse_grid.empty() && token_count != 0)
     {
         // diplay and initialize parse grid
@@ -353,6 +355,67 @@ void Displayer::display()
 
         int cell_width = 80;
         int cell_height = 20;
+        
+        set<FrameCoordinates> frame_coords_to_highlight;
+
+        // vector<Frame> top_interps = parser->parse_grid[parser->parse_grid.size()-1][0];
+        // bool has_keystone_interpretation = top_interps.size() > 0;
+        if (is_highlighted)
+        {
+            auto interps = parser->parse_grid[highlighted_cell_position.first][highlighted_cell_position.second];
+
+            bool do_traverse = true;
+            if (interps.size() <= highlight_frame_index)
+                do_traverse = false;
+            
+            auto starting_coordinates = FrameCoordinates(highlighted_cell_position.first, highlighted_cell_position.second, highlight_frame_index);
+            if (do_traverse)
+            {
+                auto top_frame = interps[highlight_frame_index];
+                vector<pair<FrameCoordinates, Frame>> frame_traverse_stack = vector<pair<FrameCoordinates,Frame>> {make_pair(starting_coordinates, top_frame)};
+
+                while (do_traverse && frame_traverse_stack.size() > 0)
+                {
+                    auto coords_from_and_current_frame = frame_traverse_stack.back();
+
+                    FrameCoordinates current_coordinates = coords_from_and_current_frame.first;
+                    Frame current_frame = coords_from_and_current_frame.second;
+                    frame_traverse_stack.pop_back();
+
+                    if (current_frame.type == FrameType::Matched)
+                    {
+                        frame_coords_to_highlight.insert(current_frame.left_match);
+                        frame_coords_to_highlight.insert(current_frame.right_match);
+
+                        Frame left_frame = Frame();
+                        Frame right_frame = Frame();
+                        if (!parser->try_get_frame_at(current_frame.left_match, left_frame))
+                            continue;
+                        if (!parser->try_get_frame_at(current_frame.right_match, right_frame))
+                            continue;
+
+                        frame_traverse_stack.push_back(make_pair(current_frame.left_match, left_frame));
+                        frame_traverse_stack.push_back(make_pair(current_frame.right_match, right_frame));
+
+                        frame_coords_to_connect.insert(make_pair(current_coordinates, current_frame.left_match));
+                        frame_coords_to_connect.insert(make_pair(current_coordinates, current_frame.right_match));
+                    }
+                    else if (current_frame.type == FrameType::Derived)
+                    {
+                        frame_coords_to_highlight.insert(current_frame.left_match);
+
+                        Frame left_frame = Frame();
+
+                        if (!parser->try_get_frame_at(current_frame.left_match, left_frame))
+                            continue;
+
+                        frame_traverse_stack.push_back(make_pair(current_frame.left_match, left_frame));
+                    }
+                }
+
+            }
+
+        }
 
         for (int row = 0; row < parser->parse_grid.size(); row++)
         {
@@ -433,7 +496,7 @@ void Displayer::display()
                         // printf("the frame at row %d, col %d, ind %d: %s\n", row, col, frame_index, frame.stringify_pre_binarization().c_str());
                         if (frame.pattern_elements.size() != 0)
                         {
-                            cell_text = frame.frame_name;
+                            cell_text = frame.frame_nickname;
                         }
                         else
                         {
@@ -446,10 +509,11 @@ void Displayer::display()
                     }
                     // string cell_text = (is_word) ? (frame.type == FrameType::Derived ? frame.frame_nickname : frame.get_part_of_speech()) : frame.frame_nickname;
 
+                    bool is_highlighted_as_tree = frame_coords_to_highlight.count(FrameCoordinates(row, col, frame_index)) != 0;
                     display_text(
                         ticker_cell_text,
                         cell_text,
-                        (is_directly_highlighted && (highlight_frame_index == frame_index)) ?
+                        ((is_directly_highlighted && (highlight_frame_index == frame_index)) || is_highlighted_as_tree) ?
                             HIGHLIGHTED_FRAME :
                             (is_word ?
                                 WORD_FRAME : SYNTAX_FRAME),
@@ -495,6 +559,26 @@ void Displayer::display()
 
         if (is_highlighted)
             previous_highlighted_cell_position = highlighted_cell_position;
+    }
+
+    for (auto frame_coord_pair : frame_coords_to_connect)
+    {
+        auto frame_coord_1 = frame_coord_pair.first;
+        auto frame_coord_2 = frame_coord_pair.second;
+
+        pair<Point, Point> cell_bounds_1 = get_cell_bounds(frame_coord_1.row, frame_coord_1.col);
+        pair<Point, Point> cell_bounds_2 = get_cell_bounds(frame_coord_2.row, frame_coord_2.col);
+
+        Point top_left_1 = cell_bounds_1.first;
+        Point top_left_2 = cell_bounds_2.first;
+
+        Point bottom_right_1 = cell_bounds_1.second;
+        Point bottom_right_2 = cell_bounds_2.second;
+
+        Point center_1 = (top_left_1 + bottom_right_1) / 2;
+        Point center_2 = (top_left_2 + bottom_right_2) / 2;
+
+        line(image, center_1, center_2, HIGHLIGHTED_FRAME, 2);
     }
 
     // display the text
@@ -543,7 +627,19 @@ void Displayer::display()
 
     // display expressions
     Point expression_ticker_corner = start_predicate_corner + Point(0, scroll);
-    Point new_line = Point(0,25);
+    int NEW_LINE_NUM = 25;
+    Point new_line = Point(0,NEW_LINE_NUM);
+
+    int total_height = 0;
+    for (auto expression : mind->expressions)
+    {
+        for (auto predicate : expression.second.predicates)
+        {
+            total_height += NEW_LINE_NUM;
+        }
+        total_height += NEW_LINE_NUM;
+    }
+    expression_ticker_corner += Point(0, -total_height);
 
     if (mind->expressions.size() > 0) {
         for (auto expression_of_type : mind->expressions) {
@@ -664,8 +760,8 @@ string Displayer::stringify_frame(Frame frame)
 
         bool has_right = parser->try_get_frame_at(frame.right_match, right_frame);
 
-        string left_frame_str = left_frame.stringify_as_param();
-        string right_frame_str = right_frame.stringify_as_param();
+        string left_frame_str = left_frame.stringify_as_param() + frame.left_match.stringify();
+        string right_frame_str = right_frame.stringify_as_param() + frame.right_match.stringify();
 
         string_buildee += "MATCHED FRAME:\n";
         string_buildee += "    frame name: " + frame.frame_name + "\n";

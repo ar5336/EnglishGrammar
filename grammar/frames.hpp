@@ -81,7 +81,11 @@ public:
 	bool is_empty();
 
 	void print_out();
+
+	string stringify();
 };
+
+bool operator<(const FrameCoordinates& lhs, const FrameCoordinates& rhs);
 
 class Frame
 {

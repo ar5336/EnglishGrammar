@@ -21,7 +21,7 @@
 using namespace std;
 using namespace cv;
 
-string initial_utterance = "";
+string initial_utterance = "a tiger bit a man in the field";
 
 string current_utterance = "";
 

@@ -227,6 +227,8 @@ private:
 
     Expression resolve_properties(Expression expression);
 
+    Expression resolve_anaphoras(Expression expression);
+    
     Noun* dereference_noun_id(int noun_id, bool real);
 
     bool compare_events(Event event_1, Event event_2);
@@ -249,7 +251,6 @@ public:
     Timeline timeline;
     Timeline abstract_timeline;
 
-    Expression resolve_anaphoras(Expression expression);
 
     bool did_it_occur(Event event, Event& og_event);
 
