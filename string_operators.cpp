@@ -2,17 +2,30 @@
 
 void ltrim(string &s)
 {
-	s.erase(s.begin(), find_if(s.begin(), s.end(), [](unsigned char ch)
-							   { return !isspace(ch); }));
+	// trim the space characters from the left side of the string
+	if (s.size() == 0)
+		return;
+	if (DEBUGGING)
+		printf("ltrimming string: '%s'\n", s.c_str());
+	while (s.size() > 0 && isspace(s[0]))
+	{
+		s.erase(0, 1);
+	}
 }
 
-// trim from end (in place)
 void rtrim(string &s)
 {
-	s.erase(find_if(s.rbegin(), s.rend(), [](unsigned char ch)
-					{ return !isspace(ch); })
-				.base(),
-			s.end());
+	// trim the space characters from the right side of the string
+	if (s.size() == 0)
+		return;
+	
+	if (DEBUGGING)
+		printf("rtrimming string: '%s'\n", s.c_str());
+	while (s.size() > 0 && isspace(s[s.size() - 1]))
+	{
+		s.erase(s.size() -1, s.size());
+	}
+	
 }
 
 bool starts_and_ends_with(string l, string r)
@@ -24,7 +37,7 @@ bool starts_and_ends_with(string l, string r)
 string trim_front_and_back(string s)
 {
 	if (s.size() <= 2)
-		throw invalid_argument("string too small in trim_front_and_back");
+		throw runtime_error("string too small in trim_front_and_back");
 
 	return s.substr(1, s.size() - 2);
 }
@@ -63,8 +76,30 @@ bool is_str_empty(string str)
 
 vector<string> split_character(string str, string split)
 {
-	vector<string> split_tokens;
-	boost::split(split_tokens, str, boost::is_any_of(split), boost::token_compress_on);
+	vector<string> split_tokens = vector<string>();
+	if (DEBUGGING)
+		printf("splitting string: '%s' by delimiter '%s'\n", str.c_str(), split.c_str());
+	
+	// split string by the split string
+	int pos = 0;
+	bool append_final = true;
+	while (str.size() > 0 && (pos = str.find(split)) != string::npos)
+	{
+		// make sure to handle the case of multiple delimiters in a row such as "apples   oranger" with delimiter " "
+		if (pos == 0)
+		{
+			str.erase(0, split.length());
+			continue;
+		}
+		split_tokens.push_back(str.substr(0, pos));
+		str.erase(0, pos + split.length());
+	}
+	if (!equals(str, split) && !is_str_empty(str))
+		split_tokens.push_back(str);
+
+	if (DEBUGGING)
+		printf("returning %ld split tokens\n", split_tokens.size());
+	
 	return split_tokens;
 }
 

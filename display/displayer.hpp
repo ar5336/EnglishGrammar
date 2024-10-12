@@ -6,10 +6,10 @@
 #include <string>
 #include <vector>
 
-#include "string_operators.hpp"
-#include "grammar/parser.hpp"
-#include "logic/predicate_handler.hpp"
-#include "logic/mind.hpp"
+#include "../string_operators.hpp"
+#include "../grammar/parser.hpp"
+#include "../logic/predicate_handler.hpp"
+#include "../logic/mind.hpp"
 
 using namespace std;
 using namespace cv;

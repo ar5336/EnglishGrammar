@@ -400,7 +400,7 @@ void Displayer::display()
                         frame_coords_to_connect.insert(make_pair(current_coordinates, current_frame.left_match));
                         frame_coords_to_connect.insert(make_pair(current_coordinates, current_frame.right_match));
                     }
-                    else if (current_frame.type == FrameType::Derived)
+                    else if (current_frame.type == FrameType::MonoFrame_Derived)
                     {
                         frame_coords_to_highlight.insert(current_frame.left_match);
 
@@ -677,15 +677,15 @@ void Displayer::display()
     // display the conceptual schema
     // auto conceptual_nouns = conceptual_schema->noun_class_set;
 
-    Point conschem_corner = Point(30, 30);
-    Point conschem_other_corner = conschem_corner + Point(100, 60);
+    // Point conschem_corner = Point(30, 30);
+    // Point conschem_other_corner = conschem_corner + Point(100, 60);
 
-    string stringified_inheritances = stringify_conceptual_schema_inheritances();
+    // string stringified_inheritances = stringify_conceptual_schema_inheritances();
 
-    display_multi_line_text(conschem_corner, stringified_inheritances, CONCEPTUAL_SCHEMA, 0.5f);
-    string stringified_nouns = stringify_conceptual_schema_nouns();
+    // display_multi_line_text(conschem_corner, stringified_inheritances, CONCEPTUAL_SCHEMA, 0.5f);
+    // string stringified_nouns = stringify_conceptual_schema_nouns();
 
-    display_multi_line_text(conschem_corner + Point(400, 0), stringified_nouns, CONCEPTUAL_SCHEMA, 0.5f);
+    // display_multi_line_text(conschem_corner + Point(400, 0), stringified_nouns, CONCEPTUAL_SCHEMA, 0.5f);
 
     // display the events
     Point timeline_corner = Point(700, 50);
@@ -756,7 +756,7 @@ string Displayer::stringify_frame(Frame frame)
         Frame right_frame = Frame();
 
         if (!parser->try_get_frame_at(frame.left_match, left_frame))
-            throw runtime_error("can not access left coordinate of frame");
+            throw runtime_error("can not access left coordinate '" + frame.left_match.stringify() + "'of frame");
 
         bool has_right = parser->try_get_frame_at(frame.right_match, right_frame);
 
@@ -772,7 +772,7 @@ string Displayer::stringify_frame(Frame frame)
 
         return string_buildee;
     }
-    if (frame.type == FrameType::Derived)
+    if (frame.type == FrameType::MonoFrame_Derived)
     {
         printf("displaying derived frame\n");
         string_buildee += "DERIVED FRAME:\n";

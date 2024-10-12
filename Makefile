@@ -3,7 +3,7 @@ CC = g++
 
 # put -Wall back when you're ready
 # -Wextra when you're very ready
-CFLAGS =  -I /usr/include/opencv4 -I /usr/include/boost_1_84_0 
+CFLAGS =  -I /usr/include/opencv4
 LDFLAGS = `pkg-config --cflags --libs opencv4` 
 
 SOURCES = $(shell find . -name '*.cpp')

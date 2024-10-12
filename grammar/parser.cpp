@@ -191,9 +191,16 @@ bool Parser::try_get_matched_frames(
         {
             Frame candidate_frame = frames_to_doublecheck[frame_index];
 
-            if (candidate_frame.type == FrameType::Derived)
+            if (candidate_frame.type == FrameType::MonoFrame_Derived)
             {
                 printf("the derived frame is: %s\n", candidate_frame.stringify_pre_binarization().c_str());
+            }
+
+            if (candidate_frame.type == FrameType::MultiFrame_Derived)
+            {
+                matched_frames.push_back(candidate_frame);
+
+                continue;
             }
 
             // perform checks on PoS type and features
@@ -318,7 +325,7 @@ void Parser::update_parse_grid(string new_utterance)
                 if (DEBUGGING)
                     printf("accessing %s\n", word_frame.stringify_as_param().c_str());
 
-                if (word_frame.type != FrameType::Word && word_frame.type != FrameType::Derived)
+                if (word_frame.type != FrameType::Word && word_frame.type != FrameType::MonoFrame_Derived)
                     throw runtime_error("syntax frame on word frame row not allowed");
                 
                 load_frame(FrameCoordinates(0, token_index, -1), word_frame);

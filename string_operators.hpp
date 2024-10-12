@@ -4,7 +4,11 @@
 #include <string>
 #include <set>
 #include <map>
-#include <boost/algorithm/string.hpp>
+#include <stdexcept>
+#include <vector>
+
+#include "global.hpp"
+// #include <boost/algorithm/string.hpp>
 
 using namespace std;
 

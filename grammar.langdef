@@ -67,6 +67,7 @@ Words:
             gift gifts
             street streets
             tiger tigers
+            goose geese
         MassNoun:
             grease
             pollen
@@ -141,6 +142,7 @@ Words:
             russia -country_name
             germany -country_name
             france -country_name
+            brandon -main_name -masculine
         InterrogativePronoun:
             who -animate
             what -indentity
@@ -155,6 +157,10 @@ Words:
                 love loving loved loves
                 hate hating hated hates
                 remember remembering remembered remembers
+                believe believing believed believes
+                fear fearing feared fears
+                know knowing knowed knows known
+                deny denying denied denies
             ReceptiveTransitive: # simple continuous perfect 3PPresent (pastPart)
                 take taking took takes taken
                 drink drinking diank drinks
@@ -208,14 +214,6 @@ Words:
                 live living lived lives
                 sleep sleeping slept sleeps
                 fall falling fell falls
-        StateVerb: # simple continuous perfect 3PPresent (pastPart)
-            hate hating hated hates
-            believe believing believed believes
-            love loving loved loves
-            fear fearing feared fears
-            know knowing knowed knows known
-            deny denying denied denies
-            remember remembering remembered remembers
         AuxiliaryVerb:
             be -continuous -singular -plural
             has -perfect -singular -3rdPerson
@@ -312,6 +310,7 @@ Words:
                 dumb dumber dumbest
                 sad sadder saddest
                 white whiter whitest
+                silly sillier silliest
                 black blacker blackest
         PossessiveAdjective:
             my -1stPerson -singular -possessive
@@ -420,6 +419,7 @@ Predicates:
     OBJECT          object->    id
     NAME            object->    name
     TOPIC           object->
+    CONJUNCTION     object-> object_1-> object_2->
 
 Frames:
     NounPhrase "NP"
@@ -486,9 +486,10 @@ Frames:
 
         Noun[plural] PrepPhrase <IS object:! object_count:"inf" noun_class:Noun>
             # dogs in the city
-        Noun Conjunction Noun -plural
+        NounPhrase Conjunction NounPhrase -plural <CONJUNCTION object:! object_1:NounPhrase#1->IS.object object_2:NounPhrase#2->IS.object>
             # cats and dogs
             # cat and fish
+        # this does not work yet. need to update binarization process, and also parser handing of binarized multiframes
 
         #Noun[Pronoun,possessive] NounPhrase[!determined,NUMBER] -determined -NUMBER
         # my cat 
@@ -597,6 +598,16 @@ Frames:
             # a dog runs
             # !a dog run
 
+        Verb[continuous,Intransitive] -continuous <ACTION action:! actor:"unknown" action_type:Verb>
+            # running
+
+        Verb[ActionTransitive] -action_transitive <ACTION_2 action:! actor:"unknown" action_type:Verb object:"unknown">
+
+        # with fixed multiframe parsing, this can be simplified to
+        # NounPhrase VerbPhrase[action_transitive] VerbPhrase
+        NounPhrase[NUMBER] VerbPhrase[action_transitive] -action_transitive -action_unfilled <VerbPhrase->ACTION_2.actor=NounPhrase->IS.object>
+            # <i hate>
+
         # transitive
         NounPhrase[plural] Verb[MainVerb,!3PPresent,Transitive] -plural -transitive -object_unfilled <ACTION_2 action:! actor:NounPhrase->IS.object action_type:Verb object:"unknown">
             # the dogs bit
@@ -643,11 +654,15 @@ Frames:
     PrepPhrase "PP"
         Preposition Noun[MassNoun]
             # under water
-        Preposition[Place] NounPhrase <PREPOSITION action:! preposition:Preposition object:NounPhrase->IS.object>
+        Preposition[Place] NounPhrase <PREPOSITION action:"unknown" preposition:Preposition object:NounPhrase->IS.object>
             # under the bridge
         Preposition[Time] VerbPhrase[continuous,actor_unfilled] 
             # after running in the field
     Sentence "S"
+        VerbPhrase[action_transitive,action_unfilled] NounPhrase
+            # i hate dogs
+        VerbPhrase[action_transitive,action_unfilled] VerbPhrase[continuous]
+            # i hate running
         AdjectivePhrase[plural] Verb[MainVerb,simple] <ACTION action:! actor:AdjectivePhrase->IS.object action_type:Verb>
             # quick dogs run
             # hit dogs holler
@@ -691,7 +706,8 @@ Frames:
         # that cat is mine
 
         VerbPhrase[intransitive] PrepPhrase <PrepPhrase->PREPOSITION.action=VerbPhrase->ACTION.action>
-        Sentence PrepPhrase
+        Sentence PrepPhrase <PrepPhrase->PREPOSITION.action=Sentence->IS.object>
+        # need to find a way to retrieve the topic of a sentence
         #Noun[Pronoun,plural] VerbPhrase
 
         Noun AuxiliaryPhrase
@@ -727,12 +743,13 @@ Frames:
         InterrogativePhrase ModalPhrase[MODE] -MODE <ModalPhrase->CAN_DO.actor=InterrogativePhrase->IS.object>
             # which dogs | can run
             # which dogs in the city | can run
-        Noun[InterrogativePronoun,select] Sentence
-            # which | horses eat fish
+        # Noun[InterrogativePronoun,select] Sentence
+        # which | horses eat fish
         InterrogativePhrase VerbPhrase[super_transitive] <VerbPhrase->ACTION_3.actor=InterrogativePhrase->IS.object>
             # which horses | give gifts to fish
         InterrogativePhrase Verb[MainVerb] <CAN_DO action_type:Verb actor:InterrogativePhrase->IS.object>
             # which dogs | run
+        StateQuestionObject Adjective <HAS_PROPERTY object:StateQuestionObject->IS.object property:Adjective>
         StateQuestionObject[NUMBER,MODE] VerbPhrase[simple,Intransitive] -NUMBER -MODE -Intransitive <VerbPhrase->ACTION.actor=StateQuestionObject->IS.object>
             # can a fish | live in the house
             # can i | live in the house
@@ -849,6 +866,7 @@ Frames:
             # you can
             # he can
     AdjectivePhrase "AP"
+        #Adjective <HAS_PROPERTY object:"unknown"
         Adjective Noun[NUMBER] -NUMBER <IS object:! object_count:"1" noun_class:Noun | HAS_PROPERTY object:! property:Adjective>
             # ugly dog
             # ugly dogs

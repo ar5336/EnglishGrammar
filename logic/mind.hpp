@@ -213,6 +213,8 @@ private:
     set<Expression> given_expressions;
     set<Expression> inferred_expressions;
 
+    // void apply_to_connections(Expression expression, function<void(Predicate, Predicate)> func);
+
     // vector<string> identify_all_parents(string entityName);
 
     vector<Event> extract_events(Expression expression, bool real);
@@ -221,14 +223,16 @@ private:
 
     vector<pair<int, pair<string, string>>> extract_prepositions();
 
+    vector<pair<string, string>> extract_properties(Expression expression);
+
     map<int, vector<string>> extract_concrete_properties(Expression expression);
 
-    int create_new_object(Predicate is_predicate, bool real = true);
+    int create_object_representation(Predicate is_predicate, bool real = true);
 
     Expression resolve_properties(Expression expression);
 
     Expression resolve_anaphoras(Expression expression);
-    
+
     Noun* dereference_noun_id(int noun_id, bool real);
 
     bool compare_events(Event event_1, Event event_2);
@@ -251,11 +255,8 @@ public:
     Timeline timeline;
     Timeline abstract_timeline;
 
-
+    bool does_it_exist(Noun noun, Noun& og_noun);
     bool did_it_occur(Event event, Event& og_event);
-
-
-    // void create_concrete_noun(Noun noun);
 };
 
 // TODO - create

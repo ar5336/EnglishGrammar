@@ -15,7 +15,7 @@
 
 #include "test/test.hpp"
 
-#include "displayer.hpp"
+#include "display/displayer.hpp"
 #include "global.hpp"
 
 using namespace std;

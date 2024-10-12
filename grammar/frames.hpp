@@ -28,8 +28,9 @@ enum FrameType
 	Syntax = 2,
 	Binarized = 3,
 	Matched = 4,
-	Derived = 5,
-	Reconstructed = 5, // not yet implemented
+	MonoFrame_Derived = 5,
+	MultiFrame_Derived = 6,
+	Reconstructed = 7, // not yet implemented
 };
 
 class FeatureTag

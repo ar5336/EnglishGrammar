@@ -3,7 +3,6 @@
 
 #include <fstream>
 #include <vector>
-#include <boost/algorithm/string.hpp>
 
 #include "../string_operators.hpp"
 #include "frames.hpp"

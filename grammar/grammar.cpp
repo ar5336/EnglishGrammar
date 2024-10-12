@@ -182,6 +182,20 @@ void Grammar::binarize_grammar()
 		//   / \   \   \
 		//  A   B   C   D
 
+		// need to accomodate optional elmements
+		//      3
+		//     2  \
+		//   1  \  \
+		//  / \  \  \
+		// (A) B (C) D
+		// 1 > A B
+		// 2 > 1 C
+		//	 > B C
+		// 3 > 2 D
+		// 	 > B D
+
+		// set<pair<int,int>> already_added_frame_patterns;
+
 		// create subframes for subsequent elements
 		for (int subframe_index = 0; subframe_index < num_subframes; subframe_index++)
 		{
@@ -201,7 +215,7 @@ void Grammar::binarize_grammar()
 				frame_nickname += to_string(subframe_index);
 			}
 
-			PatternElement pattern_right = base_pattern.at(base_pattern.size() - 1 - subframe_index);
+			PatternElement pattern_right = base_pattern[base_pattern.size() - 1 - subframe_index];
 			PatternElement pattern_left;
 			if (subframe_index == num_subframes - 1)
 			{
@@ -211,14 +225,8 @@ void Grammar::binarize_grammar()
 			{
 				pattern_left.match_string = base_frame_name + to_string(subframe_index + 1);
 			}
-			// printf("CNF: %s > %s %s\n", frame_name.c_str(), pattern_left.match_string.c_str(), pattern_right.match_string.c_str());
 
 			PredicateFormationRules formation_rules = base_frame_formaiton_rules;
-			// if (subframe_index == 0)
-			// {
-			// 	formation_rules = base_frame_formaiton_rules;
-			// 	// TODO - update the formation rules inheritance while binarizing
-			// }
 
 			Frame new_cnf_frame = Frame(
 				frame_name,
@@ -229,6 +237,9 @@ void Grammar::binarize_grammar()
 				feature_set,
 				feature_groups,
 				formation_rules);
+
+			if (subframe_index != 0)
+				new_cnf_frame.type = FrameType::MonoFrame_Derived;
 			
 			internalize_frame(new_cnf_frame);
 		}

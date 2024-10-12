@@ -7,12 +7,16 @@
 			"match": "\\b(FeatureGroups|Predicates|Frames|Question)\\b"
 		},
 		{
-			"name": "keyword.main.langdef",
+			"name": "keyword.main_parts_of_speech.langdef",
 			"match": "\\b(Noun|Verb|Adjective|Adverb|Determiner|Preposition|Conjunction)\\b"
 		},
 		{
-			"name": "keyword.substrate.langdef",
+			"name": "keyword.sub_parts_of_speech.langdef",
 			"match": "\\b(MainNoun|Pronoun|RelativePronoun)\\b"
+		},
+		{
+			"name": "keyword.featuregroupbase.langef",
+			"match": "\\b([A-Z]+=)\\b"
 		},
 		{
 			"include": "#strings"
@@ -35,7 +39,26 @@
 					"match": "\\\\."
 				}
 			]
-		}
+		},
+		"expression": {
+			"patterns": [{ "include": "#letter" }, { "include": "#pred-rules" }]
+		  },
+		  "letter": {
+			"match": "a|b|c",
+			"name": "keyword.letter"
+		  },
+		  "pred-rules": {
+			"begin": "<",
+			"end": ">",
+			"beginCaptures": {
+			  "0": { "name": "punctuation.pred_rule.open" }
+			},
+			"endCaptures": {
+			  "0": { "name": "punctuation.pred_rule.close" }
+			},
+			"name": "expression.group",
+			"patterns": [{ "include": "#expression" }]
+		  }
 	},
 	"scopeName": "langdef"
 }

@@ -82,7 +82,11 @@ void FrameCoordinates::print_out()
 
 string FrameCoordinates::stringify()
 {
-    return "[" + to_string(row), + "," + to_string(col) + "," + to_string(num) + "]";
+    string str = "";
+    str += "[" + to_string(row);
+    str += "," + to_string(col);
+    str += "," + to_string(num) + "]";
+    return str;
 }
 
 // ======== FRAME ========
@@ -109,7 +113,7 @@ string Frame::stringify_pre_binarization()
         case FrameType::Syntax:
             buildee += "syntax\n";
             break;
-        case FrameType::Derived:
+        case FrameType::MonoFrame_Derived:
             buildee += "derived\n";
             break;
         default:
@@ -145,7 +149,7 @@ string Frame::stringify_as_param()
     {
         return frame_name;
     }
-    if (type == FrameType::Derived)
+    if (type == FrameType::MonoFrame_Derived)
     {
         return frame_name + " " + to_string(pattern_elements.size());
     }

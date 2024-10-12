@@ -673,3 +673,91 @@ acutally no. yeah
 whenever you load a frame, check if it matches any monoframe pattern elements
 
 turns out i was initializing a shit load of blank frames when building the parse grid shrug
+
+===
+
+you have to reconstruct frames before applying predicate construction rules.
+all MultiFrame_Derived 
+
+the reconstruction can probably happen before the parsing. no tf it cant lmao
+So, we have to make exceptions for MultiFrame_Derived. They do not get their rules applied until they are fully reconstructed from the thresher and can be properly judged.
+a compact sort of life in the thresher pods.
+
+===
+
+SEMANTIC COMPONENTS
+
+EVENT
+    CAUSAL
+        AGENT
+            # <jack> ran
+        INSTRUMENT
+            # jack ran <with a crutch> for susan
+    PATIENT
+        # jack destroyed <the car>
+        # the evening brought <the day> to a close
+    EXPERIENCER
+        # jack <enjoyed> the play
+    
+    BENEFICIARY
+        # jack ran with a crutch <for susan>
+        # they toiled <for their lord>
+    
+    AT
+        LOCATION
+            # henry pushed jack's car <from henry's back yard>
+        POSSESSOR
+        AT-VALUE
+        AT-TIME
+    TO
+        DESTINATION
+            # henry pushed jack's car <to henry's back yard>
+        RECIPIENT
+            # jack sold <henry> the car
+        TO-VALUE
+
+    
+    PATH
+        # jack put the car <through the wall>
+    CO-AGENT[]
+        # they marched on constantinople <with elephants, giants, and an army of dwarves>
+    CO-PATIENT[]
+        # i scared <the cats and dogs>
+
+
+these components should be accounted for in the grammar. each word needs much more complicated indication.
+
+Verbs in particular.
+MainVerbs have 
+
+each expression has a number of interpretations.
+
+a particular interpretation has a praticular event on the world_view
+
+WORLD-VIEW
+    OBJECT[]
+
+
+====
+ok so using yaml will be very nice.
+
+definitions given in yaml format will look something like this.
+
+
+"a silly goose is a silly person"
+    > added semantic interpretation creatied during definition matching of fopl
+
+    alternative ways to phrase a definition
+    " when you call a person a silly goose, you mean to say they are a silly person"
+    "silly goose is just a way of saying someone is silly"
+    "calling someone a silly goose is the same thing as calling someone silly"
+
+===
+okay so if i want to make it an actual piece of software of closed natural language space.
+
+only speak to it
+
+"define horse"
+    "i don't know what horse means"
+"a four-legged animal"
+    

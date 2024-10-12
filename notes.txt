@@ -94,7 +94,7 @@ Notes:
 
     subsequent clicks cycle through the different frames in the cell
 
-[ ] the cell you have selected, show a tree for it.
+[X] the cell you have selected, show a tree for it.
 
 [X] get highlighting back online
 
@@ -134,4 +134,4 @@ Notes:
         "emily has a cat"
         "she has very sharp claws"
 
-    
+[ ] use yaml finally

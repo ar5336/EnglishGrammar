@@ -79,9 +79,6 @@ Expression Mind::resolve_anaphoras(Expression expression)
         // identify the events described in the anaphora
         Expression anaphora_expression = Expression(anaphora_group);
         // conceptual_schema->consider_expression(anaphora_expression)
-        // introduce some sort of call here where the
-        // IS statemetnts are transformed into concrete object references
-        // - to simplify things greatly down the line
         auto events = extract_events(anaphora_expression, false);
 
         if (DEBUGGING)
@@ -212,12 +209,14 @@ string Mind::ask(Expression expression)
             return "yes, it did happen";
         }
     }
+
+    expression = resolve_properties(expression);
     
     if (events.size() != 0)
     {
         return "no, it did not happen";
     }
-    
+
     // can't do a simple hash comparison now. need to check connection equivalence between expression
     return "unknown";
 }
@@ -708,7 +707,7 @@ vector<Event> Mind::extract_events(Expression expression, bool real = true)
         auto event = Event(
             action_predicate.get_argument("action_type"), // action_type
             actor_predicate.get_argument("noun_class"),       // actor
-            create_new_object(actor_predicate, real),
+            create_object_representation(actor_predicate, real),
             real ? timeline.actions.size() : abstract_timeline.actions.size());
 
         identified_events.push_back(event);
@@ -785,10 +784,10 @@ vector<Event> Mind::extract_events(Expression expression, bool real = true)
                 printf("actor predicate: %s\n", predicate_handler->stringify_predicate(actor_predicate).c_str());
             }
             
-            int actor_id = is_actor_concrete ? stoi(actor_predicate.get_argument("id")) : create_new_object(actor_predicate, real);
+            int actor_id = is_actor_concrete ? stoi(actor_predicate.get_argument("id")) : create_object_representation(actor_predicate, real);
             string actor_noun_class = is_actor_concrete ? dereference_noun_id(actor_id, real)->entity_type->noun : actor_predicate.get_argument("noun_class");
 
-            int object_id = is_object_concrete ? stoi(object_predicate.get_argument("id")) : create_new_object(object_predicate, real);
+            int object_id = is_object_concrete ? stoi(object_predicate.get_argument("id")) : create_object_representation(object_predicate, real);
             string object_noun_class = is_object_concrete ? dereference_noun_id(object_id, real)->entity_type->noun : object_predicate.get_argument("noun_class");
             
             if (DEBUGGING)
@@ -825,7 +824,7 @@ vector<Event> Mind::extract_events(Expression expression, bool real = true)
             "unknown",       // actor
             -1,
             subject_predicate.get_argument("noun_class"),
-            create_new_object(subject_predicate, real),
+            create_object_representation(subject_predicate, real),
             real ? timeline.actions.size() : abstract_timeline.actions.size());
 
         identified_events.push_back(new_event);   // subject
@@ -842,7 +841,7 @@ vector<pair<int, string>> Mind::extract_names()
     return vector<pair<int, string>>();
 }
 
-int Mind::create_new_object(Predicate is_predicate, bool real)
+int Mind::create_object_representation(Predicate is_predicate, bool real)
 {
     if (DEBUGGING)
         printf("creating %s object for predicate %s\n", real ? "real" : "abstract", predicate_handler->stringify_predicate(is_predicate).c_str());
@@ -890,6 +889,7 @@ int Mind::create_new_object(Predicate is_predicate, bool real)
 
 map<int, vector<string>> Mind::extract_concrete_properties(Expression expression)
 {
+    // printf("\033[1;31mdisaster\033[0m: this method should never be called\n");
     auto property_pairs = map<int, vector<string>>();
 
     auto object_property_pairs = expression.get_connections(
@@ -916,6 +916,33 @@ map<int, vector<string>> Mind::extract_concrete_properties(Expression expression
 
     return property_pairs;
 }
+
+// vector<pair<string, string>> Mind::extract_properties(Expression expression)
+// {
+//     // auto predicate_pairs = expression.get_connections(
+//     //     "IS", "object",
+//     //     "HAS_PROPERTY", "object");
+
+//     // for (auto object_property_pair : predicate_pairs)
+//     // {
+//     //     Predicate object_predicate = object_property_pair.first;
+//     //     Predicate property_predicate = object_property_pair.second;
+
+//     //     int object_noun_id = stoi(object_predicate.get_argument("id"));
+
+//     //     string property = property_predicate.get_argument("property");
+
+//     //     if (DEBUGGING)
+//     //         printf("adding property %s to object id %d\n", property.c_str(), object_noun_id);
+
+//     //     if (property_pairs.count(object_noun_id) != 0)
+//     //         property_pairs.at(object_noun_id).push_back(property);
+//     //     else
+//     //         property_pairs.emplace(object_noun_id, vector<string> {property});
+//     // }
+
+//     // return property_pairs;
+// }
 
 Expression Mind::resolve_properties(Expression expression)
 {
@@ -948,7 +975,7 @@ Expression Mind::resolve_properties(Expression expression)
             printf("property predicate: %s\n", predicate_handler->stringify_predicate(property_predicate).c_str());
         }
 
-        int object_noun_id = create_new_object(is_predicate);
+        int object_noun_id = create_object_representation(is_predicate);
 
         string property = property_predicate.get_argument("property");
 
@@ -1161,6 +1188,28 @@ Timeline::Timeline(bool real)
     actions = vector<Event>();
 }
 
+bool Mind::does_it_exist(Noun noun, Noun& og_noun)
+{
+    vector<Noun> matches;
+
+    for (auto concrete_noun : concrete_nouns)
+    {
+        if (!compare_nouns(noun, concrete_noun))
+            matches.push_back(concrete_noun);
+    }
+
+    if (matches.size() > 1)
+    {
+        printf("\033[1;31mdisaster\033[0m: unaccomodated ambiguity in noun reference\n");
+    }
+
+    if (matches.size() == 0)
+        return false;
+    
+    og_noun = matches[0];
+    return true;
+}
+
 bool Mind::did_it_occur(Event abstract_event, Event &og_event)
 {
     if (DEBUGGING)
@@ -1193,3 +1242,18 @@ string Noun::stringify()
     str += "  properties: [" + stringify_set(properties) + "]\n";
     return str;
 };
+
+// a method that takes in a function pointer and a vector of strings that trace out the path of a set of connections
+// and applies the function to each of the connections.
+
+// void Mind::apply_to_connections(
+//     Expression expression,
+//     function<void(Predicate, Predicate)> func)
+// {
+//     auto connections = expression.get_connections();
+
+//     for (auto connection : connections)
+//     {
+//         func(connection.first, connection.second);
+//     }
+// }

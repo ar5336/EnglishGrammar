@@ -1,0 +1,11 @@
+{
+    "contributes": {
+      "themes": [
+        {
+          "label": "Custom Theme",
+          "uiTheme": "vs-dark",
+          "path": "./langed/custom-theme.json"
+        }
+      ]
+    }
+  }

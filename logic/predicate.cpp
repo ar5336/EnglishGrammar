@@ -15,11 +15,13 @@ Predicate::Predicate(int type_id, vector<string> arguments, SpeechActs speechAct
 
 string Predicate::get_argument(string parameter_name)
 {
-    if (predicate_template.parameter_index_map.count(parameter_name) == 0)
+    string trimmed = parameter_name;
+    trim(trimmed);
+    if (predicate_template.parameter_index_map.count(trimmed) == 0)
     {
-        throw runtime_error("can not find parameter name '"+parameter_name+"' in predicate of type '"+predicate_template.predicate+"'\n");
+        throw runtime_error("can not find parameter name '"+trimmed+"' in predicate of type '"+predicate_template.predicate+"'\n");
     }
-    int param_index = predicate_template.parameter_index_map[parameter_name];
+    int param_index = predicate_template.parameter_index_map[trimmed];
 
     return arguments[param_index];
 }
