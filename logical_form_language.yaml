@@ -1,0 +1,163 @@
+Role:
+    - agent: null
+            # <a dog> bit into the bone
+    - theme:
+            null
+            # a dog bit into <the bone>
+            # <the flower> wilted
+    - instr:
+            null
+            # the firefighter broke the door <with his axe>
+    - experiencer:
+            null
+            # <jack> enjoyed the play
+    - beneficiary:
+            null
+            # those soldiers fought <for crown and country>
+    - location: null
+            null
+            # we found a cave <at the canyon>
+    - possessor: null
+            # they took <the dickens's> horse to the market
+    - destination: null
+            # they took the car <to the marina>
+    - recipient: null
+            # i gave <the clown> a candy
+    - from-location: null
+            # we took the car <from the garage>
+    - from-possession: null
+            # we took the car <from dad>
+    - at-time: null
+            # we ride <at dawn>
+
+OBJECT:
+    STATES:
+        color: "red"
+        size:
+    COLOR color: null
+    TIME creation: null
+    TIME destruction: null
+
+EVENT_ROLES:
+    OBJECT agent: null
+    OBJECT instrument: null
+    OBJECT patient: null
+    OBJECT experiencer: null
+    OBJECT beneficiary: null
+    at:
+        OBJECT at-loc: null
+        OBJECT at-poss: null
+        OBJECT.STATE at-value: null
+        TIME at-time: null
+    to:
+        OBJECT to-loc: null
+        OBJECT to-poss: null
+        OBJECT.STATE to-value: null
+    from:
+        from-loc: null
+        from-poss: null
+        OBJECT.STATE from-value: null
+    OBJECT[type=path] path: null
+    OBJECT co-agent: null
+    OBJECT co-theme: null
+
+PredicateToRoleMap:
+    - ACTION.actor -> ROLE.agent
+    - ACTION.object -> ROLE.patient
+    - ACTION.indirect_object -> ROLE.instrument
+    - ACTION[actor]=>[]LOCATION.location -> ROLE.at-location
+    - ACTION
+
+
+Schema:
+    ACTION:
+        roles:
+        - agent
+        - instrument
+        - patient
+        PREPOSITION:
+            roles:
+            - location
+            - preposition_type
+    OBJECT:
+        NAME:
+
+
+Event:
+    ROLE event-role: role123
+
+Entities:
+    landmass:
+        components:
+            - area:
+            -
+    country:
+        type-of: { landmass }
+
+    country.state:
+
+Relationships:
+    - eat_food:
+          Predicate: ACTION object:eat
+          Phrasings:
+              - VerbPhrasing:
+                    Verbs: [eat]
+                    Actor: [noun_class:"animal"]
+                    Subject: []
+              - VerbPhrasing:
+                    Verbs: [scarf]
+                    Actor: [?=noun_class:"animal"]
+                    Subject: []
+                    Requirements:
+                        - Preposition:
+                              prep: "down"
+    - is_red:
+          Phrasings:
+              - Adjectives: [red, crimson, scarlet]
+                Conditions:
+                    - object.color 
+
+CausalityMap: # mapped by effect
+    - Death:
+        Conditions:
+            - OBJECT.life?
+                # has property of life
+        Effects:
+            - OBJECT.life=dead
+        Types:
+            - Natural death:
+                Causes:
+                    old age
+            - Violent death:
+                Causes:
+                    ACTION kill killer OBJECT
+            - starvation:
+                Causes:
+                    long time no eat
+    - egg birth:
+        Conditions: 
+            OBJECT.life?
+            OBJECT 
+    - Live Birth:
+        Conditions: []
+    - "time causes an object to be older"
+        
+                
+# Dictionary:
+#     red:
+#         sense0:
+#             Predicate:
+#                 COLOR
+#                     object: {}
+#                     color:
+#             OBJECT.color =
+
+Dictionary:
+    birth:
+        Predicate:
+            ACTION action_type:"birth" actor:"Mother"
+    parent:
+        an animal that gave birth to another animal
+
+
+VerbPhrase:

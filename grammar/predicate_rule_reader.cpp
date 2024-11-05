@@ -94,7 +94,7 @@ PredicateCreator::PredicateCreator(PredicateHandler *handler, vector<string> cre
         string corresponding_template_param = predicate.parameter_names[i];
 
         if (!equals(parameter_name, corresponding_template_param))
-            throw runtime_error("parameter name "+parameter_name+" does not match corresponding '"+corresponding_template_param+"' template parameter name");
+            throw runtime_error("parameter name '"+parameter_name+"' does not match corresponding '"+corresponding_template_param+"' template parameter name");
 
         if (parameter_name != predicate_template.parameter_names[i])
             throw runtime_error("parameter name in predicate creation rule is named wrong");

@@ -5,6 +5,8 @@ bool Parser::does_frame_have_features(
     bool is_left,
     Frame &consumer_frame)
 {
+    printf("checking if frame %s has features %s\n", candidate_frame.stringify_pre_binarization().c_str(), stringify_set(consumer_frame.feature_set).c_str());
+
     vector<FeatureTag> feature_tags;
     int element_index;
     if (is_left)
@@ -15,21 +17,31 @@ bool Parser::does_frame_have_features(
     {
         element_index = 1;
     }
+    
+    printf("element index is: %d\n", element_index);
+
+    printf("number of pattern elements: %ld\n", consumer_frame.pattern_elements.size());    
     PatternElement pattern_element = consumer_frame.pattern_elements[element_index];
     feature_tags = pattern_element.feature_tags;
 
     // first test the regular tags
+    printf("checking feature tags\n");
+    set<string> tag_set = candidate_frame.feature_set;
+    printf("tag set: %s\n", stringify_set(tag_set).c_str());
     for (FeatureTag test_feature_tag : feature_tags)
     {
-        set<string> tag_set = candidate_frame.feature_set;
+        
+        
         if (test_feature_tag.tag_type == FeatureTagType::Necessary)
         {
+            printf("necessary: %s\n", test_feature_tag.feature_name.c_str());
             // look for feature in frame
             if (tag_set.count(test_feature_tag.feature_name) == 0)
                 return false;
         }
         else
         {
+            printf("unnecessary: %s\n", test_feature_tag.feature_name.c_str());
             // look for absence of feature in frame
             if (tag_set.count(test_feature_tag.feature_name) != 0)
                 return false;
@@ -41,6 +53,8 @@ bool Parser::does_frame_have_features(
     // refactor this code. rename consumer to something better like, source. source and product frame. bottom-up
     // make the feature group tags check with a set of some sort.
     // TODO2000
+
+    printf("checking feature groups\n");
     vector<string> feature_group_tags = pattern_element.feature_group_tags;
     // then test for feature groups
     for (string feature_group_tag : feature_group_tags)
@@ -87,46 +101,37 @@ void Parser::load_frame(FrameCoordinates coords, Frame new_frame)
     vector<Frame> frames_to_add = vector<Frame>{new_frame};
         
 
-    if (new_frame.is_word_frame() &&
-        grammar.monoframes_by_pattern_element.count(new_frame.get_part_of_speech()) != 0)
+    // must be able to handle non-word frames
+    // check if the new frame is a monoframe
+    if (!new_frame.is_word_frame() && grammar.monoframes_by_pattern_element.count(new_frame.frame_name) != 0)
     {
-        string part_of_speech = new_frame.get_part_of_speech();
-        if (DEBUGGING)
-            printf("found a defined pattern element %s\n", part_of_speech.c_str());
-        
-        auto candidate_monoframes = grammar.monoframes_by_pattern_element.at(part_of_speech);
-
+        printf("found a non-word monoframe %s\n", new_frame.stringify_pre_binarization().c_str());
+        // if it is not a word frame, we can still check for monoframes
+        auto candidate_monoframes = grammar.monoframes_by_pattern_element.at(new_frame.frame_name);
         for (int candidate_index = 0; candidate_index < candidate_monoframes.size(); candidate_index++)
         {
-            auto pattern_element_monoframe = candidate_monoframes[candidate_index];
+            auto candidate_monoframe = candidate_monoframes[candidate_index].second;
 
-            auto pattern_element = pattern_element_monoframe.first;
-            auto candidate_monoframe = pattern_element_monoframe.second;
-            if (!does_frame_have_features(new_frame, /*is_left*/true, candidate_monoframe))
+            if (!does_frame_have_features(new_frame, true, candidate_monoframe))
             {
-                if (DEBUGGING)
-                    printf("monoframe match does not match by features\n");
-            
+                printf("non-word monoframe match does not match by features\n");
                 continue;
             }
 
             if (DEBUGGING)
-                printf("adding a frame produced based off monoframe: %s\n", candidate_monoframe.stringify_pre_binarization().c_str());
-    
-            candidate_monoframe.type = FrameType::Matched;
+                printf("adding a non-word frame based off monoframe: %s\n", candidate_monoframe.stringify_pre_binarization().c_str());
+            
+            candidate_monoframe.type = FrameType::MonoFrame_Derived;
             FrameCoordinates new_coords = FrameCoordinates(coords.row, coords.col, candidate_index);
-            // candidate_monoframe.
+            candidate_monoframe.left_match = new_coords;
 
             auto context = RuleApplierContext(predicate_handler, variable_namer);
-
-            candidate_monoframe.left_match = new_coords;
 
             auto expression = PredicateRuleApplier::apply_formation_rules_on_expression(
                     context,
                     candidate_monoframe.predicate_formation_rules,
                     candidate_monoframe.accumulated_expression,
                     vector<Frame>{new_frame});
-
             
             candidate_monoframe = candidate_monoframe.with_expression(expression);
 
@@ -135,6 +140,69 @@ void Parser::load_frame(FrameCoordinates coords, Frame new_frame)
             
             frames_to_add.push_back(candidate_monoframe);
         }
+    } else
+    if (new_frame.is_word_frame() &&
+        grammar.monoframes_by_pattern_element.count(new_frame.get_part_of_speech()) != 0)
+    {
+        auto candidate_monoframes = vector<pair<PatternElement, Frame>>();
+        if (new_frame.is_word_frame())
+        {
+            string part_of_speech = new_frame.get_part_of_speech();
+            if (DEBUGGING)
+                printf("found a monoframe-worthy part of speech: %s\n", part_of_speech.c_str());
+            
+            candidate_monoframes = grammar.monoframes_by_pattern_element.at(part_of_speech);
+
+            
+        }
+        else
+        {
+            string frame_name = new_frame.frame_name;
+            if (DEBUGGING)
+                printf("found a monoframe-worthy pattern element: %s\n", frame_name.c_str());
+            candidate_monoframes = grammar.monoframes_by_pattern_element.at(frame_name);
+        }
+
+        for (int candidate_index = 0; candidate_index < candidate_monoframes.size(); candidate_index++)
+            {
+                auto pattern_element_monoframe = candidate_monoframes[candidate_index];
+
+                auto pattern_element = pattern_element_monoframe.first;
+                auto candidate_monoframe = pattern_element_monoframe.second;
+                printf("CHECKING FOR FEATURES\n");
+                if (!does_frame_have_features(new_frame, /*is_left*/true, candidate_monoframe))
+                {
+                    if (DEBUGGING)
+                        printf("monoframe match does not match by features\n");
+                
+                    continue;
+                }
+
+                if (DEBUGGING)
+                    printf("adding a frame produced based off monoframe: %s\n", candidate_monoframe.stringify_pre_binarization().c_str());
+        
+                candidate_monoframe.type = FrameType::Matched;
+                FrameCoordinates new_coords = FrameCoordinates(coords.row, coords.col, candidate_index);
+                // candidate_monoframe.
+
+                auto context = RuleApplierContext(predicate_handler, variable_namer);
+
+                candidate_monoframe.left_match = new_coords;
+
+                auto expression = PredicateRuleApplier::apply_formation_rules_on_expression(
+                        context,
+                        candidate_monoframe.predicate_formation_rules,
+                        candidate_monoframe.accumulated_expression,
+                        vector<Frame>{new_frame});
+
+                
+                candidate_monoframe = candidate_monoframe.with_expression(expression);
+
+                if (DEBUGGING)
+                    printf("adding monframe to parse grid: %s, with expression: %s\n", candidate_monoframe.stringify_pre_binarization().c_str(), predicate_handler->stringify_expression(candidate_monoframe.accumulated_expression).c_str());
+                
+                frames_to_add.push_back(candidate_monoframe);
+            }
     }
 
     for (auto frame_to_add : frames_to_add)
@@ -187,9 +255,12 @@ bool Parser::try_get_matched_frames(
         vector<Frame> frames_to_doublecheck = grammar.cnf_map.at(match_string);
 
         // vector<Frame> accepted_frames;
+        printf("number of frames to double-check: %ld\n", frames_to_doublecheck.size());
         for (int frame_index = 0; frame_index < frames_to_doublecheck.size(); frame_index++)
         {
+            printf("checking frame %d\n", frame_index);
             Frame candidate_frame = frames_to_doublecheck[frame_index];
+            printf("dereferenced frame: %s\n", candidate_frame.stringify_as_param().c_str());
 
             if (candidate_frame.type == FrameType::MonoFrame_Derived)
             {
@@ -212,17 +283,22 @@ bool Parser::try_get_matched_frames(
             vector<FeatureTag> left_feature_tags = left_pattern_element.feature_tags;
             vector<FeatureTag> right_feature_tags = right_pattern_element.feature_tags;
 
+            printf("flag final\n");
             if (does_frame_have_features(left_candidate_frame, true, candidate_frame) && does_frame_have_features(right_candidate_frame, false, candidate_frame))
             {
+
                 Expression new_expression = apply_formation_rules_on_frames(
                                             candidate_frame.predicate_formation_rules,
                                             left_candidate_frame,
                                             right_candidate_frame) ;
+                
+                
                 matched_frames.push_back(
                     candidate_frame.with_links(
                         left_frame_coordinates,
                         right_frame_coordinates)
                                    .with_expression(new_expression));
+                
             }
         }
 

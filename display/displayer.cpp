@@ -410,6 +410,7 @@ void Displayer::display()
                             continue;
 
                         frame_traverse_stack.push_back(make_pair(current_frame.left_match, left_frame));
+                        frame_coords_to_connect.insert(make_pair(current_coordinates, current_frame.left_match));
                     }
                 }
 

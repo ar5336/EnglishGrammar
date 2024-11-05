@@ -5,8 +5,8 @@ void ltrim(string &s)
 	// trim the space characters from the left side of the string
 	if (s.size() == 0)
 		return;
-	if (DEBUGGING)
-		printf("ltrimming string: '%s'\n", s.c_str());
+	// if (DEBUGGING)
+	// 	printf("ltrimming string: '%s'\n", s.c_str());
 	while (s.size() > 0 && isspace(s[0]))
 	{
 		s.erase(0, 1);
@@ -19,8 +19,8 @@ void rtrim(string &s)
 	if (s.size() == 0)
 		return;
 	
-	if (DEBUGGING)
-		printf("rtrimming string: '%s'\n", s.c_str());
+	// if (DEBUGGING)
+	// 	printf("rtrimming string: '%s'\n", s.c_str());
 	while (s.size() > 0 && isspace(s[s.size() - 1]))
 	{
 		s.erase(s.size() -1, s.size());
@@ -77,8 +77,8 @@ bool is_str_empty(string str)
 vector<string> split_character(string str, string split)
 {
 	vector<string> split_tokens = vector<string>();
-	if (DEBUGGING)
-		printf("splitting string: '%s' by delimiter '%s'\n", str.c_str(), split.c_str());
+	// if (DEBUGGING)
+	// 	printf("splitting string: '%s' by delimiter '%s'\n", str.c_str(), split.c_str());
 	
 	// split string by the split string
 	int pos = 0;
@@ -97,8 +97,8 @@ vector<string> split_character(string str, string split)
 	if (!equals(str, split) && !is_str_empty(str))
 		split_tokens.push_back(str);
 
-	if (DEBUGGING)
-		printf("returning %ld split tokens\n", split_tokens.size());
+	// if (DEBUGGING)
+	// 	printf("returning %ld split tokens\n", split_tokens.size());
 	
 	return split_tokens;
 }

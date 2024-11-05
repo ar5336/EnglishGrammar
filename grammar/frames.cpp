@@ -153,8 +153,15 @@ string Frame::stringify_as_param()
     {
         return frame_name + " " + to_string(pattern_elements.size());
     }
-    
-    return "BLARG";
+    if (type == FrameType::Binarized)
+    {
+        return frame_name + " [" + stringify_set(feature_set) + "] " + to_string(pattern_elements.size());;
+    }
+    // if (type == FrameType::MultiFrame_Derived)
+    // {
+        return to_string((int)type);
+    // }   
+    // return "BLARG";
 }
 
 // default constructor
@@ -379,6 +386,9 @@ Frame Frame::with_expression(
 
     if (pattern_elements.size() == 1)
     {
+        if (DEBUGGING)
+            printf("adding monoframe\n");
+    
         auto new_frame = Frame(
             frame_name,
             definition_line,
@@ -397,6 +407,10 @@ Frame Frame::with_expression(
     {
         throw runtime_error("bad pattern elements");
     }
+
+    if (DEBUGGING)
+        printf("adding regular frame\n");
+
     auto new_frame = Frame(
         frame_name,
         definition_line,
@@ -409,6 +423,9 @@ Frame Frame::with_expression(
         right_match,
         new_expression
     );
+
+    if (DEBUGGING)
+        printf ("done adding regular frame\n");
 
     return new_frame;
 }

@@ -6,4 +6,37 @@ grammar:
         - VERB_APPLIES
     Features:
 
-      
+  
+
+AnaphoricNounPhrase "AnNP":
+  NounPhraseAnaphoricActorDescriptivePhrase:
+    Pattern:
+      NounPhrase[NUMBER]
+      AnaphoricActorDescriptivePhrase[NUMBER]
+    FeatureGroups:
+      NUMBER
+    FormationRules:
+      AnaphoricActorDescriptivePhrase->ACTION_2.object=
+        NounPhrase->IS.object
+      ANAPHORIC
+        object:NounPhrase->IS.object anaphoric_object:!
+    Examples:
+      the man | that a dog bit
+VerbPhrase "VP":
+  VerbSuperTransitiveNounPhrase:
+    Pattern:
+      Verb[SuperTransitive]
+      NounPhrase
+    Features:
+      super_transitive 
+      indirect_object_unfilled 
+      actor_unfilled
+    FormationRules:
+      ACTION_3
+        action:!!
+        actor:"unknown"
+        action_type:Verb
+        object:NounPhrase->IS.object
+        indirect_object:"unknown"
+    Examples:
+      <give a horse> some food

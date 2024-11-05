@@ -136,6 +136,8 @@ public:
     //     string direction // forwars, backward
     // );
 
+    vector<pair<int, int>> causality_map;
+
     Timeline();
     Timeline(bool real);
 

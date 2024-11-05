@@ -169,6 +169,7 @@ Words:
                 give giving gave gives given
                 transfer transferring transferred transfers
                 name naming named names
+                shoot shooting shot shoots
             Transitive: # simple continuous perfect 3PPresent (pastPart)
                 kill killing killed kills
                 write writing wrote writes written
@@ -215,15 +216,17 @@ Words:
                 sleep sleeping slept sleeps
                 fall falling fell falls
         AuxiliaryVerb:
-            be -continuous -singular -plural
-            has -perfect -singular -3rdPerson
-            have -perfect -plural
-            do -simple -singular -plural
-            will -simple -singular -plural
+            PerfectAuxiliaryVerb:
+                have -perfect -plural -1stPerson
+                has -perfect -singular -3rdPerson
+            ContinuousAuxiliaryVerb:
+                be -continuous
+                been -continuous -past
+                do -continuous
+                done
         ModalVerb:
             should -advice
             must -obligation
-            will -offer
             will -futureProbability
             may -futureProbability
             might -futureProbability
@@ -231,7 +234,7 @@ Words:
             can -ability
             could -ability
             could -futureProbability
-            may -permissoin
+            may -permission
             shall
         LinkingVerb:
             IndicativeVerb:
@@ -400,14 +403,15 @@ FeatureGroups:
     PRESENT= 3PPresent simple continuous
     PERSON= 1stPerson 2ndPerson 3rdPerson
     MODE= advice obligation offer futureProbability ability permission
-    TENSE= simple continuous perfect 3PPresent pastPart
+    TENSE_TIME= simple continuous perfect 3PPresent pastPart
+    TENSE_COMPLETENESS= complete continuous
     TRANSITIVITY= Transitive Intransitive
     DETERMINATION= determined undetermined
 
 Predicates:
     IS              object->    object_count noun_class
     HAS_PROPERTY    object->    property
-    TIME            action->    time
+    TENSE           action->    time        completeness
     PREPOSITION     action->    preposition object->
     ACTION          action->    actor->     action_type
     ACTION_2        action->    actor->     action_type object->
@@ -419,16 +423,17 @@ Predicates:
     OBJECT          object->    id
     NAME            object->    name
     TOPIC           object->
-    CONJUNCTION     object-> object_1-> object_2->
+    CONJUNCTION     object->    object_1->  object_2->
 
 Frames:
     NounPhrase "NP"
-        AnaphoricNounPhrase
         #<TOPIC object:AnaphoricNounPhrase->ANAPHORIC.object>
         Determiner[Article] Noun[MainNoun,NUMBER] -NUMBER -determined <IS object:! object_count:"1" noun_class:Noun>
             # the dog
             # the dogs
 
+        AnaphoricNounPhrase
+            # the dog that got bit by a horse
         Noun[Name] -MainNoun -singular <NAME object:! name:Noun | IS object:! object_count:"1" noun_class:"unknown">
 
         Noun[Name] NounPhrase[singular,determined] <NAME object:NounPhrase->IS.object name:Noun>
@@ -536,7 +541,8 @@ Frames:
     AnaphoricActionDescriptivePhrase "AnAtDP"
         Noun[RelativePronoun] VerbPhrase[transitive,actor_unfilled] -transitive -actor_unfilled -descriptive
             # the dog <that bit a person> is ugly
-        Noun[RelativePronoun] Verb[!Transitive] -intransitive -actor_unfilled <ACTION action:! actor:"unknown" action_type:Verb>
+        Noun[RelativePronoun] VerbPhrase[!transitive] -intransitive -actor_unfilled
+            #<ACTION action:! actor:"unknown" action_type:Verb>
             # the runner <that fell> is clumsy
     AnaphoricActorDescriptivePhrase "AnArDP"
         Noun[RelativePronoun] VerbPhrase[NUMBER,transitive,object_unfilled] -NUBER 
@@ -567,18 +573,18 @@ Frames:
         # will be bit
         # will have been bit
     VerbPhrase "VP"
-        Verb[MainVerb,TENSE,Transitive] NounPhrase -TENSE -transitive -actor_unfilled <ACTION_2 action:! actor:"unknown" action_type:Verb object:NounPhrase->IS.object>
+        Verb[MainVerb,Transitive] NounPhrase -transitive -actor_unfilled <ACTION_2 action:! actor:"unknown" action_type:Verb object:NounPhrase->IS.object>
             # the horse that <bit a man> is ugly
-        Verb[MainVerb,TENSE,SuperTransitive] NounPhrase -TENSE -super_transitive -actor_unfilled -indirect_object_unfilled <ACTION_3 action:! actor:"unknown" action_type:Verb object:NounPhrase->IS.object indirect_object:"unknown">
+        Verb[MainVerb,SuperTransitive] NounPhrase -super_transitive -actor_unfilled -indirect_object_unfilled <ACTION_3 action:! actor:"unknown" action_type:Verb object:NounPhrase->IS.object indirect_object:"unknown">
             # the horse that <gave a man> a gift
         Verb[TRANSITIVITY] Adverb -TRANSITIVITY <ACTION action:! actor:"unknown" action_type:Verb | HAS_PROPERTY object:! property:Adverb>
             # run quickly
         Adverb Verb
             # quickly run
 
-        # VerbPhrase[Intransitive,NUMBER] PrepPhrase -TENSE -NUMBER <PrepPhrase->PREPOSITION.object=VerbPhrase->ACTION.action>
+        # VerbPhrase[Intransitive,NUMBER] PrepPhrase -NUMBER <PrepPhrase->PREPOSITION.object=VerbPhrase->ACTION.action>
         # ran into a river
-        Verb[MainVerb,TENSE,TRANSITIVITY] PrepPhrase -TENSE -TRANSITIVITY <ACTION action:! actor:"unknown" action_type:Verb>
+        Verb[MainVerb,TRANSITIVITY] PrepPhrase -TRANSITIVITY <ACTION action:! actor:"unknown" action_type:Verb>
             # run into the field
         Verb[Transitive,!perfect] Noun[MassNoun] -singular -actor_unfilled -transitive <ACTION_2 action:! actor:"unknown" action_type:Verb object:!!| IS object:!! object_count:"inf" noun_class:Noun>
             # i <eat grass>
@@ -646,11 +652,23 @@ Frames:
         Verb[continuous,Intransitive] PrepPhrase -continuous -actor_unfilled <ACTION action:! actor:"unknown" action_type:Verb>
             # running in the field
     AuxiliaryPhrase "AxP"
-        Verb[AuxiliaryVerb,TENSE] Verb[MainVerb,TENSE] -TENSE
+        Verb[ContinuousAuxiliaryVerb] Verb[MainVerb,simple] <TENSE action:Verb->ACTION.action time:present completeness:continuous>
             # !i <have run>
+                # present complete
             # i <do run>
-            # the dog <has ran>
+                # present continuous
+        Verb[PerfectAuxiliaryVerb] Verb[MainVerb,pastPart] <TENSE action:Verb#2->ACTION.action time:present completeness:complete>
+            # the dog <has given>
+                # past complete
+        Verb[PerfectAuxiliaryVerb] Verb[MainVerb,perfect] <TENSE action:Verb#2->ACTION.action time:present completeness:complete>
             # the dogs <have ran>
+                # past complete
+
+        Verb[PerfectAuxiliaryVerb] Verb[ContinuousAuxiliaryVerb] <TENSE action:"unknown" time:present completeness:complete>
+            # have been
+        Verb[ModalVerb] AuxiliaryPhrase[incomplete]
+            # <could | have been>
+                # may have totally been
     PrepPhrase "PP"
         Preposition Noun[MassNoun]
             # under water
@@ -801,9 +819,8 @@ Frames:
         Verb[LinkingVerb,present,NUMBER] NounPhrase[NUMBER] -present -NUMBER -existential
             # is a house
             # do the horses
-        Verb[LinkingVerb,present,NUMBER] Noun[plural] -present -plurals -existential <IS object:! object_count:"inf" noun_class:Noun>
+        Verb[LinkingVerb,present,NUMBER] Noun[plural] -present -plural -existential <IS object:! object_count:"inf" noun_class:Noun>
             # do dogs
-
 
     InterrogativePhrase "IntP"
     #    who -person
