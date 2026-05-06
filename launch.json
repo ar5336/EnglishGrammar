@@ -1,0 +1,15 @@
+{
+  "name": "C++ Launch (Windows)",
+  "type": "cppvsdbg",
+  "MIMode": "gdb",
+  "request": "launch",
+  "program": "${workspaceFolder}/parser",
+  "externalConsole": true,
+  "logging": {
+    "moduleLoad": false,
+    "trace": true
+  },
+  "visualizerFile": "${workspaceFolder}/my.natvis",
+  "showDisplayString": true,
+  "stopAtEntry": false
+}

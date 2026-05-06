@@ -121,6 +121,13 @@ public:
 
     void display();
 
+    void display_drilldown_tree(
+        Parser* parser,
+        FrameCoordinates starting_coordinates,
+        vector<Frame> interps,
+        set<FrameCoordinates> frame_coords_to_highlight,
+        set<pair<FrameCoordinates, FrameCoordinates>>* frame_coords_to_connect);
+
     // void drift();
 
     bool is_in_bounds(Point point, pair<Point, Point> bounds);

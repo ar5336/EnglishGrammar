@@ -248,7 +248,7 @@ void Grammar::binarize_grammar()
 	if (DEBUGGING)
 	{
 		printf("monoframes_by_left: %s\n", stringify_monoframe_map(monoframes_by_frame_name).c_str());
-		printf("monoframes_by_rihgt: %s\n", stringify_monoframe_map(monoframes_by_pattern_element).c_str());
+		printf("monoframes_by_right: %s\n", stringify_monoframe_map(monoframes_by_pattern_element).c_str());
 
 		printf("done binarizing grammar\n");
 	}

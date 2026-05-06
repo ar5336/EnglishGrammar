@@ -21,7 +21,7 @@
 using namespace std;
 using namespace cv;
 
-string initial_utterance = "the man that bit the dog";
+string initial_utterance = "the man that bit the dog that ate the fish";
 
 string current_utterance = "";
 
@@ -65,7 +65,8 @@ void parse_utterance(string utterance)
 	Frame interp_frame;
 	if (!parser.try_get_top_frame(interp_frame))
 	{
-		printf("failed to interpret given utterance \"%s\"\n", utterance.c_str());
+		if (DEBUGGING)
+			printf("failed to interpret given utterance \"%s\"\n", utterance.c_str());
 		return;
 	}
 
@@ -74,7 +75,8 @@ void parse_utterance(string utterance)
 	Expression expression;
 	if(!interp_handler.try_construct_expression(expression))
 	{
-		printf("failed to construct expression for given utternace \"%s\"\n", utterance.c_str());
+		if (DEBUGGING)
+			printf("failed to construct expression for given utternace \"%s\"\n", utterance.c_str());
 		return;
 	}
 

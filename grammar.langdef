@@ -164,7 +164,7 @@ Words:
             ReceptiveTransitive: # simple continuous perfect 3PPresent (pastPart)
                 take taking took takes taken
                 drink drinking diank drinks
-            SuperTransitive: # simple continuous perfect 3PPresent (pastPart)
+            Ditransitive: # simple continuous perfect 3PPresent (pastPart)
                 gift gifting gifted gifts
                 give giving gave gives given
                 transfer transferring transferred transfers
@@ -394,7 +394,11 @@ Words:
     Conjunction:
         and
         but
-        nor
+        either -condition -pre
+        neither -condition -pre -negative
+        nor -condition -post -negative
+        if -condition -pre 
+        then -cause
 
 FeatureGroups:
     NUMBER= singular plural
@@ -423,7 +427,8 @@ Predicates:
     OBJECT          object->    id
     NAME            object->    name
     TOPIC           object->
-    CONJUNCTION     object->    object_1->  object_2->
+    CONJUNCTION     conjunction    object_1->  object_2->
+    CAUSE           cause[EVENT]->     effect[EVENT]->
 
 Frames:
     NounPhrase "NP"
@@ -491,9 +496,9 @@ Frames:
 
         Noun[plural] PrepPhrase <IS object:! object_count:"inf" noun_class:Noun>
             # dogs in the city
-        NounPhrase Conjunction NounPhrase -plural <CONJUNCTION object:! object_1:NounPhrase#1->IS.object object_2:NounPhrase#2->IS.object>
-            # cats and dogs
-            # cat and fish
+        #NounPhrase Conjunction NounPhrase -plural <CONJUNCTION object_1:! object_2:NounPhrase#1->IS.object object_2:NounPhrase#2->IS.object>
+        # cats and dogs
+        # cat and fish
         # this does not work yet. need to update binarization process, and also parser handing of binarized multiframes
 
         #Noun[Pronoun,possessive] NounPhrase[!determined,NUMBER] -determined -NUMBER
@@ -518,7 +523,6 @@ Frames:
             # land mammal
 
         Noun[Name] NounPhrase[singular,determined] -singular <NAME object:NounPhrase->IS.object name:Noun>
-
     AnaphoricNounPhrase "AnNP"
         NounPhrase[NUMBER] AnaphoricActionDescriptivePhrase[transitive] -NUMBER -actor -anaphoric <AnaphoricActionDescriptivePhrase->ACTION_2.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the dog that bit the person
@@ -575,7 +579,7 @@ Frames:
     VerbPhrase "VP"
         Verb[MainVerb,Transitive] NounPhrase -transitive -actor_unfilled <ACTION_2 action:! actor:"unknown" action_type:Verb object:NounPhrase->IS.object>
             # the horse that <bit a man> is ugly
-        Verb[MainVerb,SuperTransitive] NounPhrase -super_transitive -actor_unfilled -indirect_object_unfilled <ACTION_3 action:! actor:"unknown" action_type:Verb object:NounPhrase->IS.object indirect_object:"unknown">
+        Verb[MainVerb,Ditransitive] NounPhrase -super_transitive -actor_unfilled -indirect_object_unfilled <ACTION_3 action:! actor:"unknown" action_type:Verb object:NounPhrase->IS.object indirect_object:"unknown">
             # the horse that <gave a man> a gift
         Verb[TRANSITIVITY] Adverb -TRANSITIVITY <ACTION action:! actor:"unknown" action_type:Verb | HAS_PROPERTY object:! property:Adverb>
             # run quickly
@@ -636,18 +640,18 @@ Frames:
         NounPhrase VerbPhrase[super_transitive,actor_unfilled] -super_transitive -complete <VerbPhrase->ACTION_3.indirect_object=NounPhrase->IS.object>
             # a man give a horse an apple
 
-        Verb[SuperTransitive] NounPhrase -super_transitive -indirect_object_unfilled -actor_unfilled <ACTION_3 action:!! actor:"unknown" action_type:Verb object:NounPhrase->IS.object indirect_object:"unknown">
+        Verb[Ditransitive] NounPhrase -super_transitive -indirect_object_unfilled -actor_unfilled <ACTION_3 action:!! actor:"unknown" action_type:Verb object:NounPhrase->IS.object indirect_object:"unknown">
             # <give a horse> some food
 
-        #Verb[SuperTransitive] -super_transitive -actor_unfilled -indirect_object_unfilled -object_unfilled <ACTION_3
+        #Verb[Ditransitive] -super_transitive -actor_unfilled -indirect_object_unfilled -object_unfilled <ACTION_3
 
         #Noun[Pronoun,singular,GENDER,3rdPerson] Verb[3PPresent] -GENDER
         # he runs
         # she runs
 
-        VerbPhrase Conjunction VerbPhrase -plural
-            # eats grass and drinks water
-            # eating grass and drinking water
+        #VerbPhrase Conjunction VerbPhrase -plural
+        # eats grass and drinks water
+        # eating grass and drinking water
 
         Verb[continuous,Intransitive] PrepPhrase -continuous -actor_unfilled <ACTION action:! actor:"unknown" action_type:Verb>
             # running in the field

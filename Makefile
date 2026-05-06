@@ -1,4 +1,4 @@
-CC = g++ 
+CC = g++ -g -O0
 #-g -rdynamic
 
 # put -Wall back when you're ready

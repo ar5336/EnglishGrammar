@@ -5,7 +5,8 @@ bool Parser::does_frame_have_features(
     bool is_left,
     Frame &consumer_frame)
 {
-    printf("checking if frame %s has features %s\n", candidate_frame.stringify_pre_binarization().c_str(), stringify_set(consumer_frame.feature_set).c_str());
+    if (DEBUGGING)
+        printf("checking if frame %s has features %s\n", candidate_frame.stringify_pre_binarization().c_str(), stringify_set(consumer_frame.feature_set).c_str());
 
     vector<FeatureTag> feature_tags;
     int element_index;
@@ -18,30 +19,36 @@ bool Parser::does_frame_have_features(
         element_index = 1;
     }
     
-    printf("element index is: %d\n", element_index);
 
-    printf("number of pattern elements: %ld\n", consumer_frame.pattern_elements.size());    
     PatternElement pattern_element = consumer_frame.pattern_elements[element_index];
     feature_tags = pattern_element.feature_tags;
 
     // first test the regular tags
-    printf("checking feature tags\n");
     set<string> tag_set = candidate_frame.feature_set;
-    printf("tag set: %s\n", stringify_set(tag_set).c_str());
+    if (DEBUGGING)
+    {
+        printf("element index is: %d\n", element_index);
+        printf("number of pattern elements: %ld\n", consumer_frame.pattern_elements.size());    
+        printf("checking feature tags\n");
+        printf("tag set: %s\n", stringify_set(tag_set).c_str());
+    }
+
     for (FeatureTag test_feature_tag : feature_tags)
     {
         
         
         if (test_feature_tag.tag_type == FeatureTagType::Necessary)
         {
-            printf("necessary: %s\n", test_feature_tag.feature_name.c_str());
+            if (DEBUGGING)
+                printf("necessary: %s\n", test_feature_tag.feature_name.c_str());
             // look for feature in frame
             if (tag_set.count(test_feature_tag.feature_name) == 0)
                 return false;
         }
         else
         {
-            printf("unnecessary: %s\n", test_feature_tag.feature_name.c_str());
+            if (DEBUGGING)
+                printf("unnecessary: %s\n", test_feature_tag.feature_name.c_str());
             // look for absence of feature in frame
             if (tag_set.count(test_feature_tag.feature_name) != 0)
                 return false;
@@ -54,7 +61,8 @@ bool Parser::does_frame_have_features(
     // make the feature group tags check with a set of some sort.
     // TODO2000
 
-    printf("checking feature groups\n");
+    if (DEBUGGING)
+        printf("checking feature groups\n");
     vector<string> feature_group_tags = pattern_element.feature_group_tags;
     // then test for feature groups
     for (string feature_group_tag : feature_group_tags)
@@ -105,7 +113,8 @@ void Parser::load_frame(FrameCoordinates coords, Frame new_frame)
     // check if the new frame is a monoframe
     if (!new_frame.is_word_frame() && grammar.monoframes_by_pattern_element.count(new_frame.frame_name) != 0)
     {
-        printf("found a non-word monoframe %s\n", new_frame.stringify_pre_binarization().c_str());
+        if (DEBUGGING)
+            printf("found a non-word monoframe %s\n", new_frame.stringify_pre_binarization().c_str());
         // if it is not a word frame, we can still check for monoframes
         auto candidate_monoframes = grammar.monoframes_by_pattern_element.at(new_frame.frame_name);
         for (int candidate_index = 0; candidate_index < candidate_monoframes.size(); candidate_index++)
@@ -114,7 +123,8 @@ void Parser::load_frame(FrameCoordinates coords, Frame new_frame)
 
             if (!does_frame_have_features(new_frame, true, candidate_monoframe))
             {
-                printf("non-word monoframe match does not match by features\n");
+                if (DEBUGGING)
+                    printf("non-word monoframe match does not match by features\n");
                 continue;
             }
 
@@ -123,17 +133,17 @@ void Parser::load_frame(FrameCoordinates coords, Frame new_frame)
             
             candidate_monoframe.type = FrameType::MonoFrame_Derived;
             FrameCoordinates new_coords = FrameCoordinates(coords.row, coords.col, candidate_index);
-            candidate_monoframe.left_match = new_coords;
 
             auto context = RuleApplierContext(predicate_handler, variable_namer);
 
             auto expression = PredicateRuleApplier::apply_formation_rules_on_expression(
                     context,
                     candidate_monoframe.predicate_formation_rules,
-                    candidate_monoframe.accumulated_expression,
+                    new_frame.accumulated_expression,
                     vector<Frame>{new_frame});
             
             candidate_monoframe = candidate_monoframe.with_expression(expression);
+            candidate_monoframe.left_match = new_coords;
 
             if (DEBUGGING)
                 printf("adding monframe to parse grid: %s, with expression: %s\n", candidate_monoframe.stringify_pre_binarization().c_str(), predicate_handler->stringify_expression(candidate_monoframe.accumulated_expression).c_str());
@@ -169,7 +179,8 @@ void Parser::load_frame(FrameCoordinates coords, Frame new_frame)
 
                 auto pattern_element = pattern_element_monoframe.first;
                 auto candidate_monoframe = pattern_element_monoframe.second;
-                printf("CHECKING FOR FEATURES\n");
+                if (DEBUGGING)
+                    printf("CHECKING FOR FEATURES\n");
                 if (!does_frame_have_features(new_frame, /*is_left*/true, candidate_monoframe))
                 {
                     if (DEBUGGING)
@@ -187,7 +198,6 @@ void Parser::load_frame(FrameCoordinates coords, Frame new_frame)
 
                 auto context = RuleApplierContext(predicate_handler, variable_namer);
 
-                candidate_monoframe.left_match = new_coords;
 
                 auto expression = PredicateRuleApplier::apply_formation_rules_on_expression(
                         context,
@@ -197,6 +207,7 @@ void Parser::load_frame(FrameCoordinates coords, Frame new_frame)
 
                 
                 candidate_monoframe = candidate_monoframe.with_expression(expression);
+                candidate_monoframe.left_match = new_coords;
 
                 if (DEBUGGING)
                     printf("adding monframe to parse grid: %s, with expression: %s\n", candidate_monoframe.stringify_pre_binarization().c_str(), predicate_handler->stringify_expression(candidate_monoframe.accumulated_expression).c_str());
@@ -209,8 +220,6 @@ void Parser::load_frame(FrameCoordinates coords, Frame new_frame)
     {
         parse_grid[coords.row][coords.col].push_back(frame_to_add);
     }
-
-
 }
 
 vector<Frame> Parser::get_frames_at(FrameCoordinates coords)
@@ -247,22 +256,29 @@ bool Parser::try_get_matched_frames(
     }
 
     string match_string = left_string + " " + right_string;
-    // printf("finding matching frames - '%s'\n", match_string.c_str());
+    
+    if (DEBUGGING)
+        printf("finding matching frames - '%s'\n", match_string.c_str());
 
-    // printf("match string: %s\n", match_string.c_str());
+    if (DEBUGGING)
+        printf("match string: %s\n", match_string.c_str());
     if (grammar.cnf_map.count(match_string) != 0)
     {
         vector<Frame> frames_to_doublecheck = grammar.cnf_map.at(match_string);
 
         // vector<Frame> accepted_frames;
-        printf("number of frames to double-check: %ld\n", frames_to_doublecheck.size());
+        if (DEBUGGING)
+            printf("number of frames to double-check: %ld\n", frames_to_doublecheck.size());
         for (int frame_index = 0; frame_index < frames_to_doublecheck.size(); frame_index++)
         {
-            printf("checking frame %d\n", frame_index);
             Frame candidate_frame = frames_to_doublecheck[frame_index];
-            printf("dereferenced frame: %s\n", candidate_frame.stringify_as_param().c_str());
+            if (DEBUGGING)
+            {
+                printf("checking frame %d\n", frame_index);
+                printf("dereferenced frame: %s\n", candidate_frame.stringify_as_param().c_str());
+            }
 
-            if (candidate_frame.type == FrameType::MonoFrame_Derived)
+            if (DEBUGGING && candidate_frame.type == FrameType::MonoFrame_Derived)
             {
                 printf("the derived frame is: %s\n", candidate_frame.stringify_pre_binarization().c_str());
             }
@@ -283,7 +299,6 @@ bool Parser::try_get_matched_frames(
             vector<FeatureTag> left_feature_tags = left_pattern_element.feature_tags;
             vector<FeatureTag> right_feature_tags = right_pattern_element.feature_tags;
 
-            printf("flag final\n");
             if (does_frame_have_features(left_candidate_frame, true, candidate_frame) && does_frame_have_features(right_candidate_frame, false, candidate_frame))
             {
 

@@ -371,51 +371,21 @@ void Displayer::display()
             auto starting_coordinates = FrameCoordinates(highlighted_cell_position.first, highlighted_cell_position.second, highlight_frame_index);
             if (do_traverse)
             {
-                auto top_frame = interps[highlight_frame_index];
-                vector<pair<FrameCoordinates, Frame>> frame_traverse_stack = vector<pair<FrameCoordinates,Frame>> {make_pair(starting_coordinates, top_frame)};
-
-                while (do_traverse && frame_traverse_stack.size() > 0)
-                {
-                    auto coords_from_and_current_frame = frame_traverse_stack.back();
-
-                    FrameCoordinates current_coordinates = coords_from_and_current_frame.first;
-                    Frame current_frame = coords_from_and_current_frame.second;
-                    frame_traverse_stack.pop_back();
-
-                    if (current_frame.type == FrameType::Matched)
-                    {
-                        frame_coords_to_highlight.insert(current_frame.left_match);
-                        frame_coords_to_highlight.insert(current_frame.right_match);
-
-                        Frame left_frame = Frame();
-                        Frame right_frame = Frame();
-                        if (!parser->try_get_frame_at(current_frame.left_match, left_frame))
-                            continue;
-                        if (!parser->try_get_frame_at(current_frame.right_match, right_frame))
-                            continue;
-
-                        frame_traverse_stack.push_back(make_pair(current_frame.left_match, left_frame));
-                        frame_traverse_stack.push_back(make_pair(current_frame.right_match, right_frame));
-
-                        frame_coords_to_connect.insert(make_pair(current_coordinates, current_frame.left_match));
-                        frame_coords_to_connect.insert(make_pair(current_coordinates, current_frame.right_match));
-                    }
-                    else if (current_frame.type == FrameType::MonoFrame_Derived)
-                    {
-                        frame_coords_to_highlight.insert(current_frame.left_match);
-
-                        Frame left_frame = Frame();
-
-                        if (!parser->try_get_frame_at(current_frame.left_match, left_frame))
-                            continue;
-
-                        frame_traverse_stack.push_back(make_pair(current_frame.left_match, left_frame));
-                        frame_coords_to_connect.insert(make_pair(current_coordinates, current_frame.left_match));
-                    }
-                }
-
+                display_drilldown_tree(
+                    parser,
+                    starting_coordinates,
+                    interps,
+                    frame_coords_to_highlight,
+                    &frame_coords_to_connect);
             }
 
+        }
+
+        auto connected_frame_coords = set<FrameCoordinates>();
+        for (auto frame_coord_pair : frame_coords_to_connect)
+        {
+            connected_frame_coords.insert(frame_coord_pair.first);
+            connected_frame_coords.insert(frame_coord_pair.second);
         }
 
         for (int row = 0; row < parser->parse_grid.size(); row++)
@@ -510,7 +480,7 @@ void Displayer::display()
                     }
                     // string cell_text = (is_word) ? (frame.type == FrameType::Derived ? frame.frame_nickname : frame.get_part_of_speech()) : frame.frame_nickname;
 
-                    bool is_highlighted_as_tree = frame_coords_to_highlight.count(FrameCoordinates(row, col, frame_index)) != 0;
+                    bool is_highlighted_as_tree = connected_frame_coords.count(FrameCoordinates(row, col, frame_index)) != 0;
                     display_text(
                         ticker_cell_text,
                         cell_text,
@@ -562,10 +532,15 @@ void Displayer::display()
             previous_highlighted_cell_position = highlighted_cell_position;
     }
 
+    auto selected_frame_coords_of_tree = set<FrameCoordinates>();
+    // display connections of drilldown tree
     for (auto frame_coord_pair : frame_coords_to_connect)
     {
         auto frame_coord_1 = frame_coord_pair.first;
         auto frame_coord_2 = frame_coord_pair.second;
+
+        selected_frame_coords_of_tree.insert(frame_coord_1);
+        selected_frame_coords_of_tree.insert(frame_coord_2);
 
         pair<Point, Point> cell_bounds_1 = get_cell_bounds(frame_coord_1.row, frame_coord_1.col);
         pair<Point, Point> cell_bounds_2 = get_cell_bounds(frame_coord_2.row, frame_coord_2.col);
@@ -716,6 +691,98 @@ void Displayer::display()
     }
 
     cv::imshow(screen_name, image);
+}
+
+void Displayer::display_drilldown_tree(
+    Parser* parser,
+    FrameCoordinates starting_coordinates,
+    vector<Frame> interps,
+    set<FrameCoordinates> frame_coords_to_highlight,
+    set<pair<FrameCoordinates, FrameCoordinates>>* frame_coords_to_connect)
+{
+    auto top_frame = interps[highlight_frame_index];
+    vector<pair<FrameCoordinates,Frame>> frame_traverse_stack = vector<pair<FrameCoordinates,Frame>> {make_pair(starting_coordinates, top_frame)};
+
+    vector<int> go_over_indeces = vector<int>();
+    while (frame_traverse_stack.size() > 0)
+    {
+        auto coords_from_and_current_frame = frame_traverse_stack.back();
+
+        FrameCoordinates current_coordinates = coords_from_and_current_frame.first;
+        Frame current_frame = coords_from_and_current_frame.second;
+        frame_traverse_stack.pop_back();
+
+        if (current_frame.type == FrameType::Matched)
+        {
+            frame_coords_to_highlight.insert(current_frame.left_match);
+            frame_coords_to_highlight.insert(current_frame.right_match);
+
+            Frame left_frame = Frame();
+            Frame right_frame = Frame();
+
+            if (parser->try_get_frame_at(current_frame.left_match, left_frame))
+            {
+                frame_traverse_stack.push_back(make_pair(current_frame.left_match, left_frame));
+                frame_coords_to_connect->insert(make_pair(current_coordinates, current_frame.left_match));
+            }
+            if (parser->try_get_frame_at(current_frame.right_match, right_frame))
+            {
+                frame_traverse_stack.push_back(make_pair(current_frame.right_match, right_frame));
+                frame_coords_to_connect->insert(make_pair(current_coordinates, current_frame.right_match));
+            }
+        }
+        else if (current_frame.type == FrameType::MonoFrame_Derived || current_frame.type == FrameType::Word)
+        {
+            frame_coords_to_highlight.insert(current_frame.left_match);
+
+            if (DEBUGGING)
+            {
+                // print frame type
+                switch(current_frame.type)
+                {
+                    case FrameType::Word:
+                        printf("current frame type: WORD\n");
+                        break;
+                    case FrameType::Matched:
+                        printf("current frame type: MATCHED\n");
+                        break;
+                    case FrameType::MonoFrame_Derived:
+                        printf("current frame type: MONOFRAME_DERIVED\n");
+                        break;
+                    default:
+                        printf("current frame type: UNKNOWN\n");
+                }
+            }
+
+            Frame left_frame = Frame();
+
+            if (!parser->try_get_frame_at(current_frame.left_match, left_frame))
+            {
+                if (DEBUGGING)
+                {
+                    printf("current coords: %d, %d, %d\n", current_coordinates.row, current_coordinates.col, current_coordinates.num);
+                    printf("left_coords: %d, %d, %d\n", current_frame.left_match.row, current_frame.left_match.col, current_frame.left_match.num);
+                    printf("right_coords: %d, %d, %d\n", current_frame.right_match.row, current_frame.right_match.col, current_frame.right_match.num);
+                }// throw runtime_error("can't get frame from the grid");
+                continue;
+            }
+
+            // int go_over_range = current_coordinates.num;
+            // for(int i = 0; i < go_over_range; i++)
+            //     go_over_indeces.push_back(i);
+
+            // if (current_frame.left_match.num < current_coordinates.num)
+            //     frame_traverse_stack
+
+            frame_traverse_stack.push_back(make_pair(current_frame.left_match, left_frame));
+            frame_coords_to_connect->insert(make_pair(current_coordinates, current_frame.left_match));
+        }
+        else {
+            if (DEBUGGING)
+                printf("unknown type of frame (%d) encountered in displayer\n", (int)current_frame.type);
+            throw runtime_error("unknown type of frame");
+        }
+    }
 }
 
 // void Displayer::drift()
