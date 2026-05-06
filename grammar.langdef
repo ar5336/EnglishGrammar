@@ -409,8 +409,9 @@ FeatureGroups:
     MODE= advice obligation offer futureProbability ability permission
     TENSE_TIME= simple continuous perfect 3PPresent pastPart
     TENSE_COMPLETENESS= complete continuous
-    TRANSITIVITY= Transitive Intransitive
+    TRANSITIVITY= Transitive Intransitive Ditransitive
     DETERMINATION= determined undetermined
+    ANIMACY= animate inanimate
 
 Predicates:
     IS              object->    object_count noun_class
@@ -526,7 +527,7 @@ Frames:
     AnaphoricNounPhrase "AnNP"
         NounPhrase[NUMBER] AnaphoricActionDescriptivePhrase[transitive] -NUMBER -actor -anaphoric <AnaphoricActionDescriptivePhrase->ACTION_2.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the dog that bit the person
-        NounPhrase[NUMBER] AnaphoricActionDescriptivePhrase[intransitive] -NUMBER -actor -anaphoric <AnaphoricActionDescriptivePhrase->ACTION.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
+        NounPhrase[NUMBER] AnaphoricActionDescriptivePhrase[Intransitive] -NUMBER -actor -anaphoric <AnaphoricActionDescriptivePhrase->ACTION.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the pig that flew
         NounPhrase AnaphoriObjectDescriptivePhrase -object -actor_unfilled <AnaphoriObjectDescriptivePhrase->ACTION_2.object=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the person that got bit
@@ -545,9 +546,9 @@ Frames:
     AnaphoricActionDescriptivePhrase "AnAtDP"
         Noun[RelativePronoun] VerbPhrase[transitive,actor_unfilled] -transitive -actor_unfilled -descriptive
             # the dog <that bit a person> is ugly
-        Noun[RelativePronoun] VerbPhrase[!transitive] -intransitive -actor_unfilled
-            #<ACTION action:! actor:"unknown" action_type:Verb>
+        Noun[RelativePronoun,ANIMACY] Verb[Intransitive] -ANIMACY -Intransitive -intransitive -actor_unfilled <ACTION action:! actor:!! action_type:Verb>
             # the runner <that fell> is clumsy
+        #<ACTION action:! actor:"unknown" action_type:Verb>
     AnaphoricActorDescriptivePhrase "AnArDP"
         Noun[RelativePronoun] VerbPhrase[NUMBER,transitive,object_unfilled] -NUBER 
             # the man <that the dog bit>
@@ -588,14 +589,15 @@ Frames:
 
         # VerbPhrase[Intransitive,NUMBER] PrepPhrase -NUMBER <PrepPhrase->PREPOSITION.object=VerbPhrase->ACTION.action>
         # ran into a river
-        Verb[MainVerb,TRANSITIVITY] PrepPhrase -TRANSITIVITY <ACTION action:! actor:"unknown" action_type:Verb>
+        Verb[MainVerb,TRANSITIVITY,MainVerb] PrepPhrase -TRANSITIVITY -simple <ACTION action:! actor:"unknown" action_type:Verb>
             # run into the field
-        Verb[Transitive,!perfect] Noun[MassNoun] -singular -actor_unfilled -transitive <ACTION_2 action:! actor:"unknown" action_type:Verb object:!!| IS object:!! object_count:"inf" noun_class:Noun>
+        # TODO - make the preposition attach to the main noun of the actor
+        Verb[Transitive,!perfect,MainVerb] Noun[MassNoun] -singular -actor_unfilled -transitive -simple <ACTION_2 action:! actor:"unknown" action_type:Verb object:!!| IS object:!! object_count:"inf" noun_class:Noun>
             # i <eat grass>
             # you <eat grass>
             # they <eat grass>
             # he <eats grass>
-        Verb[Transitive] Noun[MassNoun] -plural -transitive -actor_unfilled <ACTION_2 action:! actor:"unknown" action_type:Verb object:!! | IS object:!! object_count:"inf" noun_class:Noun>
+        Verb[Transitive,MainVerb] Noun[MassNoun] -plural -transitive -actor_unfilled -simple <ACTION_2 action:! actor:"unknown" action_type:Verb object:!! | IS object:!! object_count:"inf" noun_class:Noun>
             # we <eat grass>
             # they <eat grass>
             # them <eating grass>
@@ -668,9 +670,9 @@ Frames:
             # the dogs <have ran>
                 # past complete
 
-        Verb[PerfectAuxiliaryVerb] Verb[ContinuousAuxiliaryVerb] <TENSE action:"unknown" time:present completeness:complete>
+        Verb[PerfectAuxiliaryVerb] Verb[ContinuousAuxiliaryVerb] -complete <TENSE action:"unknown" time:present completeness:complete>
             # have been
-        Verb[ModalVerb] AuxiliaryPhrase[incomplete]
+        Verb[ModalVerb] AuxiliaryPhrase[complete]
             # <could | have been>
                 # may have totally been
     PrepPhrase "PP"

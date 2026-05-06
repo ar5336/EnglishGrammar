@@ -223,7 +223,7 @@ Displayer::Displayer(string screen_name)
         start_text_corner = Point(10, image.rows * 3 / 4);
         start_grid_corner = start_text_corner + Point(0, -60);
         start_predicate_corner = Point(image.cols *7/10, image.rows * 4/5);
-        start_individual_frame_corner = Point(image.cols *1/30, image.rows * 1/5);
+        start_individual_frame_corner = Point(image.cols *1/30, image.rows * 1/15);
 
         // HIGHLIGHT = CV_RGB(50, 25, 0);
         // BACKGROUND = CV_RGB(13,5,7);
