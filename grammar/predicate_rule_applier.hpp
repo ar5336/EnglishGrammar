@@ -3,7 +3,7 @@
 
 #include "frames.hpp"
 
-#include "../logic/predicate_handler.hpp"
+#include "../logic/expression.hpp"
 
 #include "variable_namer.hpp"
 
