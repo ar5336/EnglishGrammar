@@ -674,6 +674,515 @@ whenever you load a frame, check if it matches any monoframe pattern elements
 
 turns out i was initializing a shit load of blank frames when building the parse grid shrug
 
+
+
+======================================================
+
+ok so the next move, before even parse redo.
+is change the way predicates are created. no more mr static
+
+ACTION will cover all of them
+
+    ACTION        action->    actor->     action_type (object->) (indirect_object->)
+
+VerbPhrase[HAS:indirect_object]
+    > checks if indirect_object is "unknown"
+
+
+
+
+"the feeble-minded senator had long lost his wits but continued to blindly pilot the ship of state into ruin"
+
+IS s senator 1
+
+TIME p past
+PROPERTY p superlative
+
+IS w wit 1+
+POSSESSION ! w s
+
+ACTION(loss)
+    agent: s
+    theme: wits
+
+    at-time: p
+
+-----
+
+ACTION(pilot)
+    at-time: past continuous
+
+
+"i drove the car through your door"
+
+ACTION(drive)
+    agent: I
+    instrument: car
+    path: PREPOSITION
+
+
+"the reflection of the light turned his face from red to blue:
+
+agent: reflection of the light
+from-value: OBJECT.STATES
+
+"objects have height"
+
+=======================
+
+so the path is to auto-attach predicates to objects.
+
+
+surely there is some generalizability about
+
+OBJECT -> PROPERTY
+OBJECT -> NAME
+
+
+for each Predicate Type, extract connections. Determien if they are questions or additions.
+
+
+OBJECT
+    TIME creation
+    TIME destruction
+    "when tom sawyer learned that these great heroes and warriors had been born and dead a long time ago, he lost all interest"
+
+
+=====
+
+OBJECT
+    object:c
+    noun_class:color
+
+NEVER
+    event:
+
+TIME
+    time: past
+    action_continuity: complete
+
+"the light turned him a color i had never seen before"
+
+"i turn"
+"i am turning"
+    present
+    continuous
+
+has told
+had told
+will have told
+
+had been told
+    "the man that had been told to leave"
+
+    >"a man has been told to leave"
+    >"a soldier has been givena a rifle and a sword"
+
+ModalVerb PerfectAuxiliaryVerb ContinuousAuxiliaryVerb Verb
+by the time the man was in the store he had been told to leave twice
+
+
+"was turning"
+    time: past
+    continuity: continuous
+
+"had turned"
+    time:past
+    continuity: complete
+
+"has been turned"
+    past complete
+
+"had been turning"
+    time:past
+    continuity: continuous
+
+"will have been turning"
+    time: future
+    [
+        time: past
+        continuity: continuous
+    ]
+    continuity: complete
+
+    future[past continuous] complete
+
+"turned"
+    time: past
+    continuety: complete
+
+"will have turned"
+    time: future
+    continuity: complete
+
+"will turn"
+    time: future
+    continuity: null
+
+"will be turning"
+    time: future
+    continuity: continuous
+
+"it turns"
+    time: present
+    continuity: continuous
+
+"it is turning"
+    present continuous
+
+"he is turnt"
+    time: present
+    continuity: complete
+
+
+"it was going to turn"
+"it was gonna turn"
+    time: past
+    continuity: incomplete
+
+"it is gonna turn"
+    time: present
+    continueity: incomplete
+
+
+"i was gonna have fish for dinner when i realized that my cousin had eaten it all"
+
+TENSE
+    event: h
+    time: past
+    continuity: complete
+
+ACTION
+    event: h
+    type: have
+    object: fish
+
+
+
+the predicate should be TENSE, not TIME.
+
+TIME is given by particular classes
+
+    "when the lightning struck"
+        TIME -> EVENT/ACTION
+    "
+
+
+
+================
+THE LSDL SOLVES THIS
+
+"a man scarfed the food down"
+" he chewed the food up"
+
+"ate the food up"
+"ate up the food" -> outgoing preposition from the perspective of the agent
+"ended up eating up all the leftover food"
+
+
+"munched on the food"
+"muched the food on"!*
+"ended up mucnching on all the leftover food"
+
+eat_food:
+    Verbs:
+
+the linguistic schema must be used during parse time, to determine which.
+
+
+====
+The first step should be completing binarization. it has taken too long.
+
+the "conceptual" relationships are actually linguistic relationships.
+
+Linguistic schema
+
+
+need a good example of something simple
+
+============= so is there a cause and effect between relationships?
+
+"if a dog is red, it is unusual"
+"if something is unusual it is expensive"
+
+"your red dog is expensive"
+
+
+-> a step for making inferences on all relationships.
+
+a condition, an effect.
+Noun Phrases can have predicates.
+    " a stoat is a rodent but also a kind of rat"
+
+no that is dumn, i need something useful.
+
+like the guns thrown in the river example.
+
+"a man threw a gun in the river at night"
+    1. need to realize that it is "<a man threw a gun> into the river", not that he is in teh river throwing the gun
+    2. 
+
+    "crimes are done at night"
+        # crime | do | time:night
+        this is a sentence that indicates habituality.
+        This is something above linguistic relationships.
+        Like metadata on the concrete objects and timeline
+
+    "criminals want to get rid of evidence"
+        # criminal | want:CAUSE | prep:rid ob:evidence
+    "throwing something gets you rid of it"
+        # 
+
+CausalityMap:
+"eathquakes cause tsunamis"
+    event:earthquake CAUSE event:tsunami
+
+
+death of an object
+starvation 
+
+
+
+"he brought the dog with him from the zoo to the zee along the path"
+---
+before i can really transfer things to yaml, i need to complete multi-frames.
+
+but probably more important than that in terms of simplifying the ruleset, is optional predicate parameters. since they're all named and that. so it makes sense really.
+
+
+
+the man that got bit by a tiger that swam in a blue river has a brother
+
+erratic
+    the logi of the game world is thought out in first order logic.
+    it too can be spoken of.
+
+    this appearance of the fabric is seldom seen until the end
+    the world can be rent by the word  just as it was created by it
+
+    of course it begins in medias res
+    basically im imagining the same beginning as sword and sworcery
+
+    but the mechanic is language
+
+    a character catches you on a lie you did not expect them to have been able to do.
+        "did you take the blingus from my living room?"
+            "nope"
+        " well that cant be right, i know i left it there, and before you entered, it was there, and now its gone"
+        etc..
+    
+    "goal-driven heirarchical planning"
+
+===
+create timeline
+    "a dog just crossed the road:
+
+
+VerbPhrase:
+    NounPhrase(Actor) VerbPhrase NounPhrase(Object)
+        <VerbPhrase->ACTION.actor=Actor->IS.object\
+         VerbPhrase->ACTION.abject=Object->IS.object>
+    # a man bit a horse
+
+
+---
+a man ate some fish in the morning
+then, for lunch he got bit by a fish
+
+---
+i would (totally have) done that
+i would (have totally certainly) done that
+i woudl (totally certainly have) done that
+i would (ceraintly have totally) done that ~
+i would certainly hace done (totally that) ?
+i would certainly done have totally that !
+
+
+will have totally been trounced
+will have been totally trounced
+will have been trounced totally
+will totally have been trounced
+
+will been have totally trounced !?
+
+    "totally will" MODE attached to PREDICTION
+
+need to distinguish do and be
+
+i do things
+cats do run
+being
+
+
+is - being
+
+  / \
+ /   \
+    [to do]
+
+
+---
+
+ok so predicate decomposition is pretty easy to translate into entity language.
+en event has a bunch of roles that determine the
+
+
+just need to turn a schema into a set of permissible connections.
+
+EVENT ->base predicate
+    OBJECT agent
+    OBJECT instrument
+    OBJECT patient
+
+
+    references to these lables 
+
+TIME
+    EVENT_ID during
+
+
+TIMELINE
+    before-after connections
+    A_BEFORE_B
+        EVENT_ID A
+    A_AFTER_B
+        EVENT_ID B
+
+"by the time the man had bit the tigere
+
+
+as the statements come in a sequence of those statements as well as a map of their meanings is composed
+
+"i deny knowing that he took the cookie jar"
+"i deny having known that he took the cookies"
+
+
+======
+
+
+anaphoric event reference
+
+=====
+
+AGENT
+    Actions EVENT[]
+    Thinks EVENT[]
+    Likes
+    Hates
+
+OBJECT:
+    OBJECT color: null
+    TIME creation: null
+    TIME destruction: null
+    States:
+        [StateType: State]
+        
+        
+
+EVENT_ROLES:
+    OBJECT agent: null
+    OBJECT instrument: null
+    OBJECT patient: null
+    OBJECT experiencer: null
+    OBJECT beneficiary: null
+    at:
+        OBJECT at-loc: null
+        OBJECT at-poss: null
+        OBJECT.STATE at-value: null
+        TIME at-time: null
+    to:
+        OBJECT to-loc: null
+        OBJECT to-poss: null
+        OBJECT.STATE to-value: null
+    from:
+        from-loc: null
+        from-poss: null
+        OBJECT.STATE from-value: null
+    OBJECT[type=path] path: null
+    OBJECT co-agent: null
+    OBJECT co-theme: null
+
+
+word: "tell"
+    part_of_speech: Verb
+    roles:
+        AGENT teller:ACTION.subject
+        AGENT hearer:ACTION.object
+        EVENT tale:ACTION.indirect_object
+    definition:
+        before:
+            teller.Thinks[tale]
+        after:
+            teller.Thinks[tale]
+            hearer.Thinks[tale]
+
+word: "lie"
+    part_of_speech: Verb
+    roles:
+        AGENT liar:ACTION.subject
+        AGENT liee:ACTION.object
+        EVENT lie:ACTION.indirect_object
+    definition:
+        word[tell] <teller:liar liee:hearer tale:lie>
+    condition:
+        !liar.Thinks[tale]
+
+word: "give"
+    part_of_speech: Verb
+    roles:
+        AGENT giver:ACTION.subject
+        AGENT{to} recipient:ACTION.object
+        EVENT lie:ACTION.indirect_object
+    definition:
+        word[tell] <teller:liar liee:hearer tale:lie>
+    condition:
+        !AGENT.Knows[tale]
+
+word: "take"
+    roles:
+        AGENT taker:ACTION.subject
+        AGENT{from} takee:ACTION.object
+        OBJECT thing:
+
+word: "kill"
+    roles:
+        AGENT goner:ACTION.object
+        AGENT killer:ACTION.subject
+    definition:
+        before:
+            goner.alive = true
+        after:
+            goner.alive = false
+
+"drive"
+    roles:
+        AGENT driver:ACTION.object
+        OBJECT vehicle [IS vehicle]
+        ?LOCATION departure
+        ?LOCATION destination
+    before:
+        driver.at = departure
+    after:
+        driver.at = destination
+
+
+an attribute is a type of event.
+a dog has a foot until it dies and decays.
+ "he lied that the dog had a leg"
+ the dog is "having" the leg
+ these verb-wise connections are more versatile than i thought. they can be the basis of the entire logic.
+
+ "diagram of stuff "having" stuff and doing stuff to other stuff, and that stuff being other ituff
+ "i am a person"
+
+AGENT{ablative}
+    i took the fish from a horse
+multiple states for different viewers. Select them by clicking. left and right arrow keys.
+    for events. List mode, timeline mode
+
+
+
+
 ===
 
 you have to reconstruct frames before applying predicate construction rules.
@@ -760,4 +1269,82 @@ only speak to it
 "define horse"
     "i don't know what horse means"
 "a four-legged animal"
-    
+            
+
+
+"I demand an apology"
+
+"regret"
+    Verb Regret
+        roles:
+            EVENT action
+            AGENT regretter
+        before:
+            regretter.Desires[action]
+            regretter.Actions[action]
+        after:
+            regretter.Desires[!action]
+    # as a consequence of running this rule, the action "regret" is added to the agent
+AGENT
+    <string, ACTION> actions_by_type
+
+
+everything is an event
+
+=====
+
+
+
+the venting of frustrations - the plans and desires stated of people
+
+"apology"
+    a statement wherein regret is expressed
+
+plan on how to make something
+
+word: "make"
+    roles:
+
+
+sleep
+
+
+AGENT{ablative}
+    i took the fish from a horse
+multiple states for different viewers. Select them by clicking. left and right arrow keys.
+    for events. List mode, timeline mode
+    for words. dictionary mode, alphabet mode (windows phone), 
+
+
+another thing to indicate other than verb definitions is plans and sequences
+
+
+
+=====
+the disgusting dog threw up on the floor and ate it
+    > parsing this requires an understading of the phrasing "throwing up". that it will introduce an object into the conversational context
+
+    when eavesdropping or in-medias-res-ing the attribution of different objects to anaphoras can be interactive
+
+
+    i.e.
+        A "he destroyed it"
+        B "and to think what they could have done with it"
+          "such terrible things"
+        
+        C *oh, they probably have a dwm in the works*
+
+        A "indeed, it would have been the stand mixer to end all stand mixers"
+
+
+====
+
+how to account for the physical meaning of "over"
+    jumped over, flew over, ran over
+
+    event step decomposition.
+
+    preposition 'over'
+        before: moving towards
+        during: above
+        after: moving away from
