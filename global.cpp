@@ -2,6 +2,8 @@
 
 bool DEBUGGING = false;
 
+bool SEQUENTIAL = false;
+
 void handler(int sig) {
   void *array[10];
   size_t size;

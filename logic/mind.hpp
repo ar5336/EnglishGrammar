@@ -5,7 +5,7 @@
 #include <vector>
 #include <stack>
 
-#include "predicate_handler.hpp"
+#include "expression.hpp"
 
 enum KnowledgeType
 {

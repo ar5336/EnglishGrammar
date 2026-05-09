@@ -1,7 +1,7 @@
 #ifndef PREDICATE_RULE_READER
 #define PREDICATE_RULE_READER
 
-#include "../logic/predicate_handler.hpp"
+#include "../logic/expression.hpp"
 // #include "frames.hpp"
 
 enum ParameterCreationType

@@ -229,8 +229,18 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	set<string> sequential_alternatives = set<string> {"--sequential", "-s"};
+	if (argc > arg_index && (sequential_alternatives.count((string)argv[arg_index]) != 0))
+	{		
+		SEQUENTIAL = true;
+	}
+
 	// signal(11, handler);   // install our handler
 
+	if (SEQUENTIAL)
+	{
+		std::getline(cin, initial_utterance);
+	}
 	// read the grammar
 	GrammarReader reader = GrammarReader(&grammar, &predicate_handler, &predicate_template_handler);
 	reader.read_grammar("grammar.langdef");

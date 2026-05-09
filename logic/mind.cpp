@@ -89,7 +89,8 @@ Expression Mind::resolve_anaphoras(Expression expression)
 
         vector<Predicate> action_predicates_extracted = Expression::extract_predicate_types(anaphora_expression, {"ACTION_2", "ACTION"});
         if (action_predicates_extracted.size() > 1)
-            throw runtime_error("more than one event per anaphora, parsing not implemented for this yet");
+            printf("zamn\n");
+            // throw runtime_error("more than one event per anaphora, parsing not implemented for this yet");
 
         action_predicates.push_back(action_predicates_extracted.at(0));
 
@@ -1130,9 +1131,6 @@ void ConceptualSchema::update_inheritances(string child, string parent)
             }
         }
     }
-
-    
-
 }
 
 void ConceptualSchema::update_abilities(string noun, string ability, int recursion)

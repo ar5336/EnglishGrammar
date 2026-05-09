@@ -1,4 +1,4 @@
-#include "predicate_handler.hpp"
+#include "expression.hpp"
 
 PredicateHandler::PredicateHandler(PredicateTemplateHandler *predicate_template_reader){
     predicate_template_handler = predicate_template_reader;
@@ -349,7 +349,7 @@ vector<Predicate> Expression::extract_anaphora_closure_by_argument(Expression &o
     vector<Predicate> removed_predicates;
 
     set<Predicate> visited_predicates = set<Predicate>();
-    vector<Predicate> predicates_to_visit = extract_predicates_by_argument(og_expression, argument, /*anaphorics prohibited*/ true);
+    vector<Predicate> predicates_to_visit = extract_predicates_by_argument(og_expression, argument, true);
 
     while(predicates_to_visit.size() > 0)
     {

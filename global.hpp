@@ -11,6 +11,8 @@ using namespace std;
 
 extern bool DEBUGGING;
 
+extern bool SEQUENTIAL;
+
 extern void handler(int sig);
 
 #endif

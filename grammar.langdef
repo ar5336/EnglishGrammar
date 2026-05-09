@@ -428,8 +428,8 @@ Predicates:
     OBJECT          object->    id
     NAME            object->    name
     TOPIC           object->
-    CONJUNCTION     conjunction    object_1->  object_2->
-    CAUSE           cause[EVENT]->     effect[EVENT]->
+    CONJUNCTION     conjunction object_1->  object_2->
+    CAUSE           cause->     effect->
 
 Frames:
     NounPhrase "NP"
@@ -497,9 +497,10 @@ Frames:
 
         Noun[plural] PrepPhrase <IS object:! object_count:"inf" noun_class:Noun>
             # dogs in the city
-        #NounPhrase Conjunction NounPhrase -plural <CONJUNCTION object_1:! object_2:NounPhrase#1->IS.object object_2:NounPhrase#2->IS.object>
-        # cats and dogs
-        # cat and fish
+        NounPhrase Conjunction NounPhrase -plural
+            # cats and dogs
+            # cat and fish
+        #<CONJUNCTION object_1:! object_2:NounPhrase#1->IS.object object_2:NounPhrase#2->IS.object>
         # this does not work yet. need to update binarization process, and also parser handing of binarized multiframes
 
         #Noun[Pronoun,possessive] NounPhrase[!determined,NUMBER] -determined -NUMBER
@@ -895,3 +896,11 @@ Frames:
             # ugly dogs
         Adjective AdjectivePhrase[NUMBER] -NUMBER <HAS_PROPERTY object:AdjectivePhrase->IS.object property:Adjective>
             # fat ugly dogs
+    ConditionalPhrase "ConP"
+        AntecedentPhrase PostcedentPhrase
+    AntecedentPhrase "AntP"
+        Conjunction[condition,pre] Sentence
+            # if a dog eats a horse
+    PostcedentPhrase "PoP"
+        Conjunction[cause] Sentence
+            # then a fish is fat

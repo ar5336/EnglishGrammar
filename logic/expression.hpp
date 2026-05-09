@@ -1,5 +1,5 @@
-#ifndef PREDICATE_HANDLER_HPP
-#define PREDICATE_HANDLER_HPP
+#ifndef EXPRESSION_HPP
+#define EXPRESSION_HPP
 
 #include <string>
 #include <map>
