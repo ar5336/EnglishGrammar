@@ -87,7 +87,7 @@ Expression Mind::resolve_anaphoras(Expression expression)
             printf("anaphora expression: %s\n", predicate_handler->stringify_expression(anaphora_expression).c_str());
         }
 
-        vector<Predicate> action_predicates_extracted = Expression::extract_predicate_types(anaphora_expression, {"ACTION_2", "ACTION"});
+        vector<Predicate> action_predicates_extracted = Expression::extract_predicate_types(anaphora_expression, {"ACTION"});
         if (action_predicates_extracted.size() > 1)
             printf("zamn\n");
             // throw runtime_error("more than one event per anaphora, parsing not implemented for this yet");
@@ -117,12 +117,13 @@ Expression Mind::resolve_anaphoras(Expression expression)
 
         // identify which ACTION_2 param type of base_var_name
         Predicate action_predicate = action_predicates.at(i);
-        if (equals(action_predicate.get_argument("actor"), base_var_name))
+
+        string fetched_arg;
+        if (action_predicate.try_get_argument("actor", fetched_arg) && equals(fetched_arg, base_var_name))
             param_type = ActionParamType::ACTOR;
-        
-        if (equals(action_predicate.predicate_template.predicate, "ACTION_2"))
-            if (equals(action_predicate.get_argument("object"), base_var_name))
-                param_type = ActionParamType::SUBJECT;
+
+        if (action_predicate.try_get_argument("object", fetched_arg) && equals(fetched_arg, base_var_name))
+            param_type = ActionParamType::SUBJECT;
 
         Event pass_event = Event();
         if (did_it_occur(event, pass_event))
@@ -287,6 +288,28 @@ Event::Event(
     string action_type,
     string actor_noun_class,
     int actor_noun_id,
+    string subject_noun_class,
+    int subject_noun_id,
+    string indirect_noun_class,
+    int indirect_noun_id,
+    int id) 
+    : action_type(action_type),
+    actor_noun_class(actor_noun_class),
+    actor_noun_id(actor_noun_id),
+    subject_noun_class(subject_noun_class),
+    subject_noun_id(subject_noun_id),
+    indirect_noun_class(indirect_noun_class),
+    indirect_noun_id(indirect_noun_id),
+    id(id)
+{
+    location = "unknown";
+    real = true;
+}
+
+Event::Event(
+    string action_type,
+    string actor_noun_class,
+    int actor_noun_id,
     int id) 
     : action_type(action_type),
     actor_noun_class(actor_noun_class),
@@ -308,6 +331,8 @@ string Event::stringify()
         constructee += "    Actor: " + actor_noun_class + "[" + to_string(actor_noun_id) + "]\n"; 
     if (has_subject())
         constructee += "    Subject: " + subject_noun_class + "[" + to_string(subject_noun_id) + "]\n";
+    if (has_indirect())
+        constructee += "    Indirect Object: " + indirect_noun_class + "[" + to_string(indirect_noun_id) + "]\n";
     return constructee;
 }
 
@@ -319,6 +344,11 @@ bool Event::has_subject()
 bool Event::has_actor()
 {
     return !equals(actor_noun_class, "unknown");
+}
+
+bool Event::has_indirect()
+{
+    return !equals(indirect_noun_class, "unknown");
 }
 
 bool do_args_accord(string arg_abstract, string arg_concrete)
@@ -387,139 +417,111 @@ vector<Event> Mind::extract_events(Expression expression, bool real = true)
 {
     vector<Event> identified_events = vector<Event>();
 
-    auto object_event_pairs = expression.get_connections(
-        "IS", "object",
-        "ACTION", "actor");
+    auto action_id_to_event_map = map<string, Event>();
+    // need to process the ACTION-IS and ACTION-OBJECT in a pair.
+    // factor out the processing of different parameters of the ACTION predicate
 
-    for (auto object_event_pair : object_event_pairs)
+    PredicateTemplate action_template;
+    predicate_handler->predicate_template_handler->try_get_predicate_template("ACTION", &action_template);
+
+    auto action_parameter_names = action_template.parameter_names;
+    auto action_schematic_parameters = action_template.are_params_schematic;
+    auto action_optional_parameters = action_template.are_params_optional;
+
+    auto action_param_to_noun_class_map = map<string, map<string, string>>();
+    auto action_param_to_noun_id_map = map<string, map<string, int>>();
+
+    auto actions_identified = set<string>();
+    auto action_to_action_type_map = map<string, string>();
+
+    string reflexive_schematic_param = "action";
+
+    for (int param_i = 0; param_i < action_parameter_names.size(); param_i++)
     {
-        Predicate actor_predicate = object_event_pair.first;
-        Predicate action_predicate = object_event_pair.second;
+        // process each parameter
+        bool is_schematic = action_schematic_parameters.at(param_i);
+        bool is_optional = action_optional_parameters.at(param_i);
 
-        auto event = Event(
-            action_predicate.get_argument("action_type"), // action_type
-            actor_predicate.get_argument("noun_class"),       // actor
-            create_object_representation(actor_predicate, real),
-            real ? timeline.actions.size() : abstract_timeline.actions.size());
-
-        identified_events.push_back(event);
-    }
-
-    object_event_pairs = expression.get_connections(
-        "OBJECT", "object",
-        "ACTION", "actor");
-
-    for (auto object_event_pair : object_event_pairs)
-    {
-        Predicate actor_predicate = object_event_pair.first;
-        Predicate action_predicate = object_event_pair.second;
-
-        int actor_id = stoi(actor_predicate.get_argument("id"));
-        auto event = Event(
-            action_predicate.get_argument("action_type"), // action_type
-            dereference_noun_id(actor_id, real)->entity_type->noun,       // actor
-            actor_id,
-            real ? timeline.actions.size() : abstract_timeline.actions.size());
-
-        identified_events.push_back(event);
-    }
-
-    if (identified_events.size() != 0)
-        return identified_events;
-
-    object_event_pairs = expression.get_connections(
-        "IS", "object",
-        "ACTION_2", "actor");
-
-    auto concrete_object_event_pairs = expression.get_connections(
-        "OBJECT", "object",
-        "ACTION_2", "actor");
-    
-    for (auto pair : concrete_object_event_pairs)
-    {
-        object_event_pairs.push_back(pair);
-    }
-    
-    Event new_event = Event();
-    for (auto object_event_pair : object_event_pairs)
-    {
-        new_event = Event();
-
-        Predicate actor_predicate = object_event_pair.first;
-        Predicate action_predicate = object_event_pair.second;
-
-        bool is_actor_concrete = equals(actor_predicate.predicate_template.predicate, "OBJECT");
-
-        auto event_other_object_pairs = expression.get_connections(
-            "ACTION_2", "object",
-            "IS", "object");
-
-        auto other_other_object_event_pairs = expression.get_connections(
-            "ACTION_2", "object",
-            "OBJECT", "object");
-
-        for (auto pair : other_other_object_event_pairs)
+        if (!is_schematic)
         {
-            event_other_object_pairs.push_back(pair);
+            continue;
         }
+
+        // process optional parameters
+        if (is_optional)
+        {
+            // handle optional parameter case
+        }
+
+        string param_name = action_parameter_names.at(param_i);
+
+        if (equals(param_name, reflexive_schematic_param))
+            continue;
+
+        // for now we assume every parameter in the action predicate is an object
+        auto connections = expression.get_connections(
+            "ACTION", param_name,
+            "IS", "object");
         
-        for (auto event_other_object_pair : event_other_object_pairs)
+        // add on connections to OBJECT predicates
+        auto object_connections = expression.get_connections(
+            "ACTION", param_name,
+            "OBJECT", "object");
+        
+        connections.insert(connections.end(), object_connections.begin(), object_connections.end());
+
+        for (auto connection : connections)
         {
-            Predicate object_predicate = event_other_object_pair.second;
-
-            bool is_actor_concrete = equals(actor_predicate.predicate_template.predicate, "OBJECT");
-            bool is_object_concrete = equals(object_predicate.predicate_template.predicate, "OBJECT");
+            Predicate param_predicate = connection.second;
             
-            if (DEBUGGING)
-            {
-                printf("beginning object creation and dereferencing\n");
-                printf("actor predicate: %s\n", predicate_handler->stringify_predicate(actor_predicate).c_str());
-            }
-            
-            int actor_id = is_actor_concrete ? stoi(actor_predicate.get_argument("id")) : create_object_representation(actor_predicate, real);
-            string actor_noun_class = is_actor_concrete ? dereference_noun_id(actor_id, real)->entity_type->noun : actor_predicate.get_argument("noun_class");
+            bool is_param_concrete = equals(param_predicate.predicate_template.predicate, "OBJECT");
+    
+            int param_object_id = is_param_concrete
+                    ? stoi(param_predicate.get_argument("id"))
+                    : create_object_representation(param_predicate, real);
+            string actor_noun_class = is_param_concrete
+                ? dereference_noun_id(param_object_id, real)->entity_type->noun
+                : param_predicate.get_argument("noun_class");
 
-            int object_id = is_object_concrete ? stoi(object_predicate.get_argument("id")) : create_object_representation(object_predicate, real);
-            string object_noun_class = is_object_concrete ? dereference_noun_id(object_id, real)->entity_type->noun : object_predicate.get_argument("noun_class");
+            Predicate original_action_predicate = connection.first;
             
-            if (DEBUGGING)
-                printf("ending object creation and dereferencing\n");
+            string action_id = original_action_predicate.get_argument(reflexive_schematic_param);
+            // add parameter identifications to map
+            action_param_to_noun_class_map[action_id][param_name] = actor_noun_class;
+            action_param_to_noun_id_map[action_id][param_name] = param_object_id;
 
-            new_event = Event(
-                action_predicate.get_argument("action_type"), // action_type
-                actor_noun_class,       // actor
-                actor_id,
-                object_noun_class,
-                object_id,
-                real ? timeline.actions.size() : abstract_timeline.actions.size());
-            identified_events.push_back(new_event);   // subject
+            actions_identified.insert(action_id);
+            action_to_action_type_map[action_id] = original_action_predicate.get_argument("action_type");
         }
     }
 
-    if (identified_events.size() != 0)
-        return identified_events;
-
-    auto event_other_object_pairs = expression.get_connections(
-            "ACTION_2", "object",
-            "IS", "object");
-
-    if (event_other_object_pairs.size() <= 0)
-        return identified_events;
-
-    for (auto event_other_object_pair : event_other_object_pairs)
+    // traverse maps by list of actions
+    for (const auto& action_id : actions_identified)
     {
-        Predicate action_predicate = event_other_object_pair.first;
-        Predicate subject_predicate = event_other_object_pair.second;
+        auto object_noun_class = action_param_to_noun_class_map[action_id]["actor"];
+        auto object_noun_id = action_param_to_noun_id_map[action_id]["actor"];
 
-        new_event = Event(
-            action_predicate.get_argument("action_type"), // action_type
-            "unknown",       // actor
-            -1,
-            subject_predicate.get_argument("noun_class"),
-            create_object_representation(subject_predicate, real),
-            real ? timeline.actions.size() : abstract_timeline.actions.size());
+        auto subject_class = action_param_to_noun_class_map[action_id]["object"];
+        auto subject_noun_id = action_param_to_noun_id_map[action_id]["object"];
 
-        identified_events.push_back(new_event);   // subject
+        auto indirect_class = action_param_to_noun_class_map[action_id]["indirect_object"];
+        auto indirect_noun_id = action_param_to_noun_id_map[action_id]["indirect_object"];
+
+        // Create an event for each identified action
+        // depending on which params are identified, call different constructors for Event
+
+        Event new_event = Event(
+            action_to_action_type_map[action_id],
+            object_noun_class,
+            object_noun_id,
+            subject_class,
+            subject_noun_id,
+            indirect_class,
+            indirect_noun_id,
+            real ? timeline.actions.size() : abstract_timeline.actions.size()
+        );
+
+        identified_events.push_back(new_event);
     }
 
     if (DEBUGGING)

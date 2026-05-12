@@ -81,6 +81,9 @@ public:
     string subject_noun_class;
     int subject_noun_id;
 
+    string indirect_noun_class;
+    int indirect_noun_id;
+
     Event();
 
     // constructor for actualized entity
@@ -96,6 +99,16 @@ public:
         string action_type,
         string actor_noun_class,
         int actor_noun_id,
+        string subject_noun_class,
+        int subject_noun_id,
+        string indirect_noun_class,
+        int indirect_noun_id,
+        int id);
+
+    Event(
+        string action_type,
+        string actor_noun_class,
+        int actor_noun_id,
         int id);
 
     string stringify();
@@ -103,6 +116,8 @@ public:
     bool has_subject();
     
     bool has_actor();
+
+    bool has_indirect();
 
     bool real;
 };

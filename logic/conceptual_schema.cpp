@@ -62,8 +62,6 @@ vector<pair<string, string>> ConceptualSchema::extract_inheritances(Expression e
 
         Predicate contains_predicate = connection_pair.second;
 
-        // auto parent_child_pairs = vector<tuple<string, string>>();
-
         auto second_connection_pairs = expression.get_connections(
             "CONTAINS", "containee",
             "IS", "object");
@@ -79,9 +77,6 @@ vector<pair<string, string>> ConceptualSchema::extract_inheritances(Expression e
             string child = is_predicate.get_argument("noun_class");
 
             constructed_response.push_back(make_pair(parent, child));
-            
-            // child_to_parent.emplace(child, parent);
-            // parent_child_pairs.push_back(make_tuple(parent, child));
         }
     }
 

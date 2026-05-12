@@ -265,23 +265,35 @@ void GrammarReader::read_predicate_template_entry()
     string predicate_name = split_tokens[0];
 
     vector<string> input_param_names(split_tokens.begin() + 1, split_tokens.end());
+
     auto are_params_schematic = vector<bool>();
+    auto are_params_optional = vector<bool>();
     auto param_names = vector<string>();
-    for (string param_name : input_param_names)
+
+    // a parameter being marked schematic is indicated by param->
+    // a parameter being marked optional is indicated by (param)
+    // both of these can be combined: (param->)
+    for (string potential_param_name : input_param_names)
     {
-        if (find_in_string(param_name, "->"))
+        string param_name = potential_param_name;
+        bool is_schematic = false;
+        bool is_optional = false;
+        if (potential_param_name.at(0) == '(' && potential_param_name.back() == ')')
         {
-            param_names.push_back(param_name.substr(0, param_name.size()-2));
-            are_params_schematic.push_back(true);
+            is_optional = true;
+            param_name = trim_front_and_back(param_name);
         }
-        else
+        if (find_in_string(potential_param_name, "->"))
         {
-            param_names.push_back(param_name);
-            are_params_schematic.push_back(false);
+            param_name = param_name.substr(0, param_name.size()-2);
+            is_schematic = true;
         }
+        param_names.push_back(param_name);
+        are_params_schematic.push_back(is_schematic);
+        are_params_optional.push_back(is_optional);
     }
 
-    PredicateTemplate predicate_template = PredicateTemplate(predicate_name, param_names, are_params_schematic);
+    PredicateTemplate predicate_template = PredicateTemplate(predicate_name, param_names, are_params_schematic, are_params_optional);
 
     predicate_template_handler->add_entry(predicate_template);
 }

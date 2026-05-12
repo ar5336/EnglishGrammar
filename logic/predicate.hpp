@@ -34,6 +34,8 @@ public:
 
     string get_argument(string parameter_name);
 
+    bool try_get_argument(string parameter_name, string& out_value);
+
     bool has_argument(string parameter_name);
 
     Predicate with_modified_argument(string paramenter_name, string new_value);

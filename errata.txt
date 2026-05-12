@@ -1,3 +1,14 @@
+You just sort of have a fact-predicate space. that the existing predicates follow the rules of.
+"if thing 1 is a type of thing 2, thing 1 can do anything thing 2 can do"
+    I suppose the first implication rules can be written in FOPL
+
+        IF
+            IS object:a
+            CONTAINS container:b containee:a 
+            IS object:b
+            CAN_DO object:b ability:!
+        THEN
+            CAN_DO object:b ability:!
 
 
 
@@ -954,7 +965,7 @@ but probably more important than that in terms of simplifying the ruleset, is op
 the man that got bit by a tiger that swam in a blue river has a brother
 
 erratic
-    the logi of the game world is thought out in first order logic.
+    the logic of the game world is thought out in first order logic.
     it too can be spoken of.
 
     this appearance of the fabric is seldom seen until the end
@@ -994,7 +1005,7 @@ i would (totally have) done that
 i would (have totally certainly) done that
 i woudl (totally certainly have) done that
 i would (ceraintly have totally) done that ~
-i would certainly hace done (totally that) ?
+i would certainly have done (totally that) ?
 i would certainly done have totally that !
 
 
@@ -1194,6 +1205,7 @@ a compact sort of life in the thresher pods.
 
 ===
 
+#semantic_components
 SEMANTIC COMPONENTS
 
 EVENT
@@ -1348,3 +1360,11 @@ how to account for the physical meaning of "over"
         before: moving towards
         during: above
         after: moving away from
+
+====
+
+an event does not need to be a separate structure. Unless we evntually go the grammar compilation route.
+
+It can just as well be the predicate structure as defined in the .langdef
+
+the #semantic_components be accounted for

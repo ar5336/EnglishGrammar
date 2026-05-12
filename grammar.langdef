@@ -418,9 +418,7 @@ Predicates:
     HAS_PROPERTY    object->    property
     TENSE           action->    time        completeness
     PREPOSITION     action->    preposition object->
-    ACTION          action->    actor->     action_type
-    ACTION_2        action->    actor->     action_type object->
-    ACTION_3        action->    actor->     action_type object-> indirect_object->
+    ACTION          action->    actor->     action_type     (object->)  (indirect_object->)
     CAN_DO          action_type actor->
     SPECIFIER       object->    person      number
     CONTAINS        container-> containee->
@@ -429,7 +427,7 @@ Predicates:
     NAME            object->    name
     TOPIC           object->
     CONJUNCTION     conjunction object_1->  object_2->
-    CAUSE           cause->     effect->
+    CAUSATION       cause->     effect->
 
 Frames:
     NounPhrase "NP"
@@ -526,20 +524,20 @@ Frames:
 
         Noun[Name] NounPhrase[singular,determined] -singular <NAME object:NounPhrase->IS.object name:Noun>
     AnaphoricNounPhrase "AnNP"
-        NounPhrase[NUMBER] AnaphoricActionDescriptivePhrase[transitive] -NUMBER -actor -anaphoric <AnaphoricActionDescriptivePhrase->ACTION_2.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
+        NounPhrase[NUMBER] AnaphoricActionDescriptivePhrase[transitive] -NUMBER -actor -anaphoric <AnaphoricActionDescriptivePhrase->ACTION.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the dog that bit the person
         NounPhrase[NUMBER] AnaphoricActionDescriptivePhrase[Intransitive] -NUMBER -actor -anaphoric <AnaphoricActionDescriptivePhrase->ACTION.actor=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the pig that flew
-        NounPhrase AnaphoriObjectDescriptivePhrase -object -actor_unfilled <AnaphoriObjectDescriptivePhrase->ACTION_2.object=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
+        NounPhrase AnaphoriObjectDescriptivePhrase -object -actor_unfilled <AnaphoriObjectDescriptivePhrase->ACTION.object=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the person that got bit
-        NounPhrase[NUMBER] VerbPhrase[NUMBER,transitive,object_unfilled] -NUMBER <VerbPhrase->ACTION_2.object=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
+        NounPhrase[NUMBER] VerbPhrase[NUMBER,transitive,object_unfilled] -NUMBER <VerbPhrase->ACTION.object=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the man a dog bit
-        NounPhrase[NUMBER] AnaphoricActorDescriptivePhrase[NUMBER] -NUMBER <AnaphoricActorDescriptivePhrase->ACTION_2.object=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
+        NounPhrase[NUMBER] AnaphoricActorDescriptivePhrase[NUMBER] -NUMBER <AnaphoricActorDescriptivePhrase->ACTION.object=NounPhrase->IS.object | ANAPHORIC object:NounPhrase->IS.object anaphoric_object:!>
             # the man that a dog bit
 
-        AnaphoricNounPhrase[actor_unfilled] ActorDescriptivePhrase -actor <AnaphoricNounPhrase->ACTION_2.actor=ActorDescriptivePhrase->IS.object>
+        AnaphoricNounPhrase[actor_unfilled] ActorDescriptivePhrase -actor <AnaphoricNounPhrase->ACTION.actor=ActorDescriptivePhrase->IS.object>
             # the man that got bit by the dogs
-        NounPhrase[NUMBER,determined] AnaphoricIndirectObjectObjectDescriptivePhrase <AnaphoricIndirectObjectObjectDescriptivePhrase->ACTION_3.actor=NounPhrase->IS.object>
+        NounPhrase[NUMBER,determined] AnaphoricIndirectObjectObjectDescriptivePhrase <AnaphoricIndirectObjectObjectDescriptivePhrase->ACTION.actor=NounPhrase->IS.object>
             # the dog that gave the fish some food
     AnaphoricInquisitivePhrase "anIP"
         Verb[LinkingVerb,NUMBER] AnaphoricNounPhrase
@@ -554,34 +552,34 @@ Frames:
         Noun[RelativePronoun] VerbPhrase[NUMBER,transitive,object_unfilled] -NUBER 
             # the man <that the dog bit>
     AnaphoricIndirectObjectObjectDescriptivePhrase "AnIOODP"
-        AnaphoricIndirectObjectDescriptivePhrase NounPhrase[determined] <AnaphoricIndirectObjectDescriptivePhrase->ACTION_3.indirect_object=NounPhrase->IS.object>
+        AnaphoricIndirectObjectDescriptivePhrase NounPhrase[determined] <AnaphoricIndirectObjectDescriptivePhrase->ACTION.indirect_object=NounPhrase->IS.object>
             # the man <that gave the cat | some meat>
     AnaphoriObjectDescriptivePhrase "AnODP"
         Noun[RelativePronoun] SubjectDescriber -transitive -actor_unfilled -descriptive
             # the person <that got bit> is ugly
             # the person <that was bitten> is ugly
     AnaphoricIndirectObjectDescriptivePhrase "AnIODP"
-        Noun[RelativePronoun] VerbPhrase[super_transitive,indirect_object_unfilled] -super_transitive -object_unfilled
+        Noun[RelativePronoun] VerbPhrase[ditransitive,indirect_object_unfilled] -ditransitive -object_unfilled
             # the man <that | gave the cat> some meat
     ActorDescriptivePhrase "AtrDP"
         Preposition[Preposition,Actor] NounPhrase
             # the man that got bit <by the dog>
 
     SubjectActorDescriber "SuAD"
-        SubjectDescriber ActorDescriptivePhrase <SubjectDescriber->ACTION_2.actor=ActorDescriptivePhrase->IS.object>
+        SubjectDescriber ActorDescriptivePhrase <SubjectDescriber->ACTION.actor=ActorDescriptivePhrase->IS.object>
             # a man <got bit | by the dog>
 
     SubjectDescriber "SuD"
-        Verb[IndicativeVerb,past] Verb[MainVerb,pastPart] -past <ACTION_2 action:! actor:"unknown" action_type:Verb#2 object:"unknown">
+        Verb[IndicativeVerb,past] Verb[MainVerb,pastPart] -past <ACTION action:! actor:"unknown" action_type:Verb#2 object:"unknown">
             # was bitten
-        Verb[IndicativeVerb,past] Verb[MainVerb,perfect] -past <ACTION_2 action:! actor:"unknown" action_type:Verb#2 object:"unknown">
+        Verb[IndicativeVerb,past] Verb[MainVerb,perfect] -past <ACTION action:! actor:"unknown" action_type:Verb#2 object:"unknown">
             # got bit
         # will be bit
         # will have been bit
     VerbPhrase "VP"
-        Verb[MainVerb,Transitive] NounPhrase -transitive -actor_unfilled <ACTION_2 action:! actor:"unknown" action_type:Verb object:NounPhrase->IS.object>
+        Verb[MainVerb,Transitive] NounPhrase -transitive -actor_unfilled <ACTION action:! actor:"unknown" action_type:Verb object:NounPhrase->IS.object>
             # the horse that <bit a man> is ugly
-        Verb[MainVerb,Ditransitive] NounPhrase -super_transitive -actor_unfilled -indirect_object_unfilled <ACTION_3 action:! actor:"unknown" action_type:Verb object:NounPhrase->IS.object indirect_object:"unknown">
+        Verb[MainVerb,Ditransitive] NounPhrase -ditransitive -actor_unfilled -indirect_object_unfilled <ACTION action:! actor:"unknown" action_type:Verb object:NounPhrase->IS.object indirect_object:"unknown">
             # the horse that <gave a man> a gift
         Verb[TRANSITIVITY] Adverb -TRANSITIVITY <ACTION action:! actor:"unknown" action_type:Verb | HAS_PROPERTY object:! property:Adverb>
             # run quickly
@@ -593,12 +591,12 @@ Frames:
         Verb[MainVerb,TRANSITIVITY,MainVerb] PrepPhrase -TRANSITIVITY -simple <ACTION action:! actor:"unknown" action_type:Verb>
             # run into the field
         # TODO - make the preposition attach to the main noun of the actor
-        Verb[Transitive,!perfect,MainVerb] Noun[MassNoun] -singular -actor_unfilled -transitive -simple <ACTION_2 action:! actor:"unknown" action_type:Verb object:!!| IS object:!! object_count:"inf" noun_class:Noun>
+        Verb[Transitive,!perfect,MainVerb] Noun[MassNoun] -singular -actor_unfilled -transitive -simple <ACTION action:! actor:"unknown" action_type:Verb object:!!| IS object:!! object_count:"inf" noun_class:Noun>
             # i <eat grass>
             # you <eat grass>
             # they <eat grass>
             # he <eats grass>
-        Verb[Transitive,MainVerb] Noun[MassNoun] -plural -transitive -actor_unfilled -simple <ACTION_2 action:! actor:"unknown" action_type:Verb object:!! | IS object:!! object_count:"inf" noun_class:Noun>
+        Verb[Transitive,MainVerb] Noun[MassNoun] -plural -transitive -actor_unfilled -simple <ACTION action:! actor:"unknown" action_type:Verb object:!! | IS object:!! object_count:"inf" noun_class:Noun>
             # we <eat grass>
             # they <eat grass>
             # them <eating grass>
@@ -614,39 +612,39 @@ Frames:
         Verb[continuous,Intransitive] -continuous <ACTION action:! actor:"unknown" action_type:Verb>
             # running
 
-        Verb[ActionTransitive] -action_transitive <ACTION_2 action:! actor:"unknown" action_type:Verb object:"unknown">
+        Verb[ActionTransitive] -action_transitive <ACTION action:! actor:"unknown" action_type:Verb object:"unknown">
 
         # with fixed multiframe parsing, this can be simplified to
         # NounPhrase VerbPhrase[action_transitive] VerbPhrase
-        NounPhrase[NUMBER] VerbPhrase[action_transitive] -action_transitive -action_unfilled <VerbPhrase->ACTION_2.actor=NounPhrase->IS.object>
+        NounPhrase[NUMBER] VerbPhrase[action_transitive] -action_transitive -action_unfilled <VerbPhrase->ACTION.actor=NounPhrase->IS.object>
             # <i hate>
 
         # transitive
-        NounPhrase[plural] Verb[MainVerb,!3PPresent,Transitive] -plural -transitive -object_unfilled <ACTION_2 action:! actor:NounPhrase->IS.object action_type:Verb object:"unknown">
+        NounPhrase[plural] Verb[MainVerb,!3PPresent,Transitive] -plural -transitive -object_unfilled <ACTION action:! actor:NounPhrase->IS.object action_type:Verb object:"unknown">
             # the dogs bit
             # !the dogs bites
-        NounPhrase[singular] Verb[MainVerb,!simple,Transitive] -singular -transitive -object_unfilled <ACTION_2 action:! actor:NounPhrase->IS.object action_type:Verb object:"unknown">
+        NounPhrase[singular] Verb[MainVerb,!simple,Transitive] -singular -transitive -object_unfilled <ACTION action:! actor:NounPhrase->IS.object action_type:Verb object:"unknown">
             # a dog bites
             # a dog bit
             # !a dog bite
-        NounPhrase[singular] Verb[MainVerb,simple,Transitive] -singular -transitive -object_unfilled <ACTION_2 action:! actor:NounPhrase->IS.object action_type:Verb object:"unknown">
+        NounPhrase[singular] Verb[MainVerb,simple,Transitive] -singular -transitive -object_unfilled <ACTION action:! actor:NounPhrase->IS.object action_type:Verb object:"unknown">
             # did <a dog bite> another dog
         NounPhrase[singular] Verb[MainVerb,simple,Intransitive] -singular -transitive -object_unfilled <ACTION action:! actor:NounPhrase->IS.object action_type:Verb>
             # did <a dog jump>
         NounPhrase[singular] Verb[MainVerb,!simple,Transitive] -singular -intransitive <IS object:! object_count:"1" noun_class:Noun | ACTION action:!! actor:! action_type:Verb>
             # dog bites
 
-        VerbPhrase[super_transitive,indirect_object_unfilled] NounPhrase -super_transitive -actor_unfilled <VerbPhrase->ACTION_3.indirect_object=NounPhrase->IS.object>
+        VerbPhrase[ditransitive,indirect_object_unfilled] NounPhrase -ditransitive -actor_unfilled <VerbPhrase->ACTION.indirect_object=NounPhrase->IS.object>
             # give a horse some food
             # gave a horse some food
 
-        NounPhrase VerbPhrase[super_transitive,actor_unfilled] -super_transitive -complete <VerbPhrase->ACTION_3.indirect_object=NounPhrase->IS.object>
+        NounPhrase VerbPhrase[ditransitive,actor_unfilled] -ditransitive -complete <VerbPhrase->ACTION.actor=NounPhrase->IS.object>
             # a man give a horse an apple
 
-        Verb[Ditransitive] NounPhrase -super_transitive -indirect_object_unfilled -actor_unfilled <ACTION_3 action:!! actor:"unknown" action_type:Verb object:NounPhrase->IS.object indirect_object:"unknown">
+        Verb[Ditransitive] NounPhrase -ditransitive -indirect_object_unfilled -actor_unfilled <ACTION action:!! actor:"unknown" action_type:Verb object:NounPhrase->IS.object indirect_object:"unknown">
             # <give a horse> some food
 
-        #Verb[Ditransitive] -super_transitive -actor_unfilled -indirect_object_unfilled -object_unfilled <ACTION_3
+        #Verb[Ditransitive] -ditransitive -actor_unfilled -indirect_object_unfilled -object_unfilled <ACTION
 
         #Noun[Pronoun,singular,GENDER,3rdPerson] Verb[3PPresent] -GENDER
         # he runs
@@ -692,12 +690,12 @@ Frames:
             # quick dogs run
             # hit dogs holler
 
-        VerbPhrase[transitive,object_unfilled] NounPhrase <VerbPhrase->ACTION_2.object=NounPhrase->IS.object>
+        VerbPhrase[transitive,object_unfilled] NounPhrase <VerbPhrase->ACTION.object=NounPhrase->IS.object>
             # <a dog bit | a horse>
-        VerbPhrase[super_transitive,indirect_object_unfilled] NounPhrase <VerbPhrase->ACTION_3.indirect_object=NounPhrase->IS.object>
+        VerbPhrase[ditransitive,indirect_object_unfilled] NounPhrase <VerbPhrase->ACTION.indirect_object=NounPhrase->IS.object>
             # <give a man | a fish>
-        #<ACTION_3 action:VerbPhrase->ACTION_3.action actor:VerbPhrase->IS.object action_type:VerbPhrase->ACTION_3.action_type object:VerbPhrase->IS.object indirect_object:Noun->IS.object>
-        #VerbPhrase[super_transitive,indirect_object_unfilled] Noun[MassNoun] <IS object:! object_count:"1" noun_class:Noun | VerbPhrase->ACTION_2.object=Noun->IS.object>
+        #<ACTION action:VerbPhrase->ACTION.action actor:VerbPhrase->IS.object action_type:VerbPhrase->ACTION.action_type object:VerbPhrase->IS.object indirect_object:Noun->IS.object>
+        #VerbPhrase[ditransitive,indirect_object_unfilled] Noun[MassNoun] <IS object:! object_count:"1" noun_class:Noun | VerbPhrase->ACTION.object=Noun->IS.object>
         # give a man grass
 
         #Noun[plural] SetDescriptorPhrase <IS object:! object_count:"inf" noun_class:Noun | SetDescriptorPhrase->CONTAINS.containee=!>
@@ -706,7 +704,7 @@ Frames:
             # the horses are mammals
             # horses are mammals
 
-        NounPhrase[plural] VerbPhrase[plural,transitive] <IS object:! object_count:"inf" noun_class:Noun | VerbPhrase->ACTION_2.actor=!>
+        NounPhrase[plural] VerbPhrase[plural,transitive] <IS object:! object_count:"inf" noun_class:Noun | VerbPhrase->ACTION.actor=!>
             # dogs eat grass
 
         #PreIndicativePhrase Verb[MainVerb,continuous] -continuous
@@ -743,10 +741,10 @@ Frames:
 
         AnaphoricNounPhrase PropertyDescriptorPhrase <PropertyDescriptorPhrase->HAS_PROPERTY.object=AnaphoricNounPhrase->ANAPHORIC.anaphoric_object>
             # the dog that bit the person | is ugly
-        AnaphoricNounPhrase VerbPhrase[actor_unfilled] <VerbPhrase->ACTION_2.actor=AnaphoricNounPhrase->ANAPHORIC.anaphoric_object>
+        AnaphoricNounPhrase VerbPhrase[actor_unfilled] <VerbPhrase->ACTION.actor=AnaphoricNounPhrase->ANAPHORIC.anaphoric_object>
             # the horse that bit the fish | ate the fish
 
-        NounPhrase SubjectActorDescriber <SubjectActorDescriber->ACTION_2.object=NounPhrase->IS.object>
+        NounPhrase SubjectActorDescriber <SubjectActorDescriber->ACTION.object=NounPhrase->IS.object>
             # a horse | got bitten by a dog
 
         Noun[plural] StateQuestionObject[plural,categorical] <IS object:! object_count:"inf" noun_class:Noun | CONTAINS container:StateQuestionObject->IS.object containee:!>
@@ -770,7 +768,7 @@ Frames:
             # which dogs in the city | can run
         # Noun[InterrogativePronoun,select] Sentence
         # which | horses eat fish
-        InterrogativePhrase VerbPhrase[super_transitive] <VerbPhrase->ACTION_3.actor=InterrogativePhrase->IS.object>
+        InterrogativePhrase VerbPhrase[ditransitive] <VerbPhrase->ACTION.actor=InterrogativePhrase->IS.object>
             # which horses | give gifts to fish
         InterrogativePhrase Verb[MainVerb] <CAN_DO action_type:Verb actor:InterrogativePhrase->IS.object>
             # which dogs | run
@@ -778,7 +776,7 @@ Frames:
         StateQuestionObject[NUMBER,MODE] VerbPhrase[simple,Intransitive] -NUMBER -MODE -Intransitive <VerbPhrase->ACTION.actor=StateQuestionObject->IS.object>
             # can a fish | live in the house
             # can i | live in the house
-        StateQuestionObject[NUMBER,MODE] VerbPhrase[transitive,actor_unfilled] -NUMBER -MODE -Intransitive <VerbPhrase->ACTION_2.actor=StateQuestionObject->IS.object>
+        StateQuestionObject[NUMBER,MODE] VerbPhrase[transitive,actor_unfilled] -NUMBER -MODE -Intransitive <VerbPhrase->ACTION.actor=StateQuestionObject->IS.object>
             # can i | eat the cookie
             # can the dog | eat the cookie
         StateQuestionObject[MODE] Verb[MainVerb,simple] -MODE <CAN_DO action_type:Verb actor:StateQuestionObject->IS.object | ACTION action:! actor:StateQuestionObject->IS.object action_type:Verb>

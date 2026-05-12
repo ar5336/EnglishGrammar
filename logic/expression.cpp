@@ -40,8 +40,8 @@ Predicate PredicateHandler::construct_predicate(string predicate_name, vector<st
     if (!predicate_template_handler->try_get_predicate_template(predicate_name, &predicate_template))
         throw runtime_error("predicate name '" + predicate_name + "' is wrong");
 
-    if (predicate_arguments.size() != predicate_template.parameter_names.size())
-        throw runtime_error("this predicate is malformed");
+    if (predicate_arguments.size() > predicate_template.parameter_names.size())
+        throw runtime_error("too many parameters for the prediicate template '" + predicate_name + "'");
 
     int type_index = predicate_template_handler->get_predicate_index(predicate_name);
 
@@ -59,11 +59,11 @@ bool operator<(const Expression& lhs, const Expression& rhs)
 }
 
 Expression::Expression() {
-    prid_to_prid_by_arg = map<int, map<int, tuple<string, string>>>();
+    prid_to_prid_by_arg = map<int, map<int, pair<string, string>>>();
 }
 
 Expression::Expression(vector<Predicate> predicates) : predicates(predicates) {
-    prid_to_prid_by_arg = map<int, map<int, tuple<string, string>>>();
+    prid_to_prid_by_arg = map<int, map<int, pair<string, string>>>();
     // construct noun set
     noun_set = set<string>();
     for (auto predicate : predicates)
@@ -160,8 +160,8 @@ void Expression::add_connection(int prid_1, string arg_1, int prid_2, string arg
     if (prid_to_prid_by_arg.count(prid_1) == 0)
     {
         // must create new connection + map
-        auto new_map = map<int, tuple<string, string>>();
-        new_map.emplace(prid_2, make_tuple(arg_1, arg_2));
+        auto new_map = map<int, pair<string, string>>();
+        new_map.emplace(prid_2, make_pair(arg_1, arg_2));
 
         prid_to_prid_by_arg.emplace(prid_1, new_map);
     } else
@@ -180,7 +180,7 @@ void Expression::add_connection(int prid_1, string arg_1, int prid_2, string arg
             return;
         }
 
-        to_map.emplace(prid_2, make_tuple(arg_1, arg_2));
+        to_map.emplace(prid_2, make_pair(arg_1, arg_2));
 
         prid_to_prid_by_arg.erase(prid_1);
 
@@ -194,15 +194,15 @@ Predicate Expression::operator [](int i) const
 }
 
 
-tuple<bool, vector<tuple<int, int>>> Expression::has_connection(string pred_1, string arg_1, string pred_2, string arg_2)
+pair<bool, vector<pair<int, int>>> Expression::has_connection(string pred_1, string arg_1, string pred_2, string arg_2)
 {
     if (prids_by_type.count(pred_1) == 0 || prids_by_type.count(pred_2) == 0)
-        return make_tuple(false, vector<tuple<int, int>>());
+        return make_pair(false, vector<pair<int, int>>());
 
     vector<int> candidate_prid_1s = prids_by_type.at(pred_1);
     vector<int> candidate_prid_2s = prids_by_type.at(pred_2);
 
-    vector<tuple<int, int>> found_connections = vector<tuple<int, int>>();
+    vector<pair<int, int>> found_connections = vector<pair<int, int>>();
     for (int candidate_prid_1 : candidate_prid_1s)
     {
         if (prid_to_prid_by_arg.count(candidate_prid_1) == 0)
@@ -226,23 +226,23 @@ tuple<bool, vector<tuple<int, int>>> Expression::has_connection(string pred_1, s
                 // add to found connections
                 auto connection_info = candidiate_connection.at(candidate_prid_2);
 
-                string found_arg_1 = get<0>(connection_info);
+                string found_arg_1 = connection_info.first;
                 if (!equals(found_arg_1, arg_1))
                     continue;
-                string found_arg_2 = get<1>(connection_info);
+                string found_arg_2 = connection_info.second;
                 if (!equals(found_arg_2, arg_2))
                     continue;
 
-                found_connections.push_back(make_tuple(candidate_prid_1, candidate_prid_2));
+                found_connections.push_back(make_pair(candidate_prid_1, candidate_prid_2));
             } else
                 continue;
         }
     }
 
     if (found_connections.size() == 0)
-        return make_tuple(false, found_connections);
+        return make_pair(false, found_connections);
     else
-        return make_tuple(true, found_connections);
+        return make_pair(true, found_connections);
 }
 
 Expression Expression::combine_expressions(Expression expression1, Expression expression2)
@@ -375,7 +375,7 @@ vector<Predicate> Expression::extract_anaphora_closure_by_argument(Expression &o
                 continue;
             }
 
-            auto identified_relevant_predicates = extract_predicates_by_argument(og_expression, top_predicate_argument, /*anaphorics prohibited*/ true);
+            auto identified_relevant_predicates = extract_predicates_by_argument(og_expression, top_predicate_argument, true);
 
             if (DEBUGGING)
             {
@@ -423,21 +423,21 @@ vector<pair<Predicate, Predicate>> Expression::get_connections(
             target_predicate_type,
             target_argument);
     
-    bool has_connection = get<0>(has_connection_and_connection_ids);
+    bool has_connection = has_connection_and_connection_ids.first;
     if (!has_connection){
         if (DEBUGGING)
             printf("no connections found\n");
         return vector<pair<Predicate, Predicate>>();
     }
-    
-    auto predicate_index_pairs = get<1>(has_connection_and_connection_ids);
+
+    auto predicate_index_pairs = has_connection_and_connection_ids.second;
 
     auto predicate_pairs = vector<pair<Predicate, Predicate>>();
 
     for (auto predicate_index_pair : predicate_index_pairs)
     {
-        int predicate_index_1 = get<0>(predicate_index_pair);
-        int predicate_index_2 = get<1>(predicate_index_pair);
+        int predicate_index_1 = predicate_index_pair.first;
+        int predicate_index_2 = predicate_index_pair.second;
 
         predicate_pairs.push_back(make_pair(predicates[predicate_index_1], predicates[predicate_index_2]));
     }

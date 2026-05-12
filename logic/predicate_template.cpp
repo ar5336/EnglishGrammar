@@ -6,11 +6,23 @@ PredicateTemplate::PredicateTemplate() {
     are_params_schematic = vector<bool>();
 }
 
-PredicateTemplate::PredicateTemplate(string predicate_name, vector<string> parameter_names, vector<bool> are_params_schematic)
-    : predicate(predicate_name), parameter_names(parameter_names), are_params_schematic(are_params_schematic)
+PredicateTemplate::PredicateTemplate(
+    string predicate_name,
+    vector<string> parameter_names,
+    vector<bool> are_params_schematic,
+    vector<bool> are_params_optional)
+    : predicate(predicate_name),
+      parameter_names(parameter_names),
+      are_params_schematic(are_params_schematic),
+      are_params_optional(are_params_optional)
     {
         if (are_params_schematic.size() != parameter_names.size())
-            throw runtime_error("are params schematic size " + to_string(are_params_schematic.size()) + " does not match parameter names size " + to_string(parameter_names.size()) +".");
+            throw runtime_error("are params schematic size " + to_string(are_params_schematic.size())
+            + " does not match parameter names size " + to_string(parameter_names.size()) + ".");
+
+        if (are_params_optional.size() != parameter_names.size())
+            throw runtime_error("are params optional size " + to_string(are_params_optional.size())
+            + " does not match parameter names size " + to_string(parameter_names.size()) + ".");
 
         parameter_index_map = map<string, int>();
         for (int param_index = 0; param_index < parameter_names.size(); param_index++)
@@ -49,6 +61,7 @@ void PredicateTemplate::replace(PredicateTemplate other)
     parameter_names = other.parameter_names;
     parameter_index_map = other.parameter_index_map;
     are_params_schematic = other.are_params_schematic;
+    are_params_optional = other.are_params_optional;
 }
 
 PredicateTemplateHandler::PredicateTemplateHandler() {

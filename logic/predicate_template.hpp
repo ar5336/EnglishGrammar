@@ -17,12 +17,17 @@ public:
     string predicate;
     vector<string> parameter_names;
     vector<bool> are_params_schematic;
+    vector<bool> are_params_optional;
 
     map<string, int> parameter_index_map;
 
     PredicateTemplate();
 
-    PredicateTemplate(string predicate_name, vector<string> parameter_names, vector<bool> are_params_schematic);
+    PredicateTemplate(
+        string predicate_name,
+        vector<string> parameter_names,
+        vector<bool> are_params_schematic,
+        vector<bool> are_params_optional);
 
     bool contains_parameter_name(string parameter_name);
 

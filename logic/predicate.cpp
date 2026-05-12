@@ -13,7 +13,7 @@ Predicate::Predicate(int type_id, vector<string> arguments, PredicateTemplate pr
 Predicate::Predicate(int type_id, vector<string> arguments, SpeechActs speechAct)
     : type_id(type_id), arguments(arguments) {}
 
-string Predicate::get_argument(string parameter_name)
+string  Predicate::get_argument(string parameter_name)
 {
     string trimmed = parameter_name;
     trim(trimmed);
@@ -24,6 +24,25 @@ string Predicate::get_argument(string parameter_name)
     int param_index = predicate_template.parameter_index_map[trimmed];
 
     return arguments[param_index];
+}
+
+bool Predicate::try_get_argument(string parameter_name, string& out_value)
+{
+    string trimmed = parameter_name;
+    trim(trimmed);
+    if (predicate_template.parameter_index_map.count(trimmed) == 0)
+    {
+        return false;
+    }
+    int param_index = predicate_template.parameter_index_map[trimmed];
+
+    if (arguments.size() <= param_index)
+    {
+        return false;
+    }
+
+    out_value = arguments[param_index];
+    return true;
 }
 
 bool Predicate::has_argument(string parameter_name)

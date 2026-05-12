@@ -51,30 +51,10 @@ PredicateCreator::PredicateCreator(PredicateHandler *handler, vector<string> cre
         throw runtime_error("could not find predicate template for name '"+predicate_name+"'");
     
     int template_size = predicate_template.parameter_names.size(); 
-    int token_size = parameter_tokens.size(); 
-    if (template_size != token_size)
-    {
-        // if (template_size > token_size){
-        //     string extra_param = predicate_template.parameter_names[template_size];
-        //     throw runtime_error("template parameter size "+to_string(template_size)+" does not match parameter token size "+to_string(token_size)+" for predicate "+predicate_name+". First extra parameter is:"+extra_param);
+    int token_size = parameter_tokens.size();
 
-        // } else {
-        //     if (template_size > token_size){
-        //     string extra_param = par[template_size];
-        //     throw runtime_error("template parameter size "+to_string(template_size)+" does not match parameter token size "+to_string(token_size)+" for predicate "+predicate_name+". First extra parameter is:"+extra_param);
-        // }
-        // }
-        printf("fatal break during grammar reading. dumping creation tokens for predicate creator: [");
-        for (string token : creation_tokens)
-        {
-            printf("'%s', ", token.c_str());
-        }
-        printf("]\n");
-        throw runtime_error("template parameter size "+to_string(template_size)+" does not match parameter token size "+to_string(token_size)+" for predicate "+predicate_name+".");
-    }
-
-    if (predicate_template.parameter_names.size() != parameter_tokens.size())
-        throw runtime_error("wrong size of parameter tokens");
+    if (predicate_template.parameter_names.size() < parameter_tokens.size())
+        throw runtime_error("too many parameter tokens");
 
     predicate = predicate_template;
     int template_parameter_index = 0;

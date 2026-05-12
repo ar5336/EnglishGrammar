@@ -306,6 +306,15 @@ void Displayer::display_predicate(Point *pos, bool is_given, Predicate predicate
     vector<string> pred_args = predicate.arguments;
     for (int i = 0; i < param_names.size(); i++)
     {
+        bool parameter_is_optional = predicate.predicate_template.are_params_optional[i];
+        if (i >= pred_args.size())
+        {
+            continue;
+        }
+        if (parameter_is_optional && equals(pred_args[i], "unknown"))
+        {
+            continue;
+        }
         string param_name = param_names[i];
         string pred_arg = pred_args[i];
 
