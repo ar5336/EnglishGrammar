@@ -8,7 +8,8 @@ string PredicateRuleApplier::get_argument_accessor(
     vector<Predicate> predicates_to_modify = vector<Predicate>();
     if (!try_get_predicates(context, frames, accessor, predicates_to_modify))
     {
-        printf("\033[38;5;208mdisaster\033[0m: failed to access argument with accessor %s\n", accessor.stringify().c_str());
+        if (DEBUGGING || WARNING)
+            printf("\033[38;5;208mwarning\033[0m: failed to access argument with accessor %s\n", accessor.stringify().c_str());
         return "unknown";
     }
 
@@ -22,7 +23,8 @@ string PredicateRuleApplier::get_argument_accessor(
     }
 
     if (predicates_to_modify.size() > 1)
-        printf("\033[38;5;208mdisaster\033[0m: impermissibile ambiguity in argument accessor %s\n", accessor.stringify().c_str());
+        if (DEBUGGING || WARNING)
+            printf("\033[38;5;208mwarning\033[0m: impermissibile ambiguity in argument accessor %s\n", accessor.stringify().c_str());
 
     string argument = original_predicate.get_argument(accessor_paramter_name);
 
@@ -260,12 +262,13 @@ Expression PredicateRuleApplier::set_argument_accessor(
     vector<Predicate> predicates_to_modify;
     if (!try_get_predicates(context, frames, argument_accessor, predicates_to_modify))
     {
-        printf("\033[38;5;208mdisaster\033[0m: failed to access assignee of predicate modifier rule\n");
+        if (DEBUGGING || WARNING)
+            printf("\033[38;5;208mwarning\033[0m: failed to access assignee of predicate modifier rule\n");
         return expression;
     }
 
         // // if (predicates_to_modify.size() > 1)
-        // // printf("\033[38;5;208mdisaster\033[0m: impermissibile ambiguity in argument accessor %s\n", accessor.stringify().c_str());
+        // // printf("\033[38;5;208mwarning\033[0m: impermissibile ambiguity in argument accessor %s\n", accessor.stringify().c_str());
 
     vector<Predicate> new_predicates;
     for (auto original_predicate : predicates_to_modify)

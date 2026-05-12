@@ -1,6 +1,7 @@
 #include "global.hpp"
 
 bool DEBUGGING = false;
+bool WARNING = false;
 
 bool SEQUENTIAL = false;
 

@@ -366,7 +366,7 @@ bool run_integration_test()
                     }
                 }
 
-                if (def_line != current_definition_line)
+                if (def_line != current_definition_line && !has_bang)
                     printf("'%s' | result: %d : expected: %d\n",current_line.c_str(), def_line,  current_definition_line);
 
                 // // printf("stringified parser: %s\n", tester.test_parser.stringify().c_str());

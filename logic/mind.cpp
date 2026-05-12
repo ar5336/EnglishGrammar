@@ -583,7 +583,7 @@ int Mind::create_object_representation(Predicate is_predicate, bool real)
 
 map<int, vector<string>> Mind::extract_concrete_properties(Expression expression)
 {
-    // printf("\033[1;31mdisaster\033[0m: this method should never be called\n");
+    // printf("\033[1;31mwarning\033[0m: this method should never be called\n");
     auto property_pairs = map<int, vector<string>>();
 
     auto object_property_pairs = expression.get_connections(
@@ -722,15 +722,12 @@ bool Mind::does_it_exist(Noun noun, Noun& og_noun)
     vector<Noun> matches;
 
     for (auto concrete_noun : concrete_nouns)
-    {
         if (!compare_nouns(noun, concrete_noun))
             matches.push_back(concrete_noun);
-    }
 
     if (matches.size() > 1)
-    {
-        printf("\033[1;31mdisaster\033[0m: unaccomodated ambiguity in noun reference\n");
-    }
+        if (DEBUGGING || WARNING)
+            printf("\033[1;31mwarning\033[0m: unaccomodated ambiguity in noun reference\n");
 
     if (matches.size() == 0)
         return false;

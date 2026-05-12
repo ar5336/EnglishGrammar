@@ -466,8 +466,8 @@ void Displayer::display()
                     bool is_word = row == 0;
                     if (frame.frame_name.size() == 0)
                     {
-                        if (DEBUGGING)
-                            printf("disaster: skipping bad frame at row %d, col %d, ind %d: %s\n", row, col, frame_index, frame.stringify_pre_binarization().c_str());
+                        if (DEBUGGING || WARNING)
+                            printf("warning: skipping bad frame at row %d, col %d, ind %d: %s\n", row, col, frame_index, frame.stringify_pre_binarization().c_str());
                         continue;
                     }
                     string cell_text;

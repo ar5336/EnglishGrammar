@@ -235,6 +235,12 @@ int main(int argc, char **argv)
 		SEQUENTIAL = true;
 	}
 
+	set<string> warning_alternatives = set<string> {"--warning", "-w"};
+	if (argc > arg_index && (warning_alternatives.count((string)argv[arg_index]) != 0))
+	{		
+		WARNING = true;
+	}
+
 	// signal(11, handler);   // install our handler
 
 	if (SEQUENTIAL)
