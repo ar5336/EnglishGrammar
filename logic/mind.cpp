@@ -223,7 +223,7 @@ string Mind::ask(Expression expression)
     return "unknown";
 }
 
-Noun* Mind::dereference_noun_id(int noun_id, bool real = true)
+Noun& Mind::dereference_noun_id(int noun_id, bool real)
 {
     if (real)
     {
@@ -239,9 +239,9 @@ Noun* Mind::dereference_noun_id(int noun_id, bool real = true)
     }
     if (real)
     {
-        return &concrete_nouns.at(noun_id);
+        return concrete_nouns.at(noun_id);
     }
-    return &abstract_nouns.at(noun_id);
+    return abstract_nouns.at(noun_id);
 }
 
 
@@ -480,7 +480,7 @@ vector<Event> Mind::extract_events(Expression expression, bool real = true)
                     ? stoi(param_predicate.get_argument("id"))
                     : create_object_representation(param_predicate, real);
             string actor_noun_class = is_param_concrete
-                ? dereference_noun_id(param_object_id, real)->entity_type->noun
+                ? dereference_noun_id(param_object_id, real).entity_type->noun
                 : param_predicate.get_argument("noun_class");
 
             Predicate original_action_predicate = connection.first;

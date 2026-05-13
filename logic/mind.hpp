@@ -184,7 +184,7 @@ private:
 
     Expression resolve_anaphoras(Expression expression);
 
-    Noun* dereference_noun_id(int noun_id, bool real);
+    Noun& dereference_noun_id(int noun_id, bool real);
 
     bool compare_events(Event event_1, Event event_2);
 

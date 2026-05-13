@@ -13,9 +13,6 @@
 class InterpretationHandler
 {
 private:
-    bool try_get_left_link(Frame*& result_ptr);
-	bool try_get_right_link(Frame*& result_ptr);
-
     Parser* parser;
     PredicateHandler* handler;
 public:

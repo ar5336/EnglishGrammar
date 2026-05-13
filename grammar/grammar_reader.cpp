@@ -322,76 +322,84 @@ void GrammarReader::read_grammar(string file_name)
     if (new_file.is_open())
     { // checking whether the file is open
 
-        while (getline(new_file, current_line))
-        { // read data from file object and put it into string.
-            // printf("%s\n", current_line.c_str());
-            current_line_index++;
+        try
+        {
+            while (getline(new_file, current_line))
+            { // read data from file object and put it into string.
+                // printf("%s\n", current_line.c_str());
+                current_line_index++;
 
-            if (current_line.size() == 0)
-                continue;
+                if (current_line.size() == 0)
+                    continue;
 
-            // measure indentation by counting initial spaces
-            int initial_spaces = count_initial_spaces(current_line);
-            int current_indentation = initial_spaces / tab_spaces;
+                // measure indentation by counting initial spaces
+                int initial_spaces = count_initial_spaces(current_line);
+                int current_indentation = initial_spaces / tab_spaces;
 
-            if (current_indentation < previous_indentation)
-            {
-                for (int i = 0; i < previous_indentation - current_indentation; i++)
+                if (current_indentation < previous_indentation)
                 {
-                    if (type_heirarchy.size() > 0)
+                    for (int i = 0; i < previous_indentation - current_indentation; i++)
                     {
-                        type_heirarchy.pop_back();
+                        if (type_heirarchy.size() > 0)
+                        {
+                            type_heirarchy.pop_back();
+                        }
+                        term_forms.clear();
+                        term_form_names.clear();
                     }
-                    term_forms.clear();
-                    term_form_names.clear();
                 }
-            }
-            
-            previous_indentation = current_indentation;
+                
+                previous_indentation = current_indentation;
 
-            trim(current_line);
+                trim(current_line);
 
-            if (equals(current_line, "FeatureGroups:"))
-            {
-                state = GrammarReaderState::ReadingFeatureGroups;
-                continue;
-            }
-            if (equals(current_line, "Predicates:"))
-            {
-                state = GrammarReaderState::ReadingPredicateTemplates;
-            }
-            if (equals(current_line, "Frames:"))
-            {
-                predicate_handler->predicate_template_handler = predicate_template_handler;
-                state = GrammarReaderState::ReadingSyntax;
-            }
-
-            split_tokens = split_spaces(current_line);
-
-            // if the first token ends in a ":" you're going up a level in the type_heirarchy
-            first_token = split_tokens[0];
-            if (first_token.at(first_token.size() - 1) == ':')
-            {
-                add_term_forms(term_forms, term_form_names);
-            }
-            else
-            {
-                switch (state)
+                if (equals(current_line, "FeatureGroups:"))
                 {
-                case GrammarReaderState::ReadingWords:
-                    read_word_entry();
-                    break;
-                case GrammarReaderState::ReadingSyntax:
-                    read_syntax_entry();
-                    break;
-                case GrammarReaderState::ReadingFeatureGroups:
-                    read_feature_group_entry();
-                    break;
-                case GrammarReaderState::ReadingPredicateTemplates:
-                    read_predicate_template_entry();
-                    break;
+                    state = GrammarReaderState::ReadingFeatureGroups;
+                    continue;
+                }
+                if (equals(current_line, "Predicates:"))
+                {
+                    state = GrammarReaderState::ReadingPredicateTemplates;
+                }
+                if (equals(current_line, "Frames:"))
+                {
+                    predicate_handler->predicate_template_handler = predicate_template_handler;
+                    state = GrammarReaderState::ReadingSyntax;
+                }
+
+                split_tokens = split_spaces(current_line);
+
+                // if the first token ends in a ":" you're going up a level in the type_heirarchy
+                first_token = split_tokens[0];
+                if (first_token.at(first_token.size() - 1) == ':')
+                {
+                    add_term_forms(term_forms, term_form_names);
+                }
+                else
+                {
+                    switch (state)
+                    {
+                    case GrammarReaderState::ReadingWords:
+                        read_word_entry();
+                        break;
+                    case GrammarReaderState::ReadingSyntax:
+                        read_syntax_entry();
+                        break;
+                    case GrammarReaderState::ReadingFeatureGroups:
+                        read_feature_group_entry();
+                        break;
+                    case GrammarReaderState::ReadingPredicateTemplates:
+                        read_predicate_template_entry();
+                        break;
+                    }
                 }
             }
+        }
+        catch (...)
+        {
+            new_file.close();
+            throw;
         }
         
         new_file.close(); // close the file object.

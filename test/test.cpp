@@ -235,7 +235,6 @@ bool run_integration_test()
     new_file.open("grammar.langdef", ios::in); // open a file to perform read operation using file object
     if (!new_file.is_open()) {
         throw runtime_error("Failed to open grammar file.");
-        return false;
     }
 
     bool reading_frames = false;
@@ -243,7 +242,7 @@ bool run_integration_test()
 
     int current_definition_line = 0;
     int current_reading_line = 0;
-    if (new_file.is_open())
+    try
     {
         while (getline(new_file, current_line))
         {
@@ -377,6 +376,12 @@ bool run_integration_test()
             }
         }
     }
+    catch (...)
+    {
+        new_file.close();
+        throw;
+    }
+    new_file.close();
 
     return true;;
 }
