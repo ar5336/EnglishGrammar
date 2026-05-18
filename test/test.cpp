@@ -87,6 +87,7 @@ void ParserTester::setup_parse()
     tell_mind("horses are mammals");
     tell_mind("dogs are mammals");
     tell_mind("foxes are mammals");
+    tell_mind("mammals are animals");
     tell_mind("fishes are animals");
 }
 
@@ -121,6 +122,36 @@ string ParserTester::ask_mind(string utterance)
         return test_mind.ask(constructed_expression);
     }
     return "dunno";
+}
+
+bool test_parse__inheritance() {
+    tester.setup_parse();
+
+    TEST_ASSERT(equals(tester.ask_mind("are dogs animals"), "yes, dog inherits from animal."));
+    TEST_ASSERT(equals(tester.ask_mind("are horses animals"), "yes, horse inherits from animal."));
+    TEST_ASSERT(equals(tester.ask_mind("are horses mammals"), "yes, horse inherits from mammal."));
+
+    tester.tell_mind("animals can run");
+
+    TEST_ASSERT(equals(tester.ask_mind("can dogs run"), "yes, dog can run."));
+    TEST_ASSERT(equals(tester.ask_mind("can horses run"), "yes, horse can run."));
+    TEST_ASSERT(equals(tester.ask_mind("can foxes run"), "yes, fox can run."));
+
+    tester.tell_mind("birds are animals");
+    tester.tell_mind("ravens are birds");
+    tester.tell_mind("eagles are birds");
+    tester.tell_mind("birds can fly");
+
+    TEST_ASSERT(equals(tester.ask_mind("can ravens fly"), "yes, raven can fly."));
+    TEST_ASSERT(equals(tester.ask_mind("can eagles fly"), "yes, eagle can fly."));
+
+    // these last asserts are failing, and show the limitations of the schema system.
+    // we need to move to a inference rule system that will not require hardcoding inheritance updating
+    tester.tell_mind("pigs are mammals");
+    TEST_ASSERT(equals(tester.ask_mind("can pigs run"), "yes, pig can run."));
+    TEST_ASSERT(equals(tester.ask_mind("can pigs fly"), "no, pig cannot fly."));
+
+    return true;
 }
 
 bool test_parse__event() {
@@ -390,6 +421,7 @@ bool run_integration_test()
 int test_all() {
     printf("running unit tests\n");
 
+    RUN_TEST(test_parse__inheritance);
     RUN_TEST(test_parse__event);
     RUN_TEST(test_parse__anaphora_event);
     RUN_TEST(test_parse__event_anaphora_create_event);
