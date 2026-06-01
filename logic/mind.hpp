@@ -7,6 +7,7 @@
 
 #include "conceptual_schema.hpp"
 #include "expression.hpp"
+#include "inference/inference_rule.hpp"
 
 enum KnowledgeType
 {
@@ -152,6 +153,7 @@ private:
 
     PredicateHandler *predicate_handler;
     ConceptualSchema *conceptual_schema;
+    InferenceHandler *inference_handler;
 
     // map<string, string> child_to_parent_map;
     // inheritance map

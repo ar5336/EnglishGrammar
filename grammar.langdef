@@ -170,7 +170,9 @@ Words:
                 transfer transferring transferred transfers
                 name naming named names
                 shoot shooting shot shoots
+                teach teaching taught teaches
             Transitive: # simple continuous perfect 3PPresent (pastPart)
+                learn learning learned learns
                 kill killing killed kills
                 write writing wrote writes written
                 code coding coded codes
@@ -362,7 +364,7 @@ Words:
         forthwidth
     Preposition:
         for
-        to
+        to -infinitive
         of
         Place:
             in
@@ -428,6 +430,20 @@ Predicates:
     TOPIC           object->
     CONJUNCTION     conjunction object_1->  object_2->
     CAUSATION       cause->     effect->
+
+InferenceRules:
+    Inherit-Abilities
+        IF
+            IS object:a object_count:_ noun_class:c
+            IS object:b object_count:_ noun_class:d
+            CONTAINS container:a containee:b
+            CAN_DO action_type:e actor:a 
+        THEN
+            CAN_DO action_type:e actor:b
+        # animals can run
+        # horses are animals
+        #? can horses run
+        #> yes
 
 Frames:
     NounPhrase "NP"
@@ -561,7 +577,7 @@ Frames:
     AnaphoricIndirectObjectDescriptivePhrase "AnIODP"
         Noun[RelativePronoun] VerbPhrase[ditransitive,indirect_object_unfilled] -ditransitive -object_unfilled
             # the man <that | gave the cat> some meat
-    ActorDescriptivePhrase "AtrDP"
+    ActorDescriptivePhrase "ActrDP"
         Preposition[Preposition,Actor] NounPhrase
             # the man that got bit <by the dog>
 
@@ -826,6 +842,11 @@ Frames:
             # do the horses
         Verb[LinkingVerb,present,NUMBER] Noun[plural] -present -plural -existential <IS object:! object_count:"inf" noun_class:Noun>
             # do dogs
+    ToInfinitivePhrase "ToIP"
+        Preposition[infinitive] Verb[MainVerb]
+            # to run
+        # TODO - needs integration w/ a phrasing system.
+        # Must handle to-infinitve "he taught me to run" and bare infinitive "he made me run"
 
     InterrogativePhrase "IntP"
     #    who -person

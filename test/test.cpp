@@ -281,9 +281,7 @@ bool run_integration_test()
             // printf("line %d: %s\n", current_reading_line, current_line.c_str());
 
             if (current_line.size() == 0)
-            {
                 continue;
-            }
             
             int initial_spaces = count_initial_spaces(current_line);
 
@@ -302,20 +300,16 @@ bool run_integration_test()
             bool has_right_bracket = find_in_string(current_line, ">");
 
 
-            if (initial_spaces == 7) // syntax definition
+            if (initial_spaces == 8) // syntax definition
             {
                 if (!has_hashtag)
                     current_definition_line = current_reading_line;
             }
 
-            if (initial_spaces == 11) // check for correct indentation
+            if (initial_spaces == 12) // check for correct indentation
             {
-
-
                 if (!has_hashtag)
-                {
                     continue;
-                }
 
                 if (DEBUGGING)
                 {
@@ -343,6 +337,7 @@ bool run_integration_test()
                     else if (find_in_string(token, ">"))
                     {
                         token = remove_char_from_string(token, '>');
+
                         end_bracket_index = i;
                     }
                     modified_tokens.push_back(token);

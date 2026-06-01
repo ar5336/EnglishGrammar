@@ -60,7 +60,7 @@ int count_initial_spaces(string str)
 		char_index++;
 		initial_char = str.at(char_index);
 	}
-	return char_index - 1;
+	return char_index;
 }
 
 bool equals(string a, string b)

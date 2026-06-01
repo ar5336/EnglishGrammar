@@ -7,6 +7,8 @@
 #include "../string_operators.hpp"
 #include "frames.hpp"
 #include "grammar.hpp"
+#include "inference_rule_reader.hpp"
+#include "../logic/inference/inference_rule.hpp"
 
 using namespace std;
 
@@ -14,7 +16,8 @@ enum GrammarReaderState{
 	ReadingWords = 1,
 	ReadingSyntax = 2,
 	ReadingFeatureGroups = 3,
-	ReadingPredicateTemplates = 4,
+	ReadingInferenceRules = 4,
+	ReadingPredicateTemplates = 5,
 };
 
 class GrammarReader
@@ -22,6 +25,7 @@ class GrammarReader
 private:
     Grammar* grammar;
 	PredicateHandler* predicate_handler;
+	InferenceRuleReader* inference_rule_reader;
 	PredicateTemplateHandler* predicate_template_handler;
 
 	GrammarReaderState state;
@@ -48,6 +52,10 @@ private:
 	void read_syntax_entry();
 
 	void read_feature_group_entry();
+
+	void read_inference_rule_entry();
+
+	void finish_inference_rule();
 
 	void read_word_entry();
 

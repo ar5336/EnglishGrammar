@@ -224,3 +224,35 @@ bool PredicateRuleReader::try_read_predicate_rule(string predicate_rule, Predica
 
 //     // }
 // }
+
+PredicateMatcher::PredicateMatcher()
+{
+}
+
+PredicateMatcher::PredicateMatcher(PredicateHandler *handler_ptr, vector<string> creation_tokens)
+{
+    if (!handler_ptr->try_get_predicate_template(creation_tokens[0], &predicate_template))
+        throw runtime_error("could not find predicate template for name '"+creation_tokens[0]+"'");
+    
+    for (const string &token : creation_tokens)
+    {
+        // Determine the type of each token and populate the corresponding member variables
+        ParameterCreationType type = determine_type(token);
+        parameter_matching_types.push_back(type);
+        
+        // check for quotes for string param
+
+        if (token[0] == '"' && token[token.size() - 1] == '"')
+            param_strings.push_back(trim_front_and_back(token));
+        else
+            param_values.push_back(token);
+
+        // check if value is _ for drop
+        if (equals(token, "_"))
+            param_dropped.push_back(true);
+        else
+            param_dropped.push_back(false);
+
+        param_dropped.push_back(false); // Initially, no parameters are dropped
+    }
+}

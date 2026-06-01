@@ -10,6 +10,7 @@ enum ParameterCreationType
     WORD_FRAME = 1,
     FRAME_PREDICATE_PROPERTY = 2,
     STRING = 3,
+    DROP = 4,
 };
 
 ParameterCreationType determine_type(string argument);
@@ -75,6 +76,22 @@ public:
     PredicateCreator(PredicateHandler *handler_ptr, vector<string> creation_tokens);
 
     // Predicate create_predicate(vector<Predicate> pattern_element_accessor_fodder, vector<Frame> word_frame_accessor_fodder);
+};
+
+class PredicateMatcher
+{
+public:
+    PredicateTemplate predicate_template;
+    vector<ParameterCreationType> parameter_matching_types;
+
+    vector<string> param_strings;
+    vector<bool> param_dropped;
+    vector<string> param_values;
+    // frame accessors not necessary for this
+    // wildcards not yet implemented in matcher - unclear if even necessary yet
+
+    PredicateMatcher();
+    PredicateMatcher(PredicateHandler *handler_ptr, vector<string> creation_tokens);
 };
 
 class PredicateFormationRules

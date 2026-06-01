@@ -211,6 +211,34 @@ void GrammarReader::read_feature_group_entry()
     grammar->feature_group_to_features.emplace(feature_group_name, feature_names);
 }
 
+void GrammarReader::finish_inference_rule()
+{
+    // create the inference rule object
+
+    // construct inference rule
+    // InferenceRule
+    string rule_name = inference_rule_reader->rule_name;
+    vector<PredicateMatcher> if_predicates = inference_rule_reader->if_predicates;
+    vector<PredicateCreator> then_predicates = inference_rule_reader->then_predicates;
+    // vector<string> integration_tests = inference_rule_reader->integration_tests;
+
+    auto new_rule = InferenceRule(
+        rule_name,
+        if_predicates,
+        then_predicates);
+    
+    inference_rule_reader->reset();
+}
+
+void GrammarReader::read_inference_rule_entry()
+{
+    bool is_rule_finished = inference_rule_reader->is_rule_finished(current_line, previous_indentation);
+    if (is_rule_finished)
+    {
+        finish_inference_rule();
+    }
+}
+
 void GrammarReader::read_word_entry()
 {
     // reading word
@@ -308,6 +336,7 @@ GrammarReader::GrammarReader(
     current_line_index(0)
 {
     state = GrammarReaderState::ReadingWords;
+    inference_rule_reader = new InferenceRuleReader(predicate_handler);
 }
 
 void GrammarReader::read_grammar(string file_name)
@@ -330,7 +359,13 @@ void GrammarReader::read_grammar(string file_name)
                 current_line_index++;
 
                 if (current_line.size() == 0)
+                {
+                    if (state == GrammarReaderState::ReadingInferenceRules)
+                    {
+                        finish_inference_rule();
+                    }
                     continue;
+                }
 
                 // measure indentation by counting initial spaces
                 int initial_spaces = count_initial_spaces(current_line);
@@ -364,15 +399,20 @@ void GrammarReader::read_grammar(string file_name)
                 }
                 if (equals(current_line, "Frames:"))
                 {
-                    predicate_handler->predicate_template_handler = predicate_template_handler;
                     state = GrammarReaderState::ReadingSyntax;
+                }
+                if (equals(current_line, "InferenceRules:"))
+                {
+                    predicate_handler->predicate_template_handler = predicate_template_handler;
+                    state = GrammarReaderState::ReadingInferenceRules;
+                    // continue;
                 }
 
                 split_tokens = split_spaces(current_line);
 
                 // if the first token ends in a ":" you're going up a level in the type_heirarchy
                 first_token = split_tokens[0];
-                if (first_token.at(first_token.size() - 1) == ':')
+                if (first_token.at(first_token.size() - 1) == ':' && state != GrammarReaderState::ReadingInferenceRules)
                 {
                     add_term_forms(term_forms, term_form_names);
                 }
@@ -388,6 +428,9 @@ void GrammarReader::read_grammar(string file_name)
                         break;
                     case GrammarReaderState::ReadingFeatureGroups:
                         read_feature_group_entry();
+                        break;
+                    case GrammarReaderState::ReadingInferenceRules:
+                        read_inference_rule_entry();
                         break;
                     case GrammarReaderState::ReadingPredicateTemplates:
                         read_predicate_template_entry();
