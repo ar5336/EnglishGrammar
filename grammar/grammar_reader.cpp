@@ -223,19 +223,30 @@ void GrammarReader::finish_inference_rule()
     // vector<string> integration_tests = inference_rule_reader->integration_tests;
 
     auto new_rule = InferenceRule(
+        predicate_handler,
         rule_name,
         if_predicates,
         then_predicates);
+    
+    grammar->inference_rules.push_back(new_rule);
     
     inference_rule_reader->reset();
 }
 
 void GrammarReader::read_inference_rule_entry()
 {
-    bool is_rule_finished = inference_rule_reader->is_rule_finished(current_line, previous_indentation);
-    if (is_rule_finished)
+    auto [is_rule_finished, rule_name] = inference_rule_reader->is_rule_finished(current_line, previous_indentation);
+    switch (is_rule_finished)
     {
-        finish_inference_rule();
+        case InferenceRuleReaderFinishType::Finished:
+            finish_inference_rule();
+            break;
+        case InferenceRuleReaderFinishType::NextRuleHandoff:
+            finish_inference_rule();
+            inference_rule_reader->rule_name = rule_name;
+            break;
+        case InferenceRuleReaderFinishType::NotFinished:
+            break;
     }
 }
 

@@ -150,15 +150,20 @@ string stringify_set(set<string> set)
 
 string stringify_vector(vector<string> vector)
 {
+    return stringify_vector(vector, ", ");
+}
+
+string stringify_vector(vector<string> vector, string delim)
+{
     string feature_string = "";
     for (string string : vector)
     {
         feature_string += string;
-        feature_string += ", ";
+        feature_string += delim;
     }
 
     if (vector.size() > 0)
-        return feature_string.substr(0, feature_string.length()-2);
+        return feature_string.substr(0, feature_string.length()-delim.length());
     return feature_string;
 }
 

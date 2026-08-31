@@ -24,6 +24,7 @@ public:
     int type_id;
     PredicateTemplate predicate_template;
     vector<string> arguments;
+    map<string, int> argument_to_index_map;
     // SpeechActs speech_act;
 
     Predicate();

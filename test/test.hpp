@@ -28,6 +28,7 @@ private:
 
 
     ConceptualSchema test_conceptual_schema;
+    InferenceHandler test_inference_handler;
 
 public:
     PredicateHandler test_predicate_handler;
@@ -44,7 +45,7 @@ public:
 
     ParserTester();
 
-
+    void reset();
 };
 
 int test_all();

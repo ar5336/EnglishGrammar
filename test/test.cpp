@@ -8,6 +8,7 @@
         return false; \
     } else { \
         std::cout << "\033[1;32m█\033[0m";\
+        std::flush(std::cout); \
     } \
 
 
@@ -30,26 +31,33 @@ ParserTester tester = ParserTester();
 
 ParserTester::ParserTester()
     : test_predicate_handler(PredicateHandler(nullptr)),
-        test_mind(Mind(nullptr, nullptr))
+        test_mind(Mind(nullptr, nullptr, nullptr))
 {
     test_utterance = "";
-
     test_variable_namer = VariableNamer();
-
     test_parser = Parser();
-
     test_grammar = Grammar();
-
     // Displayer displayer = Displayer("reader");
-
     test_predicate_template_handler = PredicateTemplateHandler();
-
     test_predicate_handler = PredicateHandler(&test_predicate_template_handler);
-
     test_conceptual_schema = ConceptualSchema();
-
-    test_mind = Mind(&test_predicate_handler, &test_conceptual_schema);
+    test_inference_handler = InferenceHandler(vector<InferenceRule>(), &test_predicate_handler);
+    test_mind = Mind(&test_predicate_handler, &test_conceptual_schema, &test_inference_handler);
 }
+
+// ParserTesster::reset()
+// {
+//     test_utterance = "";
+//     test_variable_namer = VariableNamer();
+//     test_parser = Parser();
+//     test_grammar = Grammar();
+//     // Displayer displayer = Displayer("reader");
+//     test_predicate_template_handler = PredicateTemplateHandler();
+//     test_predicate_handler = PredicateHandler(&test_predicate_template_handler);
+//     test_conceptual_schema = ConceptualSchema();
+//     test_inference_handler = InferenceHandler(vector<InferenceRule>());
+//     test_mind = Mind(&test_predicate_handler, &test_conceptual_schema, &test_inference_handler);
+// }
 
 void ParserTester::setup_parse()
 {
@@ -81,7 +89,7 @@ void ParserTester::setup_parse()
 
 	test_predicate_handler.init_stringification();
 
-    test_mind = Mind(&test_predicate_handler, &test_conceptual_schema);
+    test_mind = Mind(&test_predicate_handler, &test_conceptual_schema, &test_inference_handler);
 
     tell_mind("horses are mammals");
     tell_mind("horses are mammals");
@@ -397,6 +405,8 @@ bool run_integration_test()
                 // // printf("stringified parser: %s\n", tester.test_parser.stringify().c_str());
 
                 // // printf("frame index: %d\n", tester.test_parser.parse_grid[0][0][0].definition_line);
+
+                tester.setup_parse();
 
                 TEST_ASSERT(has_bang xor does_have_interpretation);
             }

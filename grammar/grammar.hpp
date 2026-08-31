@@ -8,6 +8,7 @@
 #include "frames.hpp"
 #include "variable_namer.hpp"
 #include "predicate_rule_applier.hpp"
+#include "../logic/inference/inference_rule.hpp"
 // #include "parser.hpp"
 
 class Grammar
@@ -15,7 +16,7 @@ class Grammar
 private:
     PredicateHandler* predicate_handler;
     VariableNamer* variable_namer;
-    
+
     string stringify_monoframe_map(map<string, vector<pair<PatternElement, Frame>>> map);
 
     void accomodate_monoframe(Frame frame);
@@ -38,6 +39,8 @@ public:
     // map<string, string> syntax_nickname_to_name_map;
     vector<Frame> syntax_frames;
     map<string, Frame> syntax_name_map;
+
+    vector<InferenceRule> inference_rules;
 
     vector<Frame> cnf_frames;
     map<string, vector<Frame>> cnf_map; // frame A > B C becomes map entry {"B C", "A"}

@@ -59,6 +59,8 @@ public:
         string target_predicate_type,
         string target_argument);
 
+    vector<pair<Predicate, string>> get_occurrences_of_param(string argument_value);
+
     static Expression combine_expressions(Expression expression1, Expression expression2);
 
     static bool try_get_predicates_by_name(Expression expression, string predicate_name, vector<Predicate>& result_predicates);

@@ -191,8 +191,9 @@ private:
     bool compare_events(Event event_1, Event event_2);
 
     int id_counter = 0;
+    
 public:
-    Mind(PredicateHandler *predicate_handler, ConceptualSchema *conceptual_schema);
+    Mind(PredicateHandler *predicate_handler, ConceptualSchema *conceptual_schema, InferenceHandler* inference_handler);
 
     // void init(PredicateHandler *predicate_handler, ConceptualSchema *conceptual_schema);
 

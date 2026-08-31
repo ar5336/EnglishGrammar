@@ -36,20 +36,23 @@ InferenceRuleReader::InferenceRuleReader(PredicateHandler *predicate_handler_ptr
 
 
 
-bool InferenceRuleReader::is_rule_finished(const string line, const int current_indentation)
+pair<InferenceRuleReaderFinishType, string> InferenceRuleReader::is_rule_finished(const string line, const int current_indentation)
 {
     // Parse the line and extract relevant information// FORMAT:
     // 	<RuleName>
     // 		IF
-    // 			<predicate template>
-    //             xN
+    // 			<predicate template> xN
     // 		THEN
-    // 			<predicate template>
-    //             xN
-    //      # <integration test>
-    //          xN
+    // 			<predicate template> xN
+    //      # <integration test> xN
 
     auto category = categorize_line(line, current_indentation);
+
+    if (if_predicates.size() != 0 && category == InferenceRuleReaderState::ReadingRuleName)
+    {
+        state = category;
+        return make_pair(InferenceRuleReaderFinishType::NextRuleHandoff, line);
+    }
 
     if (category == InferenceRuleReaderState::Unknown)
     {
@@ -66,7 +69,7 @@ bool InferenceRuleReader::is_rule_finished(const string line, const int current_
         // don't process lines that indicate subsequent line's category
         if (state != InferenceRuleReaderState::ReadingRuleName
             && state != InferenceRuleReaderState::ReadingIntegrationTest)
-            return false;
+            return make_pair(InferenceRuleReaderFinishType::NotFinished, "");
     }
 
     string local_line = line;
@@ -101,11 +104,11 @@ bool InferenceRuleReader::is_rule_finished(const string line, const int current_
 
     if ((current_indentation == 1 && state != InferenceRuleReaderState::ReadingRuleName)
         || (current_indentation == 0
-        && (state == InferenceRuleReaderState::ReadingIntegrationTest
-            || state == InferenceRuleReaderState::ReadingThen)))
-        return true; // End of rule
+            && (state == InferenceRuleReaderState::ReadingIntegrationTest
+                || state == InferenceRuleReaderState::ReadingThen)))
+        return make_pair(InferenceRuleReaderFinishType::Finished, "");
 
-    return false;
+    return make_pair(InferenceRuleReaderFinishType::NotFinished, "");
 }
 
 void InferenceRuleReader::reset()

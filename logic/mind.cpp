@@ -1,7 +1,7 @@
 #include "mind.hpp"
 
-Mind::Mind(PredicateHandler *predicate_handler, ConceptualSchema *conceptual_schema)
-    : predicate_handler(predicate_handler), conceptual_schema(conceptual_schema)
+Mind::Mind(PredicateHandler *predicate_handler, ConceptualSchema *conceptual_schema, InferenceHandler* inference_handler)
+    : predicate_handler(predicate_handler), conceptual_schema(conceptual_schema), inference_handler(inference_handler)
 {
     timeline = Timeline();
     abstract_timeline = Timeline(false);
@@ -37,6 +37,26 @@ void Mind::tell(Expression expression)
     for (Event event : events)
     {
         timeline.actions.push_back(event);
+    }
+
+    // combine all expressions
+    auto combined_predicates = vector<Predicate>();
+    for (auto& [knowledge_type, expression_to_combine] : expressions)
+    {
+        auto predicates = expression_to_combine.predicates;
+        combined_predicates.insert(combined_predicates.end(), predicates.begin(), predicates.end());
+    }
+
+    auto combined_expression = Expression(combined_predicates);
+
+    // make inferences on the combined expression
+    auto inferred_information = inference_handler->apply_inference_rules(combined_expression);
+    for (auto& [inferred_expression, rule_name] : inferred_information)
+    {
+        if ((inferred_expressions.emplace(inferred_expression)).second)
+        {
+            expressions.push_back(pair<KnowledgeType, Expression>(KnowledgeType::INFERRED, inferred_expression));
+        }
     }
 }
 
@@ -640,7 +660,6 @@ map<int, vector<string>> Mind::extract_concrete_properties(Expression expression
 
 Expression Mind::resolve_properties(Expression expression)
 {
-
     // TODO - extract some of this logic into extract_properties. (the extraction part)
     // and have that be used in the anaphora and tell methods.
     // for anaphora, to chekc the did_it_occur correctly,

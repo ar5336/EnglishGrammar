@@ -14,6 +14,10 @@ ParameterCreationType determine_type(string argument)
     {
         return ParameterCreationType::FRAME_PREDICATE_PROPERTY;
     }
+    else if (equals(argument, "_"))
+    {
+        return ParameterCreationType::DROP;
+    }
     {
         return ParameterCreationType::WORD_FRAME;
     }
@@ -41,6 +45,24 @@ PredicateCreator::PredicateCreator(){
 
 PredicateCreator::PredicateCreator(PredicateHandler *handler, vector<string> creation_tokens)
 {
+    if (creation_tokens.at(0) == "*")
+    {
+        is_bound_predicate_creator = true;
+
+        // bound predicate matchers show up in the format
+        //    "* all_connected:connection_object"
+
+        auto parameter_token = split_character(creation_tokens.at(1), ":");
+        // we don't need to set the parameter type here
+        param_strings.push_back(parameter_token.at(1));
+
+        return;
+    }
+    else
+    {
+        is_bound_predicate_creator = false;
+    }
+
     string predicate_name = creation_tokens[0];
     wildcard_list = vector<string>();
 
@@ -231,28 +253,62 @@ PredicateMatcher::PredicateMatcher()
 
 PredicateMatcher::PredicateMatcher(PredicateHandler *handler_ptr, vector<string> creation_tokens)
 {
+    // TODO - unify this with the same code in PredicateCreator
+    if (creation_tokens.at(0) == "*")
+    {
+        is_bound_predicates_matcher = true;
+
+        // bound predicate matchers show up in the format
+        //    "* all_connected:connection_object"
+
+        auto parameter_token = split_character(creation_tokens.at(1), ":");
+        param_names.push_back(parameter_token.at(0));
+        param_values.push_back(parameter_token.at(1));
+
+        return;
+    }
+    else
+    {
+        is_bound_predicates_matcher = false;
+    }
+
     if (!handler_ptr->try_get_predicate_template(creation_tokens[0], &predicate_template))
         throw runtime_error("could not find predicate template for name '"+creation_tokens[0]+"'");
     
-    for (const string &token : creation_tokens)
+    // the first token is the predicate name, the rest are parameter tokens
+    auto parameter_tokens = vector<string>(creation_tokens.begin() + 1, creation_tokens.end());
+
+    for (const string &token : parameter_tokens)
     {
         // Determine the type of each token and populate the corresponding member variables
-        ParameterCreationType type = determine_type(token);
+        auto arg_name_and_value = split_character(token, ":");
+        if (arg_name_and_value.size() != 2)
+            throw runtime_error("predicate matcher token '" + token + "' does not properly split into argument name and value by ':'");
+
+        string arg_name = arg_name_and_value[0];
+        string arg_value = arg_name_and_value[1];
+
+        ParameterCreationType type = determine_type(arg_value);
+        if (type == ParameterCreationType::WILDCARD)
+            throw runtime_error("wildcards not allowed in condition matching predicates");
+
         parameter_matching_types.push_back(type);
         
         // check for quotes for string param
-
-        if (token[0] == '"' && token[token.size() - 1] == '"')
-            param_strings.push_back(trim_front_and_back(token));
-        else
-            param_values.push_back(token);
-
-        // check if value is _ for drop
-        if (equals(token, "_"))
-            param_dropped.push_back(true);
-        else
-            param_dropped.push_back(false);
-
-        param_dropped.push_back(false); // Initially, no parameters are dropped
+        if (type == ParameterCreationType::STRING)
+            arg_value = trim_front_and_back(arg_value);
+        param_values.push_back(arg_value);
+        param_names.push_back(arg_name);
     }
+}
+
+string PredicateMatcher::stringify()
+{
+    string predicate_name = predicate_template.predicate;
+    auto param_strings = vector<string>();
+    for (int i = 0; i < parameter_matching_types.size(); i++)
+    {
+        param_strings.push_back(param_names[i] + ":" + param_values[i]);
+    }
+    return predicate_name + " " + stringify_vector(param_strings, " ");
 }

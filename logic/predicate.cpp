@@ -5,13 +5,24 @@ Predicate::Predicate()
     type_id = -1;
     arguments = vector<string>(6);
     predicate_template = PredicateTemplate();
+    argument_to_index_map = map<string, int>();
 }
 
 Predicate::Predicate(int type_id, vector<string> arguments, PredicateTemplate predicate_template)
-    : type_id(type_id), arguments(arguments), predicate_template(predicate_template) {}
+    : type_id(type_id), arguments(arguments), predicate_template(predicate_template) {
+        for (int i = 0; i < arguments.size(); i++)
+        {
+            argument_to_index_map.emplace(arguments[i], i);
+        }
+    }
 
 Predicate::Predicate(int type_id, vector<string> arguments, SpeechActs speechAct)
-    : type_id(type_id), arguments(arguments) {}
+    : type_id(type_id), arguments(arguments) {
+        for (int i = 0; i < arguments.size(); i++)
+        {
+            argument_to_index_map.emplace(arguments[i], i);
+        }
+    }
 
 string  Predicate::get_argument(string parameter_name)
 {

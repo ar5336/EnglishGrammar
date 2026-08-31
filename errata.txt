@@ -10,7 +10,165 @@ You just sort of have a fact-predicate space. that the existing predicates follo
         THEN
             CAN_DO object:b ability:!
 
+So this is the structure we are settling on
+Rules:
+    Inherit-Abilities
+        IF
+            IS object:a object_count:_ noun_class:c
+            IS object:b object_count:_ noun_class:d
+            CONTAINS container:a containee:b
+            CAN_DO action_type:e actor:a 
+        THEN
+            CAN_DO action_type:e actor:b
+        # animals can run
+        # horses are animals
+        #? can horses run
+        #> yes
+    Supercategory-Actions
+        IF
+            IS object:super_class_object object_count:_ noun_class:c
+            IS object:sub_class_object object_count:_ noun_class:d
+            CONTAINS container:super_class_object containee:sub_class_object
+            ACTION action:e actor:sub_class_object action_type:f object:g indirect_object:h
+        THEN
+            ACTION action:e actor:super_class_object action_type:f object:g indirect_object:h
+        # birds are animals
+        # eagles are birds
+        # ravens are birds
+        # a raven died
+        #? did an animal die
+        #> yes
+        #? did an eagle die
+        #> no
 
+    there is an issue - we do not want to have the second rule be re-written for every single parameter of every new predicate.
+    we want any predicate to apply to its superclass.
+        > a raven died -> an animal died
+        > a red dog died -> a red animal died
+        > a fat red dog -> a fat red animal
+    so it should cover HAS_PROPERTY, ACTION, 
+    i suppose each predicate can be handled individually, but the particualr parameters shouldn't be. but for now, the base implementation. whiich by the way shoudl include inheritance-Inheritance
+
+    1. abolish the conceptual schema.
+        Instead create first
+            Rules for deriving predicate expressions
+        second
+            make that derivation more efficient later, so that not all predicates have to be derived until a solution is requested.
+    2. Add definitions for action_types
+
+okay, just realizing now that many times the condition is delivered piecemeal. in fact, most of the time.
+ -> you never say "horses are animals, and animals can run"
+    you instad say that "animals can run" "horses are animals"
+    should this then be applied to the entire knowledgebase?
+        there should be two new subclasses for Expression
+            ExpressionTemplate -> to be used in inference rules
+                should do template inheritance of Expression<InferencePredicate>
+            KnowledgeBase
+                indicates the origins of every predicate to a certain utterance
+        and Preicate has a new subtype
+            InferencePredicate, which also indicates whether a parameter is a discard param
+====================
+
+| the implementation
+    [ ] create inference rule reader
+    []
+
+the actual matcher will look like this:
+    sequentially go through the elements of the IF template,
+        fast-fail by filtering out all exising predicate candidates for matches
+        need some interfacing with Expression class that tracks ids
+
+        perhaps do a find_subexpressions_occurences method in Expression that takes the other expression in.
+            This other expression, finds its argument occurences, then does the matching algorithm.
+            then the subsequent parameter value filtering can be done outside in the inference handler
+
+            this way we can keep track of predicate ids
+                the problem comes when multiples of the same predicate are generated
+
+                like for example for subsequent utterance of
+                    "pigs are mammals"
+                    "pigs can fly"
+
+                    a future inference rule could merge these, but that would require new notation.
+                    an easier approach would be to just merge them in the matcher.
+                        specifically cases of count:"inf"
+                            as this indicates abstraction
+                    
+                            but actually, using EXISTS and ALL predicates would be preferable - and more readable to lingusts + logicians
+
+
+    After considering the inefficiency of the naive approach of finding all candidate predicate matches, an order must be established.
+    an order of inference connections.
+    this order is DISTANCE FROM IMPLICATION
+        this is calculated by a BFS of the inference connections
+
+        so for example for the Inherit-Abilities inference rule
+            IF
+                1. IS object:hypernym_object object_count:_ noun_class:hypernym_class
+                2. IS object:hyponym_object object_count:_ noun_class:hyponym_class
+                3. CONTAINS container:hypernym_object containee:hyponym_object
+                4. CAN_DO action_type:hypernym_action actor:hypernym_object
+            THEN
+                CAN_DO action_type:hypernym_action actor:hyponym_object
+            
+            first order connected predicates:
+                4. CAN_DO action_type:hypernym_action actor:hypernym_object
+                    by hypernym_action
+                2. IS object:hyponym_object object_count:_ noun_class:hyponym_class
+                    by hyponym_object
+                second order connected predicates:
+                    3. CONTAINS container:hypernym_object containee:hyponym_object
+                        by hypernym_object
+                    1. IS object:hypernym_object object_count:_ noun_class:hypernym_class
+                        by hypernym_class
+            
+                the pseudocode will look like
+                    '
+                        untraversed_prids = set(predicate ids)
+
+                        current_prids = []
+                        foreach (pred in conclusion)
+                            if condition has predicate with shared arg
+                                current_prids.add(shared arg condition predicate)
+                        while (untraversed_prids > 0)
+                            
+                    '
+                
+                these inference check orders should be calculated once per inference rule
+                and then applied thereon out
+
+            there is no point in searching for second order connections when first ones may fail - breaking the tree
+                but this is a nice-to-have optimization
+    the first step to have the actual thing work is to just filter out unapliccable predicate connections and failing out when they are not found
+
+    This in an example execution of the inference handler w/ our KB
+        applying inference rule 'Inherit-Abilities' with 3 condition connections
+            knowledge base has 3 connections between predicate 'CAN_DO.actor' and 'IS.object'
+                found connection between predicate 'CAN_DO action_type:fly actor:p2' and 'IS object:p2 object_count:inf noun_class:bird' in knowledge base
+                found connection between predicate 'CAN_DO action_type:breathe actor:t2' and 'IS object:t2 object_count:inf noun_class:animal' in knowledge base
+            knowledge base has 7 connections between predicate 'CONTAINS.container' and 'IS.object'
+                found connection between predicate 'CONTAINS container:c containee:i' and 'IS object:c object_count:inf noun_class:mammal' in knowledge base
+                found connection between predicate 'CONTAINS container:m containee:s' and 'IS object:m object_count:inf noun_class:mammal' in knowledge base
+                found connection between predicate 'CONTAINS container:v containee:b1' and 'IS object:v object_count:inf noun_class:animal' in knowledge base
+                found connection between predicate 'CONTAINS container:e1 containee:k1' and 'IS object:e1 object_count:inf noun_class:bird' in knowledge base
+                found connection between predicate 'CONTAINS container:n1 containee:t1' and 'IS object:n1 object_count:inf noun_class:animal' in knowledge base
+                found connection between predicate 'CONTAINS container:w1 containee:c2' and 'IS object:w1 object_count:inf noun_class:mammal' in knowledge base
+                found connection between predicate 'CONTAINS container:f2 containee:l2' and 'IS object:f2 object_count:inf noun_class:mammal' in knowledge base
+        gonna extract only the relevant elements that have to do with birds and breathing
+            this is missing a connection between CONTAINS.containee and IS.object
+                so it's skipping the hyponym_object
+                    it first operates on hypernym_object - so it's some problem with updaring the map
+
+
+
+======================
+    the actual answering though - this will be the tricky part.
+        we presumably will abstract away the events - keep everything as predicates whenever possible.
+        so how do we tell that what is being asked is an event, or a set of properties that an object has.
+            is the man ugly?
+            > no, it is not ugly
+                and eventually, "no, the man is not ugly" after object rephrasing can be complete
+            
 
 how predicates are supposed to look
 

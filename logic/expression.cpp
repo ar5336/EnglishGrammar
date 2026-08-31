@@ -446,6 +446,22 @@ vector<pair<Predicate, Predicate>> Expression::get_connections(
     return predicate_pairs;
 }
 
+vector<pair<Predicate, string>> Expression::get_occurrences_of_param(string argument_value)
+{
+    auto occurrences = vector<pair<Predicate, string>>();
+    for (auto predicate : predicates)
+    {
+        if (predicate.argument_to_index_map.count(argument_value) > 0)
+        {
+            string parameter_name = predicate.predicate_template.parameter_names[predicate.argument_to_index_map[argument_value]];
+
+            occurrences.push_back(make_pair(predicate, parameter_name));
+        }
+    }
+
+    return occurrences;
+}
+
 string PredicateHandler::stringify_expression(Expression expression)
 {
     string accumulated_string = "";

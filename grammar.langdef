@@ -430,16 +430,30 @@ Predicates:
     TOPIC           object->
     CONJUNCTION     conjunction object_1->  object_2->
     CAUSATION       cause->     effect->
+    EXISTS          object->
+    ALL             object->
 
 InferenceRules:
+    Unify-All
+        IF
+            IS object:universal object_count:inf noun_class:universal_class
+            * all_connected:universal
+            IS object:particular object_count:particular_count noun_class:universal_class
+        THEN
+            IS object:particular object_count:particular_count noun_class:universal_class
+            * all_connected:particular
+        # horses are animals
+        # a horse bit a man
+        #? did an animal bite a man
+        #> yes
     Inherit-Abilities
         IF
-            IS object:a object_count:_ noun_class:c
-            IS object:b object_count:_ noun_class:d
-            CONTAINS container:a containee:b
-            CAN_DO action_type:e actor:a 
+            IS object:hypernym_object object_count:inf noun_class:hypernym_class
+            IS object:hyponym_object object_count:_ noun_class:hyponym_class
+            CONTAINS container:hypernym_object containee:hyponym_object
+            CAN_DO action_type:hypernym_action actor:hypernym_object
         THEN
-            CAN_DO action_type:e actor:b
+            CAN_DO action_type:hypernym_action actor:hyponym_object
         # animals can run
         # horses are animals
         #? can horses run

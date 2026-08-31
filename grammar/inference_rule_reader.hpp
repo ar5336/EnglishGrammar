@@ -19,6 +19,12 @@ enum InferenceRuleReaderState{
     Unknown = 5,
 };
 
+enum InferenceRuleReaderFinishType{
+    Finished = 1,
+    NextRuleHandoff = 2,
+    NotFinished = 3,
+};
+
 class InferenceRuleReader
 {
 private:
@@ -35,7 +41,7 @@ public:
     vector<string> integration_tests; // not yet properly implemented as objects
     InferenceRuleReader(PredicateHandler* predicate_handler_ptr);
 
-    bool is_rule_finished(const string line, const int current_indentation);
+    pair<InferenceRuleReaderFinishType, string> is_rule_finished(const string line, const int current_indentation);
 
     void reset();
 

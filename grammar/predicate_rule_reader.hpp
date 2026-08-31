@@ -71,6 +71,7 @@ public:
     vector<string> param_strings;
     vector<PatternElementPredicateAccessor> pattern_predicate_accessors;
     vector<string> wildcard_list;
+    bool is_bound_predicate_creator;
 
     PredicateCreator();
     PredicateCreator(PredicateHandler *handler_ptr, vector<string> creation_tokens);
@@ -83,15 +84,14 @@ class PredicateMatcher
 public:
     PredicateTemplate predicate_template;
     vector<ParameterCreationType> parameter_matching_types;
-
-    vector<string> param_strings;
-    vector<bool> param_dropped;
+    vector<string> param_names;
     vector<string> param_values;
-    // frame accessors not necessary for this
-    // wildcards not yet implemented in matcher - unclear if even necessary yet
+    bool is_bound_predicates_matcher;
 
     PredicateMatcher();
     PredicateMatcher(PredicateHandler *handler_ptr, vector<string> creation_tokens);
+
+    string stringify();
 };
 
 class PredicateFormationRules

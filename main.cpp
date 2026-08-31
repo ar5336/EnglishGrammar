@@ -38,7 +38,9 @@ VariableNamer variable_namer = VariableNamer();
 Grammar grammar = Grammar(&predicate_handler, &variable_namer);
 ConceptualSchema conceptual_schema = ConceptualSchema();
 
-Mind mind = Mind(&predicate_handler, &conceptual_schema);
+InferenceHandler inference_handler = InferenceHandler(vector<InferenceRule>(), &predicate_handler);
+
+Mind mind = Mind(&predicate_handler, &conceptual_schema, &inference_handler);
 
 bool is_shift_pressed = false;
 
@@ -255,6 +257,7 @@ int main(int argc, char **argv)
 	grammar.binarize_grammar();
 
 	parser = Parser(grammar, &variable_namer);
+	inference_handler = InferenceHandler(grammar.inference_rules, &predicate_handler);
 
 	predicate_handler.predicate_template_handler = &predicate_template_handler;
 
