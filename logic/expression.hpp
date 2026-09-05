@@ -19,7 +19,7 @@ private:
 
     map<string, vector<int>> prids_by_type;
     // instead of a map of variables to variables. A map of predicate to predicate by way of argument name.
-    map<int, map<int, pair<string, string>>> prid_to_prid_by_arg;
+    map<int, map<int, set<pair<string, string>>>> prid_to_prid_by_arg;
 
     // map<string, map<string, vector<int>>> variable_by_prid_connection_map;
 
@@ -59,7 +59,7 @@ public:
         string target_predicate_type,
         string target_argument);
 
-    vector<pair<Predicate, string>> get_occurrences_of_param(string argument_value);
+    vector<PredicateArgumentAddress> get_occurrences_of_param(string argument_value);
 
     static Expression combine_expressions(Expression expression1, Expression expression2);
 

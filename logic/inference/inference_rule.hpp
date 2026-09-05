@@ -42,30 +42,13 @@ public:
 //     InferenceMap(PredicateHandler* predicate_handler);
 // }
 
-class PredicateArgumentAddress
-{
-public:
-    PredicateArgumentAddress(
-        int predicate_index,
-        int statement_index,
-        string predicate_type,
-        string argument_name)
-        : predicate_index(predicate_index),
-        statement_index(statement_index),
-        predicate_type(predicate_type),
-        argument_name(argument_name) {}
-
-    int predicate_index;
-    int statement_index;
-    string predicate_type;
-    string argument_name;
-};
-
 class InferencePredicateConnections
 {
     // source predicate type -> target predicate type -> (source argument name, target argument name)
 public:
     map<PredicateArgumentAddress, set<PredicateArgumentAddress>> source_predicate_connection;
+    map<PredicateArgumentAddress, set<PredicateArgumentAddress>> source_to_target_predicate_connections;
+
     void add_connection(
         const PredicateArgumentAddress& source,
         const PredicateArgumentAddress& target)

@@ -28,13 +28,10 @@ InferenceRuleReaderState InferenceRuleReader::categorize_line(const string line,
     return InferenceRuleReaderState::Unknown;
 }
 
-
 InferenceRuleReader::InferenceRuleReader(PredicateHandler *predicate_handler_ptr)
 {
     predicate_handler = predicate_handler_ptr;
 }
-
-
 
 pair<InferenceRuleReaderFinishType, string> InferenceRuleReader::is_rule_finished(const string line, const int current_indentation)
 {

@@ -70,8 +70,11 @@ InferencePredicateConnections InferenceHandler::identify_condition_connections(E
     //  except for cases of _
 
     InferencePredicateConnections connections = InferencePredicateConnections();
-    for (auto condition_predicate : condition_expression.predicates)
+    int condition_predicate_index = 0;
+    for (int condition_predicate_index = 0; condition_predicate_index < condition_expression.predicates.size(); condition_predicate_index++)
     {
+        auto condition_predicate = condition_expression.predicates[condition_predicate_index];
+
         string source_predicate_type_name = condition_predicate.predicate_template.predicate;
         for (int arg_i = 0; arg_i < condition_predicate.predicate_template.parameter_names.size(); arg_i++)
         {
@@ -85,23 +88,26 @@ InferencePredicateConnections InferenceHandler::identify_condition_connections(E
 
             for (auto occurrence : occurrences_of_param)
             {
-                if (DEBUGGING)
-                    printf("occurrence: predicate %s with argument %s\n", occurrence.first.predicate_template.predicate.c_str(), occurrence.second.c_str());
                 
-                auto occurrence_predicate = occurrence.first;
-                string occurrence_predicate_type_name = occurrence_predicate.predicate_template.predicate;
-                string occurrence_param_name = occurrence.second;
+                string occurrence_predicate_type_name = occurrence.predicate_type;
+                string occurrence_param_name = occurrence.argument_name;
 
+                if (DEBUGGING)
+                    printf("occurrence: predicate type %s with argument %s\n", occurrence_predicate_type_name.c_str(), occurrence_param_name.c_str());
+
+                if (equals(source_predicate_type_name, occurrence_predicate_type_name)
+                    && equals(arg_name, occurrence_param_name)
+                    && (condition_predicate_index == occurrence.predicate_index))
+                    continue;
+                    
                 // add to existing connections
                 connections.add_connection(
                     PredicateArgumentAddress(
-                        condition_predicate.argument_to_index_map[param_value],
-                        condition_expression.predicates.size(),
+                        condition_predicate_index,
                         source_predicate_type_name,
                         arg_name),
                     PredicateArgumentAddress(
-                        occurrence_predicate.argument_to_index_map[param_value],
-                        condition_expression.predicates.size(),
+                        occurrence.predicate_index,
                         occurrence_predicate_type_name,
                         occurrence_param_name));
             }
@@ -175,7 +181,7 @@ vector<pair<Expression, string>> InferenceHandler::apply_inference_rules(Express
 
         printf("applying inference rule '%s' with %ld condition connections\n", name.c_str(), condition_connections.source_predicate_connection.size());
 
-        auto candidate_kb_connections = vector<pair<pair<Predicate, string>, pair<Predicate, string>>>();
+        auto candidate_kb_connections = vector<pair<PredicateArgumentAddress, PredicateArgumentAddress>>();
 
         for (auto& [source_predicate_address, target_predicate_address_set] : condition_connections.source_predicate_connection)
         {
@@ -187,7 +193,8 @@ vector<pair<Expression, string>> InferenceHandler::apply_inference_rules(Express
                 string target_argument = target_predicate_address.argument_name;
 
                 if (equals(source_predicate_name, target_predicate_name)
-                    && equals(source_argument, target_argument))
+                    && equals(source_argument, target_argument)
+                    && (source_predicate_address.predicate_index == target_predicate_address.predicate_index))
                     continue;
 
 

@@ -59,11 +59,11 @@ bool operator<(const Expression& lhs, const Expression& rhs)
 }
 
 Expression::Expression() {
-    prid_to_prid_by_arg = map<int, map<int, pair<string, string>>>();
+    prid_to_prid_by_arg = map<int, map<int, set<pair<string, string>>>>();
 }
 
 Expression::Expression(vector<Predicate> predicates) : predicates(predicates) {
-    prid_to_prid_by_arg = map<int, map<int, pair<string, string>>>();
+    prid_to_prid_by_arg = map<int, map<int, set<pair<string, string>>>>();
     // construct noun set
     noun_set = set<string>();
     for (auto predicate : predicates)
@@ -87,16 +87,15 @@ void Expression::make_connections()
     if (DEBUGGING)
         printf("making connections\n");
 
+    // categorize predicates by type
     for (int i = 0; i < predicates.size(); i++)
     {
         string predicate_type = predicates[i].predicate_template.predicate;
 
         if (prids_by_type.count(predicate_type) == 0)
-        {
             prids_by_type.emplace(predicate_type, vector<int>{i});
-        } else {
+        else
             prids_by_type.at(predicate_type).push_back(i);
-        }
     }
 
     // for each predicate, index up their variables.
@@ -107,13 +106,12 @@ void Expression::make_connections()
         for (string arg_name : predicate.predicate_template.parameter_names)
         {
             if (arg_name_to_prid.count(arg_name) != 0)
-            {
                 arg_name_to_prid.at(arg_name).push_back(prid);
-            } else {
+            else
                 arg_name_to_prid.emplace(arg_name, vector<int> {prid});
-            }
         }
     }
+
     for (int i = 0; i < predicates.size(); i++)
     {
         auto predicate = predicates[i];
@@ -131,7 +129,6 @@ void Expression::make_connections()
 
             for (int k = 0; k < predicate.arguments.size(); k++)
             {
-
                 for (int l = 0; l < other_predicate.arguments.size(); l++)
                 {
                     auto var_1 = predicate.arguments[k];
@@ -160,8 +157,8 @@ void Expression::add_connection(int prid_1, string arg_1, int prid_2, string arg
     if (prid_to_prid_by_arg.count(prid_1) == 0)
     {
         // must create new connection + map
-        auto new_map = map<int, pair<string, string>>();
-        new_map.emplace(prid_2, make_pair(arg_1, arg_2));
+        auto new_map = map<int, set<pair<string, string>>>();
+        new_map.emplace(prid_2, set<pair<string, string>>{make_pair(arg_1, arg_2)});
 
         prid_to_prid_by_arg.emplace(prid_1, new_map);
     } else
@@ -177,10 +174,15 @@ void Expression::add_connection(int prid_1, string arg_1, int prid_2, string arg
                     predicates[prid_2].predicate_template.predicate.c_str());
             }
 
+            // add an additional connection
+            auto connection_set = to_map.at(prid_2);
+            connection_set.emplace(make_pair(arg_1, arg_2));
+
+            prid_to_prid_by_arg[prid_1][prid_2].emplace(make_pair(arg_1, arg_2));
             return;
         }
 
-        to_map.emplace(prid_2, make_pair(arg_1, arg_2));
+        to_map.emplace(prid_2, set<pair<string, string>>{make_pair(arg_1, arg_2)});
 
         prid_to_prid_by_arg.erase(prid_1);
 
@@ -224,18 +226,32 @@ pair<bool, vector<pair<int, int>>> Expression::has_connection(string pred_1, str
             if (candidiate_connection.count(candidate_prid_2) != 0)
             {
                 // add to found connections
-                auto connection_info = candidiate_connection.at(candidate_prid_2);
+                auto connections_set = candidiate_connection.at(candidate_prid_2);
 
-                string found_arg_1 = connection_info.first;
-                if (!equals(found_arg_1, arg_1))
-                    continue;
-                string found_arg_2 = connection_info.second;
-                if (!equals(found_arg_2, arg_2))
-                    continue;
+                bool should_continue = false;
+                for (auto connection_info : connections_set)
+                {
+                    string found_arg_1 = connection_info.first;
+                    if (!equals(found_arg_1, arg_1))
+                    {
+                        continue;
+                    }    
+                    string found_arg_2 = connection_info.second;
+                    if (!equals(found_arg_2, arg_2))
+                    {
+                        continue;
+                    }
+                    if (!should_continue)
+                    {
+                        found_connections.push_back(make_pair(candidate_prid_1, candidate_prid_2));
+                    }                
+                }
 
-                found_connections.push_back(make_pair(candidate_prid_1, candidate_prid_2));
-            } else
+            }
+            else
+            {
                 continue;
+            }
         }
     }
 
@@ -446,17 +462,20 @@ vector<pair<Predicate, Predicate>> Expression::get_connections(
     return predicate_pairs;
 }
 
-vector<pair<Predicate, string>> Expression::get_occurrences_of_param(string argument_value)
+vector<PredicateArgumentAddress> Expression::get_occurrences_of_param(string argument_value)
 {
-    auto occurrences = vector<pair<Predicate, string>>();
+    auto occurrences = vector<PredicateArgumentAddress>();
+
+    int predicate_index = 0;
     for (auto predicate : predicates)
     {
         if (predicate.argument_to_index_map.count(argument_value) > 0)
         {
             string parameter_name = predicate.predicate_template.parameter_names[predicate.argument_to_index_map[argument_value]];
 
-            occurrences.push_back(make_pair(predicate, parameter_name));
+            occurrences.push_back(PredicateArgumentAddress(predicate_index, predicate.predicate_template.predicate, parameter_name));
         }
+        predicate_index++;
     }
 
     return occurrences;

@@ -18,6 +18,35 @@ enum SpeechActs
     DEMAND
 };
 
+class PredicateArgumentAddress
+{
+public:
+    PredicateArgumentAddress(
+        int predicate_index,
+        int statement_index,
+        string predicate_type,
+        string argument_name)
+        : predicate_index(predicate_index),
+        statement_index(statement_index),
+        predicate_type(predicate_type),
+        argument_name(argument_name) {}
+    
+    PredicateArgumentAddress(
+        int predicate_index,
+        string predicate_type,
+        string argument_name)
+        : predicate_index(predicate_index),
+        statement_index(0),
+        predicate_type(predicate_type),
+        argument_name(argument_name) {}
+
+    int predicate_index;
+    int statement_index;
+    string predicate_type;
+    string argument_name;
+};
+
+
 class Predicate
 {
 public:
