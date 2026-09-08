@@ -53,7 +53,7 @@ public:
 
     static vector<Predicate> extract_anaphora_closure_by_argument(Expression& og_expression, string argument);
 
-    vector<pair<Predicate, Predicate>> get_connections(
+    vector<pair<PredicateArgumentAddress, PredicateArgumentAddress>> get_connections(
         string source_predicate_type,
         string source_argument,
         string target_predicate_type,

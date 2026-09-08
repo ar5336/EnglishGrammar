@@ -419,7 +419,7 @@ vector<Predicate> Expression::extract_anaphora_closure_by_argument(Expression &o
     return removed_predicates;
 }
 
-vector<pair<Predicate, Predicate>> Expression::get_connections(
+vector<pair<PredicateArgumentAddress, PredicateArgumentAddress>> Expression::get_connections(
     string source_predicate_type,
     string source_argument,
     string target_predicate_type,
@@ -443,19 +443,27 @@ vector<pair<Predicate, Predicate>> Expression::get_connections(
     if (!has_connection){
         if (DEBUGGING)
             printf("no connections found\n");
-        return vector<pair<Predicate, Predicate>>();
+        return vector<pair<PredicateArgumentAddress, PredicateArgumentAddress>>();
     }
 
     auto predicate_index_pairs = has_connection_and_connection_ids.second;
 
-    auto predicate_pairs = vector<pair<Predicate, Predicate>>();
+    auto predicate_pairs = vector<pair<PredicateArgumentAddress, PredicateArgumentAddress>>();
 
     for (auto predicate_index_pair : predicate_index_pairs)
     {
         int predicate_index_1 = predicate_index_pair.first;
         int predicate_index_2 = predicate_index_pair.second;
 
-        predicate_pairs.push_back(make_pair(predicates[predicate_index_1], predicates[predicate_index_2]));
+        predicate_pairs.push_back(make_pair(
+            PredicateArgumentAddress(
+                predicate_index_1,
+                predicates[predicate_index_1].predicate_template.predicate,
+                predicates[predicate_index_1].predicate_template.parameter_names[0]), 
+            PredicateArgumentAddress(
+                predicate_index_2,
+                predicates[predicate_index_2].predicate_template.predicate,
+                predicates[predicate_index_2].predicate_template.parameter_names[0])));
     }
     
     // dereference predicates by indeces

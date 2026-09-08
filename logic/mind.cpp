@@ -492,7 +492,7 @@ vector<Event> Mind::extract_events(Expression expression, bool real = true)
 
         for (auto connection : connections)
         {
-            Predicate param_predicate = connection.second;
+            Predicate param_predicate = expression.predicates[connection.second.predicate_index];
             
             bool is_param_concrete = equals(param_predicate.predicate_template.predicate, "OBJECT");
     
@@ -503,8 +503,8 @@ vector<Event> Mind::extract_events(Expression expression, bool real = true)
                 ? dereference_noun_id(param_object_id, real).entity_type->noun
                 : param_predicate.get_argument("noun_class");
 
-            Predicate original_action_predicate = connection.first;
-            
+            Predicate original_action_predicate = expression.predicates[connection.first.predicate_index];
+
             string action_id = original_action_predicate.get_argument(reflexive_schematic_param);
             // add parameter identifications to map
             action_param_to_noun_class_map[action_id][param_name] = actor_noun_class;
@@ -612,8 +612,8 @@ map<int, vector<string>> Mind::extract_concrete_properties(Expression expression
 
     for (auto object_property_pair : object_property_pairs)
     {
-        Predicate object_predicate = object_property_pair.first;
-        Predicate property_predicate = object_property_pair.second;
+        Predicate object_predicate = expression.predicates[object_property_pair.first.predicate_index];
+        Predicate property_predicate = expression.predicates[object_property_pair.second.predicate_index];
 
         int object_noun_id = stoi(object_predicate.get_argument("id"));
 
@@ -675,12 +675,12 @@ Expression Mind::resolve_properties(Expression expression)
     set<Predicate> modified_predicates;
     for (auto is_property_pair : is_property_pairs)
     {
-        Predicate is_predicate = is_property_pair.first;
+        Predicate is_predicate = expression.predicates[is_property_pair.first.predicate_index];
 
         if (modified_predicates.count(is_predicate) != 0)
             continue;
 
-        Predicate property_predicate = is_property_pair.second;
+        Predicate property_predicate = expression.predicates[is_property_pair.second.predicate_index];
 
         if (DEBUGGING)
         {

@@ -36,12 +36,10 @@ class KnowledgeBase
 {
 private:
     InferenceHandler* inference_handler;
-    
-    vector<Expression> given_facts;
-    vector<Expression> inferred_facts;
-    vector<InferenceRule> inference_rules;
 
-    // TODO - have this track source of fact
+    vector<pair<Expression, KnowledgeSource>> facts;
+
+    vector<int> expression_index_list_by_combined_facts_index;
     Expression combined_facts;
 public:
     KnowledgeBase(InferenceHandler* inference_handler);

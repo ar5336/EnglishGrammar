@@ -211,10 +211,13 @@ vector<pair<Expression, string>> InferenceHandler::apply_inference_rules(Express
                     base_connections.size(),
                     source_predicate_name.c_str(), source_argument.c_str(),
                     target_predicate_name.c_str(), target_argument.c_str());
-                
-                for (auto& [source_predicate, target_predicate] : base_connections)
+
+                for (auto& [source_predicate_address, target_predicate_address] : base_connections)
                 {
                     // TODO - use the source and target predicates to construct the inferred expression based on the conclusion template of the inference rule
+                    auto source_predicate = knowledge_base.predicates[source_predicate_address.predicate_index];
+                    auto target_predicate = knowledge_base.predicates[target_predicate_address.predicate_index];
+                    
                     string pred_1_str = predicate_handler->stringify_predicate(source_predicate);
                     string pred_2_str = predicate_handler->stringify_predicate(target_predicate);
                     printf("\t\tfound connection between predicate '%s' and '%s' by argument\n",

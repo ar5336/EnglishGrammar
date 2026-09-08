@@ -52,7 +52,7 @@ vector<pair<string, string>> ConceptualSchema::extract_inheritances(Expression e
 
     for (auto connection_pair : connection_pairs)
     {
-        Predicate is_predicate = connection_pair.first;
+        Predicate is_predicate = expression.predicates[connection_pair.first.predicate_index];
 
         if (!equals(is_predicate.get_argument("object_count"), "inf"))
         {
@@ -60,7 +60,7 @@ vector<pair<string, string>> ConceptualSchema::extract_inheritances(Expression e
             return constructed_response;
         }
 
-        Predicate contains_predicate = connection_pair.second;
+        Predicate contains_predicate = expression.predicates[connection_pair.second.predicate_index];
 
         auto second_connection_pairs = expression.get_connections(
             "CONTAINS", "containee",
@@ -71,7 +71,7 @@ vector<pair<string, string>> ConceptualSchema::extract_inheritances(Expression e
         
         for (auto second_connection_pair : second_connection_pairs)
         {
-            Predicate other_is_predicate = second_connection_pair.second;
+            Predicate other_is_predicate = expression.predicates[second_connection_pair.second.predicate_index];
 
             string parent = other_is_predicate.get_argument("noun_class");
             string child = is_predicate.get_argument("noun_class");
@@ -297,8 +297,8 @@ vector<pair<string, string>> ConceptualSchema::extract_abilities(Expression expr
     vector<pair<string, string>> noun_ability_pairs = vector<pair<string, string>>();
     for (auto actor_ability_pair : actor_ability_pairs)
     {
-        Predicate actor_predicate = actor_ability_pair.first;
-        Predicate ability_predicate = actor_ability_pair.second;
+        Predicate actor_predicate = expression.predicates[actor_ability_pair.first.predicate_index];
+        Predicate ability_predicate = expression.predicates[actor_ability_pair.second.predicate_index];
 
         string actor_arg = actor_predicate.get_argument("noun_class");
         string ability_arg = ability_predicate.get_argument("action_type");
