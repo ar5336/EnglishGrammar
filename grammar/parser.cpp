@@ -162,8 +162,6 @@ void Parser::load_frame(FrameCoordinates coords, Frame new_frame)
                 printf("found a monoframe-worthy part of speech: %s\n", part_of_speech.c_str());
             
             candidate_monoframes = grammar.monoframes_by_pattern_element.at(part_of_speech);
-
-            
         }
         else
         {
@@ -174,46 +172,46 @@ void Parser::load_frame(FrameCoordinates coords, Frame new_frame)
         }
 
         for (int candidate_index = 0; candidate_index < candidate_monoframes.size(); candidate_index++)
+        {
+            auto pattern_element_monoframe = candidate_monoframes[candidate_index];
+
+            auto pattern_element = pattern_element_monoframe.first;
+            auto candidate_monoframe = pattern_element_monoframe.second;
+            if (DEBUGGING)
+                printf("CHECKING FOR FEATURES\n");
+            if (!does_frame_have_features(new_frame, /*is_left*/true, candidate_monoframe))
             {
-                auto pattern_element_monoframe = candidate_monoframes[candidate_index];
-
-                auto pattern_element = pattern_element_monoframe.first;
-                auto candidate_monoframe = pattern_element_monoframe.second;
                 if (DEBUGGING)
-                    printf("CHECKING FOR FEATURES\n");
-                if (!does_frame_have_features(new_frame, /*is_left*/true, candidate_monoframe))
-                {
-                    if (DEBUGGING)
-                        printf("monoframe match does not match by features\n");
-                
-                    continue;
-                }
-
-                if (DEBUGGING)
-                    printf("adding a frame produced based off monoframe: %s\n", candidate_monoframe.stringify_pre_binarization().c_str());
-        
-                candidate_monoframe.type = FrameType::Matched;
-                FrameCoordinates new_coords = FrameCoordinates(coords.row, coords.col, candidate_index);
-                // candidate_monoframe.
-
-                auto context = RuleApplierContext(predicate_handler, variable_namer);
-
-
-                auto expression = PredicateRuleApplier::apply_formation_rules_on_expression(
-                        context,
-                        candidate_monoframe.predicate_formation_rules,
-                        candidate_monoframe.accumulated_expression,
-                        vector<Frame>{new_frame});
-
-                
-                candidate_monoframe = candidate_monoframe.with_expression(expression);
-                candidate_monoframe.left_match = new_coords;
-
-                if (DEBUGGING)
-                    printf("adding monframe to parse grid: %s, with expression: %s\n", candidate_monoframe.stringify_pre_binarization().c_str(), predicate_handler->stringify_expression(candidate_monoframe.accumulated_expression).c_str());
-                
-                frames_to_add.push_back(candidate_monoframe);
+                    printf("monoframe match does not match by features\n");
+            
+                continue;
             }
+
+            if (DEBUGGING)
+                printf("adding a frame produced based off monoframe: %s\n", candidate_monoframe.stringify_pre_binarization().c_str());
+    
+            candidate_monoframe.type = FrameType::Matched;
+            FrameCoordinates new_coords = FrameCoordinates(coords.row, coords.col, coords.num);
+            // candidate_monoframe.
+
+            auto context = RuleApplierContext(predicate_handler, variable_namer);
+
+
+            auto expression = PredicateRuleApplier::apply_formation_rules_on_expression(
+                    context,
+                    candidate_monoframe.predicate_formation_rules,
+                    candidate_monoframe.accumulated_expression,
+                    vector<Frame>{new_frame});
+
+            
+            candidate_monoframe = candidate_monoframe.with_expression(expression);
+            candidate_monoframe.left_match = new_coords;
+
+            if (DEBUGGING)
+                printf("adding monframe to parse grid: %s, with expression: %s\n", candidate_monoframe.stringify_pre_binarization().c_str(), predicate_handler->stringify_expression(candidate_monoframe.accumulated_expression).c_str());
+            
+            frames_to_add.push_back(candidate_monoframe);
+        }
     }
 
     for (auto frame_to_add : frames_to_add)
@@ -410,8 +408,10 @@ void Parser::update_parse_grid(string new_utterance)
         {
             vector<Frame> word_frames_identified = grammar.word_map.at(token);
             // printf("does match: %s\n", word_frames_identified[0].stringify_as_param().c_str());
-            for (Frame word_frame : word_frames_identified)
+            int word_frame_number = 0;
+            for (int word_frame_number = 0; word_frame_number < word_frames_identified.size(); word_frame_number++)
             {
+                Frame word_frame = word_frames_identified[word_frame_number];
 
                 if (DEBUGGING)
                     printf("accessing %s\n", word_frame.stringify_as_param().c_str());
@@ -419,7 +419,7 @@ void Parser::update_parse_grid(string new_utterance)
                 if (word_frame.type != FrameType::Word && word_frame.type != FrameType::MonoFrame_Derived)
                     throw runtime_error("syntax frame on word frame row not allowed");
                 
-                load_frame(FrameCoordinates(0, token_index, -1), word_frame);
+                load_frame(FrameCoordinates(0, token_index, word_frame_number), word_frame);
             }
         }
     }

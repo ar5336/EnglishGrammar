@@ -436,7 +436,7 @@ Predicates:
 InferenceRules:
     Unify-All
         IF
-            IS object:universal object_count:inf noun_class:universal_class
+            IS object:universal object_count:"inf" noun_class:universal_class
             IS object:particular object_count:particular_count noun_class:universal_class
             * all_connected:universal
         THEN
@@ -448,7 +448,7 @@ InferenceRules:
         #> yes
     Inherit-Abilities
         IF
-            IS object:hypernym_object object_count:inf noun_class:hypernym_class
+            IS object:hypernym_object object_count:"inf" noun_class:hypernym_class
             IS object:hyponym_object object_count:_ noun_class:hyponym_class
             CONTAINS container:hypernym_object containee:hyponym_object
             CAN_DO action_type:hypernym_action actor:hypernym_object
@@ -779,6 +779,9 @@ Frames:
 
         Noun[plural] StateQuestionObject[plural,categorical] <IS object:! object_count:"inf" noun_class:Noun | CONTAINS container:StateQuestionObject->IS.object containee:!>
             # puppies are young dogs
+
+        Sentence Conjunction Sentence
+            # dogs can run and cats can breathe
     Question "Q"
         #Verb[ModalVerb,MODE] VerbPhrase -MODE <CAN_DO action_type:VerbPhrase->ACTION.action_type actor:VerbPhrase->IS.object>
         # will i run
