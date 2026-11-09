@@ -474,16 +474,19 @@ vector<PredicateArgumentAddress> Expression::get_occurrences_of_param(string arg
 {
     auto occurrences = vector<PredicateArgumentAddress>();
 
-    int predicate_index = 0;
-    for (auto predicate : predicates)
+    for (int predicate_index = 0; predicate_index < predicates.size(); predicate_index++)
     {
-        if (predicate.argument_to_index_map.count(argument_value) > 0)
+        const auto predicate = predicates[predicate_index];
+        for (int argument_index = 0; argument_index < predicate.arguments.size(); argument_index++)
         {
-            string parameter_name = predicate.predicate_template.parameter_names[predicate.argument_to_index_map[argument_value]];
-
-            occurrences.push_back(PredicateArgumentAddress(predicate_index, predicate.predicate_template.predicate, parameter_name));
+            if (predicate.arguments[argument_index] == argument_value)
+            {
+                occurrences.emplace_back(
+                    predicate_index,
+                    predicate.predicate_template.predicate,
+                    predicate.predicate_template.parameter_names[argument_index]);
+            }
         }
-        predicate_index++;
     }
 
     return occurrences;

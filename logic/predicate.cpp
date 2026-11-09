@@ -72,6 +72,18 @@ Predicate Predicate::with_modified_argument(string parameter_name, string new_va
     return Predicate(type_id, modified_arguments, predicate_template); 
 }
 
+bool operator<(const PredicateArgumentAddress& lhs, const PredicateArgumentAddress& rhs)
+{
+    return tie(lhs.predicate_type, lhs.argument_name, lhs.predicate_index, lhs.statement_index)
+        < tie(rhs.predicate_type, rhs.argument_name, rhs.predicate_index, rhs.statement_index);
+}
+
+bool operator==(const PredicateArgumentAddress& lhs, const PredicateArgumentAddress& rhs)
+{
+    return tie(lhs.predicate_type, lhs.argument_name, lhs.predicate_index, lhs.statement_index)
+        == tie(rhs.predicate_type, rhs.argument_name, rhs.predicate_index, rhs.statement_index);
+}
+
 bool operator<(const Predicate& lhs, const Predicate& rhs)
 {
     return tie(lhs.type_id, lhs.arguments) < tie(rhs.type_id, rhs.arguments);

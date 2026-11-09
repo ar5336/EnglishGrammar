@@ -46,6 +46,10 @@ public:
     string argument_name;
 };
 
+bool operator<(const PredicateArgumentAddress& lhs, const PredicateArgumentAddress& rhs);
+
+bool operator==(const PredicateArgumentAddress& lhs, const PredicateArgumentAddress& rhs);
+
 
 class Predicate
 {

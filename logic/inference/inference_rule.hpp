@@ -13,8 +13,8 @@ class InferenceRule
 private:
 // the predicates that must be present for the rule to apply
     PredicateHandler* predicate_handler;
-    bool has_all_connected_predicate_matcher;
-    bool has_all_connected_predicate_creator;
+    bool has_all_connected_predicate_matcher = false;
+    bool has_all_connected_predicate_creator = false;
 
     // bool do_conditions_apply(Expression basis);
 public:
@@ -29,6 +29,8 @@ public:
         const string& name,
         const vector<PredicateMatcher>& condition_template,
         const vector<PredicateCreator>& conclusion_template);
+
+    bool uses_all_connected_predicates() const;
 };
 
 // class InferenceMap
@@ -70,8 +72,6 @@ public:
         }
     }
 };
-
-bool operator<(const PredicateArgumentAddress& lhs, const PredicateArgumentAddress& rhs);
 
 class InferenceHandler
 {
