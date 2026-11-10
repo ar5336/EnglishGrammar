@@ -13,12 +13,15 @@ InferenceRule::InferenceRule(
 {
     vector<Predicate> predicates;
     set<string> variables;
+    const PredicateMatcher* connected_matcher = nullptr;
 
     for (const auto& condition_predicate : condition_template)
     {
         if (condition_predicate.is_bound_predicates_matcher)
         {
-            has_all_connected_predicate_matcher = true;
+            if (connected_matcher != nullptr)
+                throw runtime_error("inference rule '" + name + "' has more than one all_connected capture");
+            connected_matcher = &condition_predicate;
             continue;
         }
 
@@ -52,11 +55,17 @@ InferenceRule::InferenceRule(
 
     condition_as_expression = Expression(predicates);
 
+    if (connected_matcher != nullptr && variables.count(connected_matcher->param_values.at(0)) == 0)
+        throw runtime_error("unbound all_connected source variable '" + connected_matcher->param_values.at(0) + "' in inference rule '" + name + "'");
+
     for (const auto& creator : conclusion_template)
     {
         if (creator.is_bound_predicate_creator)
         {
-            has_all_connected_predicate_creator = true;
+            if (connected_matcher == nullptr)
+                throw runtime_error("all_connected conclusion without a capture in inference rule '" + name + "'");
+            if (variables.count(creator.param_strings.at(0)) == 0)
+                throw runtime_error("unbound all_connected target variable '" + creator.param_strings.at(0) + "' in inference rule '" + name + "'");
             continue;
         }
 
@@ -71,11 +80,6 @@ InferenceRule::InferenceRule(
                 throw runtime_error("unbound conclusion variable '" + variable + "' in inference rule '" + name + "'");
         }
     }
-}
-
-bool InferenceRule::uses_all_connected_predicates() const
-{
-    return has_all_connected_predicate_matcher || has_all_connected_predicate_creator;
 }
 
 InferencePredicateConnections InferenceHandler::identify_condition_connections(Expression condition_expression)
@@ -124,9 +128,6 @@ void InferenceHandler::add_inference_rule(const InferenceRule &rule)
     inference_rules_by_name.emplace(rule.name, rule);
     auto condition_connections = identify_condition_connections(rule.condition_as_expression);
     inference_rule_predicate_connections.emplace(rule.name, condition_connections);
-
-    if (rule.uses_all_connected_predicates())
-        fprintf(stderr, "Inference rule '%s' is deferred: all_connected matching and copying are not implemented.\n", rule.name.c_str());
 }
 
 namespace
@@ -134,9 +135,11 @@ namespace
 class InferenceMatcher
 {
     const InferenceRule& rule;
-    Expression& knowledge_base;
+    Expression& knowledge_expression;
     PredicateHandler* predicate_handler;
     const set<Predicate>& known_predicates;
+    vector<const PredicateMatcher*> conditions;
+    const PredicateMatcher* connected_matcher = nullptr;
     vector<vector<int>> candidates;
     vector<set<int>> neighbors;
 
@@ -174,14 +177,90 @@ class InferenceMatcher
         return true;
     }
 
-    bool make_conclusion(const map<string, string>& bindings, Expression& conclusion)
+    vector<int> capture_connected_predicates(const string& root, const vector<int>& matched_predicates)
+    {
+        set<Predicate> excluded;
+        for (int predicate_index : matched_predicates)
+            excluded.insert(knowledge_expression.predicates[predicate_index]);
+
+        vector<int> captured;
+        set<Predicate> visited_predicates;
+        set<string> visited_variables;
+        vector<string> frontier{root};
+        while (!frontier.empty())
+        {
+            string variable = frontier.back();
+            frontier.pop_back();
+            if (!visited_variables.insert(variable).second)
+                continue;
+
+            for (const auto& occurrence : knowledge_expression.get_occurrences_of_param(variable))
+            {
+                auto& predicate = knowledge_expression.predicates[occurrence.predicate_index];
+                if (!predicate.predicate_template.is_param_schematic(occurrence.argument_name)
+                    || excluded.count(predicate) != 0
+                    || !visited_predicates.insert(predicate).second)
+                    continue;
+
+                captured.push_back(occurrence.predicate_index);
+                for (int i = 0; i < predicate.arguments.size(); i++)
+                {
+                    if (predicate.predicate_template.is_param_schematic(predicate.predicate_template.parameter_names[i]))
+                        frontier.push_back(predicate.arguments[i]);
+                }
+            }
+        }
+        return captured;
+    }
+
+    bool make_conclusion(
+        const vector<int>& matched_predicates,
+        const map<string, string>& bindings,
+        Expression& conclusion,
+        vector<int>& source_predicate_indices)
     {
         vector<Predicate> predicates;
         set<Predicate> included;
         bool has_new_information = false;
+        // lambda function
+        auto include_predicate = [&](const Predicate& predicate)
+        {
+            if (included.insert(predicate).second)
+            {
+                predicates.push_back(predicate);
+                if (known_predicates.count(predicate) == 0)
+                    has_new_information = true;
+            }
+        };
+
+        vector<int> connected_predicates;
+        string source;
+        if (connected_matcher != nullptr)
+        {
+            source = bindings.at(connected_matcher->param_values.at(0));
+            connected_predicates = capture_connected_predicates(source, matched_predicates);
+        }
 
         for (const auto& creator : rule.conclusion_template)
         {
+            // case that covers the * (all_connected) case
+            if (creator.is_bound_predicate_creator)
+            {
+                const auto& target = bindings.at(creator.param_strings.at(0));
+                for (int predicate_index : connected_predicates)
+                {
+                    auto predicate = knowledge_expression.predicates[predicate_index];
+                    for (int i = 0; i < predicate.arguments.size(); i++)
+                    {
+                        const auto& parameter_name = predicate.predicate_template.parameter_names[i];
+                        if (predicate.arguments[i] == source && predicate.predicate_template.is_param_schematic(parameter_name))
+                            predicate = predicate.with_modified_argument(parameter_name, target);
+                    }
+                    include_predicate(predicate);
+                }
+                continue;
+            }
+
             vector<string> arguments;
             int variable_index = 0;
             int string_index = 0;
@@ -196,24 +275,29 @@ class InferenceMatcher
             }
 
             auto predicate = predicate_handler->construct_predicate(creator.predicate.predicate, arguments);
-            if (included.insert(predicate).second)
-            {
-                predicates.push_back(predicate);
-                if (known_predicates.count(predicate) == 0)
-                    has_new_information = true;
-            }
+            include_predicate(predicate);
         }
 
         if (!has_new_information)
             return false;
 
-        printf("inference rule '%s' produced:\n%s", rule.name.c_str(), predicate_handler->stringify_expression(Expression(predicates)).c_str());
-
+        set<int> used_predicates(matched_predicates.begin(), matched_predicates.end());
+        used_predicates.insert(connected_predicates.begin(), connected_predicates.end());
+        source_predicate_indices.assign(used_predicates.begin(), used_predicates.end());
         conclusion = Expression(predicates);
+
+        printf("inference rule '%s' produced:\n%s",
+            rule.name.c_str(),
+            predicate_handler->stringify_expression(conclusion, 1).c_str());
+        
         return true;
     }
 
-    bool broaden(vector<int>& matched_predicates, const map<string, string>& bindings, Expression& conclusion)
+    bool broaden(
+        vector<int>& matched_predicates,
+        const map<string, string>& bindings,
+        Expression& conclusion,
+        vector<int>& source_predicate_indices)
     {
         int next_condition = -1;
         bool next_is_connected = false;
@@ -239,16 +323,16 @@ class InferenceMatcher
         }
 
         if (next_condition == -1)
-            return make_conclusion(bindings, conclusion);
+            return make_conclusion(matched_predicates, bindings, conclusion, source_predicate_indices);
 
         for (int predicate_index : candidates[next_condition])
         {
             auto next_bindings = bindings;
-            if (!match_predicate(rule.condition_template[next_condition], knowledge_base.predicates[predicate_index], next_bindings))
+            if (!match_predicate(*conditions[next_condition], knowledge_expression.predicates[predicate_index], next_bindings))
                 continue;
 
             matched_predicates[next_condition] = predicate_index;
-            if (broaden(matched_predicates, next_bindings, conclusion))
+            if (broaden(matched_predicates, next_bindings, conclusion, source_predicate_indices))
                 return true;
             matched_predicates[next_condition] = -1;
         }
@@ -259,22 +343,30 @@ public:
     InferenceMatcher(
         const InferenceRule& rule,
         const InferencePredicateConnections& connections,
-        Expression& knowledge_base,
+        Expression& knowledge_expression,
         PredicateHandler* predicate_handler,
         const set<Predicate>& known_predicates)
         : rule(rule),
-          knowledge_base(knowledge_base),
+          knowledge_expression(knowledge_expression),
           predicate_handler(predicate_handler),
-          known_predicates(known_predicates),
-          candidates(rule.condition_template.size()),
-          neighbors(rule.condition_template.size())
+          known_predicates(known_predicates)
     {
-        for (int i = 0; i < rule.condition_template.size(); i++)
+        for (const auto& condition : rule.condition_template)
         {
-            for (int predicate_index = 0; predicate_index < knowledge_base.predicates.size(); predicate_index++)
+            if (condition.is_bound_predicates_matcher)
+                connected_matcher = &condition;
+            else
+                conditions.push_back(&condition);
+        }
+
+        candidates.resize(conditions.size());
+        neighbors.resize(conditions.size());
+        for (int i = 0; i < conditions.size(); i++)
+        {
+            for (int predicate_index = 0; predicate_index < knowledge_expression.predicates.size(); predicate_index++)
             {
                 map<string, string> bindings;
-                if (match_predicate(rule.condition_template[i], knowledge_base.predicates[predicate_index], bindings))
+                if (match_predicate(*conditions[i], knowledge_expression.predicates[predicate_index], bindings))
                     candidates[i].push_back(predicate_index);
             }
         }
@@ -286,7 +378,7 @@ public:
         }
     }
 
-    bool try_infer(Expression& conclusion)
+    bool try_infer(Expression& conclusion, vector<int>& source_predicate_indices)
     {
         for (const auto& predicate_candidates : candidates)
         {
@@ -295,37 +387,57 @@ public:
         }
 
         vector<int> matched_predicates(candidates.size(), -1);
-        return broaden(matched_predicates, map<string, string>(), conclusion);
+        return broaden(matched_predicates, map<string, string>(), conclusion, source_predicate_indices);
     }
 };
 }
 
-vector<pair<Expression, string>> InferenceHandler::apply_inference_rules(Expression knowledge_base)
+vector<Knowledge> InferenceHandler::apply_inference_rules(const KnowledgeBase& knowledge_base)
 {
-    vector<pair<Expression, string>> results;
-    set<Predicate> known_predicates(knowledge_base.predicates.begin(), knowledge_base.predicates.end());
+    vector<Knowledge> results;
+    auto combined_facts = knowledge_base.get_combined_facts();
+    set<Predicate> known_predicates(combined_facts.predicates.begin(), combined_facts.predicates.end());
     
     for (const auto& [name, inference_rule] : inference_rules_by_name)
     {
-        if (inference_rule.uses_all_connected_predicates())
-            continue;
         if (inference_rule_predicate_connections.count(name) == 0)
             throw runtime_error("inference rule '" + name + "' has no identified predicate connections");
 
         InferenceMatcher matcher(
             inference_rule,
             inference_rule_predicate_connections.at(name),
-            knowledge_base,
+            combined_facts,
             predicate_handler,
             known_predicates);
         Expression conclusion;
-        if (matcher.try_infer(conclusion))
+        vector<int> source_predicate_indices;
+        if (matcher.try_infer(conclusion, source_predicate_indices))
         {
             if (DEBUGGING)
-                printf("inference rule '%s' produced:\n%s", name.c_str(), predicate_handler->stringify_expression(conclusion).c_str());
-            results.emplace_back(conclusion, name);
+                printf("inference rule '%s' produced:\n%s",
+                    name.c_str(),
+                    predicate_handler->stringify_expression(conclusion, 1).c_str());
+
+            set<int> source_indices;
+            for (int predicate_index : source_predicate_indices)
+                source_indices.insert(knowledge_base.get_fact_index(predicate_index));
             known_predicates.insert(conclusion.predicates.begin(), conclusion.predicates.end());
+            results.emplace_back(std::move(conclusion), KnowledgeSource{
+                KnowledgeSourceType::INFERRED,
+                vector<int>(source_indices.begin(), source_indices.end()),
+                name});
         }
     }
+    return results;
+}
+
+vector<pair<Expression, string>> InferenceHandler::apply_inference_rules(Expression expression)
+{
+    KnowledgeBase knowledge_base(nullptr);
+    knowledge_base.tell_fact(std::move(expression));
+
+    vector<pair<Expression, string>> results;
+    for (const auto& knowledge : apply_inference_rules(knowledge_base))
+        results.emplace_back(knowledge.get_expression(), knowledge.get_source().rule_name);
     return results;
 }

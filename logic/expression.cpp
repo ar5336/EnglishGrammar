@@ -492,12 +492,15 @@ vector<PredicateArgumentAddress> Expression::get_occurrences_of_param(string arg
     return occurrences;
 }
 
-string PredicateHandler::stringify_expression(Expression expression)
+string PredicateHandler::stringify_expression(Expression expression, int indent)
 {
     string accumulated_string = "";
 
     for (auto predicate : expression.predicates)
     {
+        for (int i = 0; i < indent; i++)
+            accumulated_string += "\t";
+
         accumulated_string += stringify_predicate(predicate);
         accumulated_string += "\n";
     }

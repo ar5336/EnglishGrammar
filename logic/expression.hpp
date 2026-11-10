@@ -100,7 +100,7 @@ public:
 
     void init_stringification();
 
-    string stringify_expression(Expression expression);
+    string stringify_expression(Expression expression, int indent = 0);
 
     string stringify_predicate(Predicate predicate);
 };

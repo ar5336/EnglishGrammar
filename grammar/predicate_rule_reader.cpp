@@ -25,6 +25,23 @@ ParameterCreationType determine_type(string argument)
     throw runtime_error("bad type of parameter assignment");
 }
 
+namespace
+{
+string read_connected_variable(const vector<string>& tokens)
+{
+    if (tokens.size() != 2)
+        throw runtime_error("connected predicate pattern must be '* all_connected:variable'");
+
+    auto parameter = split_character(tokens[1], ":");
+    if (parameter.size() != 2 || parameter[0] != "all_connected" || parameter[1].empty())
+        throw runtime_error("connected predicate pattern must be '* all_connected:variable'");
+    if (determine_type(parameter[1]) != WORD_FRAME)
+        throw runtime_error("all_connected requires a named variable");
+
+    return parameter[1];
+}
+}
+
 PredicateRuleReader::PredicateRuleReader(PredicateHandler *predicate_handler) : predicate_handler(predicate_handler)
 { };
 
@@ -48,14 +65,7 @@ PredicateCreator::PredicateCreator(PredicateHandler *handler, vector<string> cre
     if (creation_tokens.at(0) == "*")
     {
         is_bound_predicate_creator = true;
-
-        // bound predicate matchers show up in the format
-        //    "* all_connected:connection_object"
-
-        auto parameter_token = split_character(creation_tokens.at(1), ":");
-        // we don't need to set the parameter type here
-        param_strings.push_back(parameter_token.at(1));
-
+        param_strings.push_back(read_connected_variable(creation_tokens));
         return;
     }
     else
@@ -257,14 +267,8 @@ PredicateMatcher::PredicateMatcher(PredicateHandler *handler_ptr, vector<string>
     if (creation_tokens.at(0) == "*")
     {
         is_bound_predicates_matcher = true;
-
-        // bound predicate matchers show up in the format
-        //    "* all_connected:connection_object"
-
-        auto parameter_token = split_character(creation_tokens.at(1), ":");
-        param_names.push_back(parameter_token.at(0));
-        param_values.push_back(parameter_token.at(1));
-
+        param_names.push_back("all_connected");
+        param_values.push_back(read_connected_variable(creation_tokens));
         return;
     }
     else
