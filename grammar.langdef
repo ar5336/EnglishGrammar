@@ -454,6 +454,7 @@ InferenceRules:
             CAN_DO action_type:hypernym_action actor:hypernym_object
         THEN
             CAN_DO action_type:hypernym_action actor:hyponym_object
+            IS object:hyponym_object object_count:"inf" noun_class:hyponym_class
         # animals can run
         # horses are animals
         #? can horses run

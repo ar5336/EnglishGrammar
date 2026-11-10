@@ -8,6 +8,7 @@
 #include "conceptual_schema.hpp"
 #include "expression.hpp"
 #include "inference/inference_rule.hpp"
+#include "knowledge_base.hpp"
 
 enum KnowledgeType
 {
@@ -153,7 +154,7 @@ private:
 
     PredicateHandler *predicate_handler;
     ConceptualSchema *conceptual_schema;
-    InferenceHandler *inference_handler;
+    KnowledgeBase knowledge_base;
 
     // map<string, string> child_to_parent_map;
     // inheritance map
@@ -202,6 +203,8 @@ public:
     string ask(Expression expression);
 
     void tell(Expression expression);
+
+    const KnowledgeBase& get_knowledge_base() const;
 
     vector<Noun> concrete_nouns;
     vector<Noun> abstract_nouns;

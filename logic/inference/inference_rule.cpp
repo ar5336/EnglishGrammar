@@ -132,12 +132,33 @@ void InferenceHandler::add_inference_rule(const InferenceRule &rule)
 
 namespace
 {
+class InferenceContext
+{
+    const KnowledgeBase& knowledge_base;
+
+public:
+    Expression knowledge_expression;
+    set<Predicate> known_predicates;
+
+    explicit InferenceContext(const KnowledgeBase& knowledge_base)
+        : knowledge_base(knowledge_base),
+          knowledge_expression(knowledge_base.get_combined_facts()),
+          known_predicates(knowledge_expression.predicates.begin(), knowledge_expression.predicates.end())
+    {}
+
+    bool can_expand_predicate(int predicate_index, const string& rule_name) const
+    {
+        int fact_index = knowledge_base.get_fact_index(predicate_index);
+        const auto& source = knowledge_base.get_facts().at(fact_index).get_source();
+        return source.type != KnowledgeSourceType::INFERRED || source.rule_name != rule_name;
+    }
+};
+
 class InferenceMatcher
 {
     const InferenceRule& rule;
-    Expression& knowledge_expression;
+    InferenceContext& context;
     PredicateHandler* predicate_handler;
-    const set<Predicate>& known_predicates;
     vector<const PredicateMatcher*> conditions;
     const PredicateMatcher* connected_matcher = nullptr;
     vector<vector<int>> candidates;
@@ -181,7 +202,7 @@ class InferenceMatcher
     {
         set<Predicate> excluded;
         for (int predicate_index : matched_predicates)
-            excluded.insert(knowledge_expression.predicates[predicate_index]);
+            excluded.insert(context.knowledge_expression.predicates[predicate_index]);
 
         vector<int> captured;
         set<Predicate> visited_predicates;
@@ -194,9 +215,13 @@ class InferenceMatcher
             if (!visited_variables.insert(variable).second)
                 continue;
 
-            for (const auto& occurrence : knowledge_expression.get_occurrences_of_param(variable))
+            for (const auto& occurrence : context.knowledge_expression.get_occurrences_of_param(variable))
             {
-                auto& predicate = knowledge_expression.predicates[occurrence.predicate_index];
+                // Previous outputs of this rule are traversal barriers, not just omitted output.
+                if (!context.can_expand_predicate(occurrence.predicate_index, rule.name))
+                    continue;
+
+                auto& predicate = context.knowledge_expression.predicates[occurrence.predicate_index];
                 if (!predicate.predicate_template.is_param_schematic(occurrence.argument_name)
                     || excluded.count(predicate) != 0
                     || !visited_predicates.insert(predicate).second)
@@ -228,7 +253,7 @@ class InferenceMatcher
             if (included.insert(predicate).second)
             {
                 predicates.push_back(predicate);
-                if (known_predicates.count(predicate) == 0)
+                if (context.known_predicates.count(predicate) == 0)
                     has_new_information = true;
             }
         };
@@ -249,7 +274,7 @@ class InferenceMatcher
                 const auto& target = bindings.at(creator.param_strings.at(0));
                 for (int predicate_index : connected_predicates)
                 {
-                    auto predicate = knowledge_expression.predicates[predicate_index];
+                    auto predicate = context.knowledge_expression.predicates[predicate_index];
                     for (int i = 0; i < predicate.arguments.size(); i++)
                     {
                         const auto& parameter_name = predicate.predicate_template.parameter_names[i];
@@ -328,7 +353,7 @@ class InferenceMatcher
         for (int predicate_index : candidates[next_condition])
         {
             auto next_bindings = bindings;
-            if (!match_predicate(*conditions[next_condition], knowledge_expression.predicates[predicate_index], next_bindings))
+            if (!match_predicate(*conditions[next_condition], context.knowledge_expression.predicates[predicate_index], next_bindings))
                 continue;
 
             matched_predicates[next_condition] = predicate_index;
@@ -343,13 +368,11 @@ public:
     InferenceMatcher(
         const InferenceRule& rule,
         const InferencePredicateConnections& connections,
-        Expression& knowledge_expression,
-        PredicateHandler* predicate_handler,
-        const set<Predicate>& known_predicates)
+        InferenceContext& context,
+        PredicateHandler* predicate_handler)
         : rule(rule),
-          knowledge_expression(knowledge_expression),
-          predicate_handler(predicate_handler),
-          known_predicates(known_predicates)
+          context(context),
+          predicate_handler(predicate_handler)
     {
         for (const auto& condition : rule.condition_template)
         {
@@ -363,10 +386,10 @@ public:
         neighbors.resize(conditions.size());
         for (int i = 0; i < conditions.size(); i++)
         {
-            for (int predicate_index = 0; predicate_index < knowledge_expression.predicates.size(); predicate_index++)
+            for (int predicate_index = 0; predicate_index < context.knowledge_expression.predicates.size(); predicate_index++)
             {
                 map<string, string> bindings;
-                if (match_predicate(*conditions[i], knowledge_expression.predicates[predicate_index], bindings))
+                if (match_predicate(*conditions[i], context.knowledge_expression.predicates[predicate_index], bindings))
                     candidates[i].push_back(predicate_index);
             }
         }
@@ -395,8 +418,7 @@ public:
 vector<Knowledge> InferenceHandler::apply_inference_rules(const KnowledgeBase& knowledge_base)
 {
     vector<Knowledge> results;
-    auto combined_facts = knowledge_base.get_combined_facts();
-    set<Predicate> known_predicates(combined_facts.predicates.begin(), combined_facts.predicates.end());
+    InferenceContext context(knowledge_base);
     
     for (const auto& [name, inference_rule] : inference_rules_by_name)
     {
@@ -406,9 +428,8 @@ vector<Knowledge> InferenceHandler::apply_inference_rules(const KnowledgeBase& k
         InferenceMatcher matcher(
             inference_rule,
             inference_rule_predicate_connections.at(name),
-            combined_facts,
-            predicate_handler,
-            known_predicates);
+            context,
+            predicate_handler);
         Expression conclusion;
         vector<int> source_predicate_indices;
         if (matcher.try_infer(conclusion, source_predicate_indices))
@@ -421,7 +442,7 @@ vector<Knowledge> InferenceHandler::apply_inference_rules(const KnowledgeBase& k
             set<int> source_indices;
             for (int predicate_index : source_predicate_indices)
                 source_indices.insert(knowledge_base.get_fact_index(predicate_index));
-            known_predicates.insert(conclusion.predicates.begin(), conclusion.predicates.end());
+            context.known_predicates.insert(conclusion.predicates.begin(), conclusion.predicates.end());
             results.emplace_back(std::move(conclusion), KnowledgeSource{
                 KnowledgeSourceType::INFERRED,
                 vector<int>(source_indices.begin(), source_indices.end()),

@@ -1,10 +1,15 @@
 #include "mind.hpp"
 
 Mind::Mind(PredicateHandler *predicate_handler, ConceptualSchema *conceptual_schema, InferenceHandler* inference_handler)
-    : predicate_handler(predicate_handler), conceptual_schema(conceptual_schema), inference_handler(inference_handler)
+    : predicate_handler(predicate_handler), conceptual_schema(conceptual_schema), knowledge_base(inference_handler)
 {
     timeline = Timeline();
     abstract_timeline = Timeline(false);
+}
+
+const KnowledgeBase& Mind::get_knowledge_base() const
+{
+    return knowledge_base;
 }
 
 void Mind::tell(Expression expression)
@@ -17,7 +22,7 @@ void Mind::tell(Expression expression)
     conceptual_schema->consider_expression(expression);
 
     // resolve anaphoric references (eventually move this to a WorldModel object along with event extraction)
-    expression = resolve_anaphoras(expression);
+    auto resolved_expression = resolve_anaphoras(expression);
 
     if (DEBUGGING)
         printf("done resolving anaphora for statemnt\n");
@@ -26,11 +31,11 @@ void Mind::tell(Expression expression)
     if (DEBUGGING)
     {
         printf("finished resolving anaphoras\n");
-        printf("%s\n", predicate_handler->stringify_expression(expression).c_str());
+        printf("%s\n", predicate_handler->stringify_expression(resolved_expression).c_str());
     }
-    expression = resolve_properties(expression);
+    resolved_expression = resolve_properties(resolved_expression);
 
-    auto events = extract_events(expression, true);
+    auto events = extract_events(resolved_expression, true);
     if (DEBUGGING)
         printf("done extracting events for statemnt\n");
     
@@ -39,20 +44,16 @@ void Mind::tell(Expression expression)
         timeline.actions.push_back(event);
     }
 
-    // combine all expressions
-    auto combined_predicates = vector<Predicate>();
-    for (auto& [knowledge_type, expression_to_combine] : expressions)
+    auto first_new_fact = knowledge_base.get_facts().size();
+    knowledge_base.tell_fact(std::move(expression));
+    const auto& facts = knowledge_base.get_facts();
+    for (size_t fact_index = first_new_fact; fact_index < facts.size(); fact_index++)
     {
-        auto predicates = expression_to_combine.predicates;
-        combined_predicates.insert(combined_predicates.end(), predicates.begin(), predicates.end());
-    }
+        const auto& knowledge = facts[fact_index];
+        if (knowledge.get_source().type != KnowledgeSourceType::INFERRED)
+            continue;
 
-    auto combined_expression = Expression(combined_predicates);
-
-    // make inferences on the combined expression
-    auto inferred_information = inference_handler->apply_inference_rules(combined_expression);
-    for (auto& [inferred_expression, rule_name] : inferred_information)
-    {
+        const auto& inferred_expression = knowledge.get_expression();
         if ((inferred_expressions.emplace(inferred_expression)).second)
         {
             expressions.push_back(pair<KnowledgeType, Expression>(KnowledgeType::INFERRED, inferred_expression));
