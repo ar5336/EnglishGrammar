@@ -155,6 +155,7 @@ private:
     PredicateHandler *predicate_handler;
     ConceptualSchema *conceptual_schema;
     KnowledgeBase knowledge_base;
+    void refresh_knowledge_projection();
 
     // map<string, string> child_to_parent_map;
     // inheritance map
@@ -163,9 +164,6 @@ private:
 
     // set<string> noun_set;
     map<string, vector<Expression>> mentioned_nouns;
-
-    set<Expression> given_expressions;
-    set<Expression> inferred_expressions;
 
     // void apply_to_connections(Expression expression, function<void(Predicate, Predicate)> func);
 
@@ -203,6 +201,7 @@ public:
     string ask(Expression expression);
 
     void tell(Expression expression);
+    bool advance_inference();
 
     const KnowledgeBase& get_knowledge_base() const;
 

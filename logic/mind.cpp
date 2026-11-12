@@ -14,11 +14,6 @@ const KnowledgeBase& Mind::get_knowledge_base() const
 
 void Mind::tell(Expression expression)
 {
-    if ((given_expressions.emplace(expression)).second)
-    {
-        expressions.push_back(pair<KnowledgeType, Expression>(KnowledgeType::GIVEN, expression));
-    }
-    
     conceptual_schema->consider_expression(expression);
 
     // resolve anaphoric references (eventually move this to a WorldModel object along with event extraction)
@@ -44,20 +39,34 @@ void Mind::tell(Expression expression)
         timeline.actions.push_back(event);
     }
 
-    auto first_new_fact = knowledge_base.get_facts().size();
-    knowledge_base.tell_fact(std::move(expression));
-    const auto& facts = knowledge_base.get_facts();
-    for (size_t fact_index = first_new_fact; fact_index < facts.size(); fact_index++)
-    {
-        const auto& knowledge = facts[fact_index];
-        if (knowledge.get_source().type != KnowledgeSourceType::INFERRED)
-            continue;
+    knowledge_base.enqueue_fact(std::move(expression));
+    refresh_knowledge_projection();
+}
 
-        const auto& inferred_expression = knowledge.get_expression();
-        if ((inferred_expressions.emplace(inferred_expression)).second)
+bool Mind::advance_inference()
+{
+    if (!knowledge_base.advance_inference())
+        return false;
+    refresh_knowledge_projection();
+    return true;
+}
+
+void Mind::refresh_knowledge_projection()
+{
+    const auto& facts = knowledge_base.get_facts();
+    expressions.clear();
+    for (const auto& conclusion : knowledge_base.get_conclusions())
+    {
+        KnowledgeType type = KnowledgeType::INFERRED;
+        for (const auto& evidence : conclusion.evidence)
         {
-            expressions.push_back(pair<KnowledgeType, Expression>(KnowledgeType::INFERRED, inferred_expression));
+            if (facts[evidence.fact_index].get_source().type == KnowledgeSourceType::GIVEN)
+            {
+                type = KnowledgeType::GIVEN;
+                break;
+            }
         }
+        expressions.emplace_back(type, conclusion.expression);
     }
 }
 

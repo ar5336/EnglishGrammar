@@ -253,13 +253,16 @@ int main(int argc, char **argv)
 	displayer.display();
 	while (1)
 	{
-		int key = waitKeyEx(0);
+		int key = waitKeyEx(mind.get_knowledge_base().has_pending_inferences() ? 1 : 16);
 		if (key != -1 && !displayer.handle_knowledge_graph_key(key))
 		{
 			if (check_keypress(static_cast<char>(key)))
 				break;
 			displayer.display();
 		}
+
+		if (mind.advance_inference())
+			displayer.refresh_knowledge_graph();
 	}
 	destroyAllWindows();
 
