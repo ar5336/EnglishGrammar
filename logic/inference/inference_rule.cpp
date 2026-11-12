@@ -168,14 +168,19 @@ public:
         const vector<int>& connected_predicates) const
     {
         set<int> source_indices;
+        auto include_support = [&](int predicate_index, int fact_index)
+        {
+            auto sources = knowledge_base.get_support_sources(predicate_index, fact_index);
+            source_indices.insert(sources.begin(), sources.end());
+        };
         for (int predicate_index : matched_predicates)
-            source_indices.insert(knowledge_base.get_fact_index(predicate_index));
+            include_support(predicate_index, knowledge_base.get_fact_index(predicate_index));
         for (int predicate_index : connected_predicates)
         {
             int source_index = get_expansion_source(predicate_index, rule_name);
             if (source_index == -1)
                 throw logic_error("wildcard capture has no eligible source in inference rule '" + rule_name + "'");
-            source_indices.insert(source_index);
+            include_support(predicate_index, source_index);
         }
         return KnowledgeSource{
             KnowledgeSourceType::INFERRED,
@@ -189,15 +194,6 @@ public:
         return knowledge_base.has_derivation(expression, source);
     }
 
-    pair<int, bool> register_conclusion(const Expression& expression)
-    {
-        int conclusion_index;
-        map<string, string> bindings;
-        if (knowledge_base.try_get_conclusion(expression, conclusion_index, bindings))
-            return {conclusion_index, false};
-
-        return {static_cast<int>(knowledge_base.get_conclusions().size()), true};
-    }
 };
 
 class InferenceMatcher
@@ -362,7 +358,8 @@ class InferenceMatcher
 
         conclusion = Expression(predicates);
         provenance = context.make_source(rule.name, matched_predicates, connected_predicates);
-        provenance.predicate_indices.assign(used_predicates.begin(), used_predicates.end());
+        for (int predicate_index : used_predicates)
+            provenance.premise_predicates.push_back(context.knowledge_expression.predicates[predicate_index]);
         return !context.has_derivation(conclusion, provenance);
     }
 
@@ -499,21 +496,26 @@ bool InferenceHandler::advance_inference(KnowledgeBase& knowledge_base) const
     if (!matcher.try_infer(conclusion, source))
         return false;
 
-    auto [conclusion_index, is_new] = context.register_conclusion(conclusion);
-    if (is_new)
-        printf("inference rule '%s' produced conclusion #%d:\n%s",
-            name.c_str(),
-            conclusion_index,
-            predicate_handler->stringify_expression(conclusion, 1).c_str());
+    auto changed_types = knowledge_base.add_knowledge(Knowledge(std::move(conclusion), std::move(source)));
+    int fact_index = knowledge_base.get_facts().size() - 1;
+    int conclusion_index = knowledge_base.get_conclusion_index(fact_index);
+    const auto& family = knowledge_base.get_conclusions().at(conclusion_index);
+    if (family.phases.back().fact_index == fact_index)
+    {
+        printf("inference rule '%s' %s fact C%d, phase %zu [K%d]:\n",
+            name.c_str(), family.phases.size() == 1 ? "constructed" : "expanded",
+            conclusion_index, family.phases.size(), fact_index);
+        for (const auto& predicate : knowledge_base.canonicalize(family.phases.back().additions).predicates)
+            printf("\t[%zu] %s\n", family.phases.size(), predicate_handler->stringify_predicate(predicate).c_str());
+    }
     else
     {
-        printf("inference rule '%s' produced additional evidence for conclusion #%d from",
-            name.c_str(), conclusion_index);
-        for (int source_index : source.source_indices)
+        printf("inference rule '%s' added evidence to fact C%d [K%d] from",
+            name.c_str(), conclusion_index, fact_index);
+        for (int source_index : knowledge_base.get_facts().back().get_source().source_indices)
             printf(" #%d", source_index);
         printf("\n");
     }
-    auto changed_types = knowledge_base.add_knowledge(Knowledge(std::move(conclusion), std::move(source)));
 
     // Exhaust remaining matches without letting one rule monopolize the agenda.
     schedule_rule(knowledge_base, name);

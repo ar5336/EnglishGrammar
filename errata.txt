@@ -1581,5 +1581,14 @@ Possible separation:
     universal-to-universal reference unification -> equality
     universal-to-particular fact propagation -> instantiation
 
-This design is pinned for later consideration. Do not treat the illustrative
-equality rule or canonical-reference representation as already implemented.
+The illustrative equality rule remains pinned for later consideration.
+The KB now canonicalizes references through unambiguous topology
+matches.
+Equivalent graphs share evidence; anchored expansions share a construction
+history whose predicates retain their first-introduction phase numbers.
+Original knowledge records, matched-premise snapshots, and the evidence used
+to establish reference identity remain available. Historical subset evidence
+does not support later additions. Partial overlap or ambiguous extension
+targets do not by themselves establish identity.
+The illustrative EQUAL syntax and universal/individual identity rules above
+remain deferred.

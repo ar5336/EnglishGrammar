@@ -26,8 +26,8 @@ public:
     KnowledgeSourceType type = KnowledgeSourceType::GIVEN;
     vector<int> source_indices;
     string rule_name;
-    // Premises in the knowledge base's combined predicate view.
-    vector<int> predicate_indices;
+    // Immutable premise snapshots; view indices can change when references unify.
+    vector<Predicate> premise_predicates;
 };
 
 class Knowledge
@@ -47,14 +47,25 @@ class KnowledgeEvidence
 {
 public:
     int fact_index;
-    // Representative conclusion references -> this evidence's original references.
+    // Original evidence references -> canonical references at registration.
     map<string, string> reference_bindings;
+    // Construction phases supporting this record's predicates, not the whole latest graph.
+    vector<int> predicate_phases;
+};
+
+class KnowledgePhase
+{
+public:
+    Expression additions;
+    int fact_index;
 };
 
 class KnowledgeConclusion
 {
 public:
     Expression expression;
+    vector<int> predicate_phases;
+    vector<KnowledgePhase> phases;
     vector<KnowledgeEvidence> evidence;
 };
 
@@ -68,13 +79,27 @@ private:
     vector<Knowledge> facts;
     vector<KnowledgeConclusion> conclusions;
     map<Predicate, vector<int>> predicate_sources;
+    vector<int> fact_conclusions;
 
-    vector<int> expression_index_list_by_combined_facts_index;
+    struct ReferenceLink
+    {
+        string target;
+        vector<int> source_indices;
+    };
+    map<string, ReferenceLink> reference_links;
+    map<string, size_t> reference_order;
+
     Expression combined_facts;
     deque<string> inference_agenda;
     set<string> scheduled_rules;
 
     set<string> add_knowledge(Knowledge knowledge);
+    bool find_conclusion(
+        const Expression& expression, const KnowledgeSource& source,
+        int& conclusion_index, map<string, string>& bindings) const;
+    void refresh_conclusions();
+    void refresh_predicates();
+    void unify_references(const map<string, string>& bindings, const vector<int>& sources);
 public:
     // A null handler stores facts for an explicit inference call instead.
     explicit KnowledgeBase(InferenceHandler* inference_handler);
@@ -87,11 +112,16 @@ public:
     bool advance_inference();
     const vector<Knowledge>& get_facts() const;
     const vector<KnowledgeConclusion>& get_conclusions() const;
+    int get_conclusion_index(int fact_index) const;
+    string canonical_reference(string reference) const;
+    Predicate canonicalize(Predicate predicate) const;
+    Expression canonicalize(const Expression& expression) const;
     bool try_get_conclusion(const Expression& expression, int& conclusion_index, map<string, string>& reference_bindings) const;
     bool has_derivation(const Expression& expression, const KnowledgeSource& source) const;
     const Expression& get_combined_facts() const;
     int get_fact_index(int combined_predicate_index) const;
     const vector<int>& get_fact_indices(int combined_predicate_index) const;
+    vector<int> get_support_sources(int combined_predicate_index, int fact_index) const;
     vector<string> query(Expression query_expression);
 };
 
