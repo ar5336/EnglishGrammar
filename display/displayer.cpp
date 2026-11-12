@@ -634,8 +634,10 @@ void Displayer::display_knowledge_graph()
     const auto& knowledge = mind->get_knowledge_base();
     if (knowledge_graph_layout.evidence_count != knowledge.get_facts().size())
         knowledge_graph_layout = make_knowledge_graph(knowledge, *predicate_handler);
+    KnowledgeGraphColors colors{
+        Scalar(0), PREDICATE_ARGUMENT, PREDICATE_TYPE_GIVEN, PREDICATE_TYPE_INFERRED, HIGHLIGHT};
     auto graph = render_knowledge_graph(
-        knowledge_graph_layout, knowledge_graph_bounds.size(), knowledge_graph_camera, knowledge_graph_zoom);
+        knowledge_graph_layout, knowledge_graph_bounds.size(), knowledge_graph_camera, knowledge_graph_zoom, colors);
     graph.copyTo(image(knowledge_graph_bounds));
 }
 

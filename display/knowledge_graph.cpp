@@ -8,12 +8,6 @@
 
 namespace
 {
-const cv::Scalar BACKGROUND(24, 21, 19);
-const cv::Scalar TEXT(225, 225, 225);
-const cv::Scalar MUTED(155, 155, 155);
-const cv::Scalar GIVEN(70, 70, 235);
-const cv::Scalar INFERRED(45, 155, 245);
-const cv::Scalar EDGE(155, 170, 190);
 const double FONT_SCALE = 0.5;
 const double LABEL_SCALE = 0.45;
 const int LINE_HEIGHT = 19;
@@ -300,27 +294,28 @@ cv::Rect knowledge_graph_viewport(cv::Size size)
 }
 
 cv::Mat render_knowledge_graph(
-    const KnowledgeGraphLayout& graph, cv::Size size, cv::Point2d& camera, double zoom)
+    const KnowledgeGraphLayout& graph, cv::Size size, cv::Point2d& camera, double zoom,
+    const KnowledgeGraphColors& colors)
 {
     if (size.width < 160 || size.height < 180)
         throw std::invalid_argument("knowledge graph viewport is too small");
     if (!std::isfinite(zoom) || zoom <= 0)
         throw std::invalid_argument("knowledge graph zoom must be finite and positive");
 
-    cv::Mat image(size, CV_8UC3, BACKGROUND);
+    cv::Mat image(size, CV_8UC3, colors.background);
     auto text = [&](const std::string& value, cv::Point point, double scale, cv::Scalar color)
     {
         cv::putText(image, value, point, cv::FONT_HERSHEY_SIMPLEX, scale, color, 1, cv::LINE_AA);
     };
-    text("Knowledge base", cv::Point(18, 30), 0.8, TEXT);
+    text("Knowledge base", cv::Point(18, 30), 0.8, colors.text);
     text(std::to_string(graph.nodes.size()) + " fact graphs / "
-        + std::to_string(graph.inference_count) + " derivations", cv::Point(18, 55), 0.5, MUTED);
+        + std::to_string(graph.inference_count) + " derivations", cv::Point(18, 55), 0.5, colors.text);
     text("C: shared fact    [n]: construction phase    K: proof (same K = joint premises)",
-        cv::Point(18, 79), 0.45, MUTED);
-    text("Facts", cv::Point(18, 103), 0.48, GIVEN);
-    text("Inferred facts (columns: minimum proof depth)", cv::Point(100, 103), 0.48, INFERRED);
+        cv::Point(18, 79), 0.45, colors.text);
+    text("Facts", cv::Point(18, 103), 0.48, colors.given);
+    text("Inferred facts (columns: minimum proof depth)", cv::Point(100, 103), 0.48, colors.inferred);
     text("Drag / arrows: pan    Wheel: zoom    " + std::to_string(cvRound(zoom * 100)) + "%",
-        cv::Point(18, size.height - 10), 0.45, MUTED);
+        cv::Point(18, size.height - 10), 0.45, colors.text);
 
     cv::Rect viewport = knowledge_graph_viewport(size);
     cv::Mat body = image(viewport);
@@ -331,7 +326,7 @@ cv::Mat render_knowledge_graph(
     if (graph.nodes.empty())
     {
         text("No knowledge yet. Enter a statement to populate the graph.",
-            cv::Point(18, 145), 0.55, TEXT);
+            cv::Point(18, 145), 0.55, colors.text);
         return image;
     }
     auto project = [&](cv::Point point)
@@ -350,55 +345,55 @@ cv::Mat render_knowledge_graph(
         {
             cv::putText(body, node.depth == 0 ? "Given facts" : "Depth " + std::to_string(node.depth),
                 project(cv::Point(node.bounds.x, 25)), cv::FONT_HERSHEY_SIMPLEX,
-                0.5 * zoom, node.depth == 0 ? GIVEN : INFERRED, thickness, cv::LINE_AA);
+                0.5 * zoom, node.depth == 0 ? colors.given : colors.inferred, thickness, cv::LINE_AA);
         }
     }
     for (const auto& edge : graph.edges)
     {
         cv::Point start = project(edge.start);
         cv::Point end = project(edge.end);
-        cv::line(body, start, end, EDGE, 1, cv::LINE_AA);
+        cv::line(body, start, end, colors.text, 1, cv::LINE_AA);
         cv::Point2d direction(edge.end - edge.start);
         direction *= 1.0 / cv::norm(direction);
         cv::Point2d perpendicular(-direction.y, direction.x);
-        cv::line(body, end, cv::Point(cv::Point2d(end) - direction * (9 * zoom) + perpendicular * (4 * zoom)), EDGE, 1, cv::LINE_AA);
-        cv::line(body, end, cv::Point(cv::Point2d(end) - direction * (9 * zoom) - perpendicular * (4 * zoom)), EDGE, 1, cv::LINE_AA);
+        cv::line(body, end, cv::Point(cv::Point2d(end) - direction * (9 * zoom) + perpendicular * (4 * zoom)), colors.text, 1, cv::LINE_AA);
+        cv::line(body, end, cv::Point(cv::Point2d(end) - direction * (9 * zoom) - perpendicular * (4 * zoom)), colors.text, 1, cv::LINE_AA);
     }
     for (const auto& edge : graph.edges)
     {
         cv::Rect box = project_box(edge.label_bounds);
         if ((box & cv::Rect(cv::Point(), body.size())).empty())
             continue;
-        cv::rectangle(body, box, BACKGROUND, cv::FILLED);
+        cv::rectangle(body, box, colors.background, cv::FILLED);
         for (size_t i = 0; i < edge.label.size(); i++)
             cv::putText(body, edge.label[i], project(edge.label_bounds.tl() + cv::Point(5, 16 + i * LINE_HEIGHT)),
-                cv::FONT_HERSHEY_SIMPLEX, LABEL_SCALE * zoom, TEXT, thickness, cv::LINE_AA);
+                cv::FONT_HERSHEY_SIMPLEX, LABEL_SCALE * zoom, colors.text, thickness, cv::LINE_AA);
     }
     for (const auto& node : graph.nodes)
     {
         cv::Rect box = project_box(node.bounds);
         if ((box & cv::Rect(cv::Point(), body.size())).empty())
             continue;
-        cv::Scalar color = node.depth == 0 ? GIVEN : INFERRED;
-        cv::rectangle(body, box, cv::Scalar(35, 31, 28), cv::FILLED);
+        cv::Scalar color = node.depth == 0 ? colors.given : colors.inferred;
+        cv::rectangle(body, box, colors.background, cv::FILLED);
         cv::rectangle(body, box, color, 1, cv::LINE_AA);
         for (size_t i = 0; i < node.lines.size(); i++)
             cv::putText(body, node.lines[i], project(node.bounds.tl() + cv::Point(PADDING, PADDING + 14 + i * LINE_HEIGHT)),
-                cv::FONT_HERSHEY_SIMPLEX, FONT_SCALE * zoom, i == 0 ? color : TEXT, thickness, cv::LINE_AA);
+                cv::FONT_HERSHEY_SIMPLEX, FONT_SCALE * zoom, i == 0 ? color : colors.text, thickness, cv::LINE_AA);
     }
     if (limit.y > 0)
     {
         int height = std::max(24, cvRound(body.rows * body.rows / (graph.size.height * zoom)));
         int top = viewport.y + cvRound(camera.y * (body.rows - height) / limit.y);
-        cv::rectangle(image, cv::Rect(size.width - 9, viewport.y, 3, body.rows), cv::Scalar(60, 60, 60), cv::FILLED);
-        cv::rectangle(image, cv::Rect(size.width - 11, top, 7, height), MUTED, cv::FILLED);
+        cv::rectangle(image, cv::Rect(size.width - 9, viewport.y, 3, body.rows), colors.highlight, cv::FILLED);
+        cv::rectangle(image, cv::Rect(size.width - 11, top, 7, height), colors.text, cv::FILLED);
     }
     if (limit.x > 0)
     {
         int width = std::max(24, cvRound(body.cols * body.cols / (graph.size.width * zoom)));
         int left = cvRound(camera.x * (body.cols - width) / limit.x);
-        cv::rectangle(image, cv::Rect(0, viewport.br().y + 5, body.cols, 3), cv::Scalar(60, 60, 60), cv::FILLED);
-        cv::rectangle(image, cv::Rect(left, viewport.br().y + 3, width, 7), MUTED, cv::FILLED);
+        cv::rectangle(image, cv::Rect(0, viewport.br().y + 5, body.cols, 3), colors.highlight, cv::FILLED);
+        cv::rectangle(image, cv::Rect(left, viewport.br().y + 3, width, 7), colors.text, cv::FILLED);
     }
     return image;
 }

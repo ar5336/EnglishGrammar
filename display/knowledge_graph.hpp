@@ -36,6 +36,15 @@ struct KnowledgeGraphLayout
     size_t inference_count = 0;
 };
 
+struct KnowledgeGraphColors
+{
+    cv::Scalar background;
+    cv::Scalar text;
+    cv::Scalar given;
+    cv::Scalar inferred;
+    cv::Scalar highlight;
+};
+
 KnowledgeGraphLayout make_knowledge_graph(
     const KnowledgeBase& knowledge_base,
     PredicateHandler& predicate_handler);
@@ -46,6 +55,7 @@ cv::Mat render_knowledge_graph(
     const KnowledgeGraphLayout& graph,
     cv::Size size,
     cv::Point2d& camera,
-    double zoom);
+    double zoom,
+    const KnowledgeGraphColors& colors);
 
 #endif
