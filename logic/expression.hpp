@@ -61,6 +61,8 @@ public:
 
     vector<PredicateArgumentAddress> get_occurrences_of_param(string argument_value);
 
+    bool try_match_topology(const Expression& other, map<string, string>& reference_bindings) const;
+
     static Expression combine_expressions(Expression expression1, Expression expression2);
 
     static bool try_get_predicates_by_name(Expression expression, string predicate_name, vector<Predicate>& result_predicates);

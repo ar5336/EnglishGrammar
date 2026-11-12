@@ -1,4 +1,5 @@
 #include "expression.hpp"
+#include <algorithm>
 
 PredicateHandler::PredicateHandler(PredicateTemplateHandler *predicate_template_reader){
     predicate_template_handler = predicate_template_reader;
@@ -56,6 +57,102 @@ bool PredicateHandler::try_get_predicate_template(string predicate_name, Predica
 bool operator<(const Expression& lhs, const Expression& rhs)
 {
     return tie(lhs.predicates) < tie(rhs.predicates);
+}
+
+bool Expression::try_match_topology(const Expression& other, map<string, string>& reference_bindings) const
+{
+    reference_bindings.clear();
+    set<Predicate> left_set(predicates.begin(), predicates.end());
+    set<Predicate> right_set(other.predicates.begin(), other.predicates.end());
+    if (left_set.size() != right_set.size())
+        return false;
+
+    vector<Predicate> left(left_set.begin(), left_set.end());
+    vector<Predicate> right(right_set.begin(), right_set.end());
+    vector<vector<size_t>> candidates(left.size());
+    vector<size_t> order;
+    for (size_t i = 0; i < left.size(); i++)
+    {
+        order.push_back(i);
+        for (size_t j = 0; j < right.size(); j++)
+        {
+            const auto& lhs = left[i];
+            const auto& rhs = right[j];
+            if (lhs.predicate_template.predicate != rhs.predicate_template.predicate
+                || lhs.arguments.size() != rhs.arguments.size())
+                continue;
+
+            bool compatible = true;
+            for (size_t k = 0; k < lhs.arguments.size(); k++)
+            {
+                bool is_reference = lhs.predicate_template.are_params_schematic.at(k);
+                if (lhs.predicate_template.parameter_names.at(k) != rhs.predicate_template.parameter_names.at(k)
+                    || is_reference != rhs.predicate_template.are_params_schematic.at(k)
+                    || (!is_reference && lhs.arguments[k] != rhs.arguments[k]))
+                {
+                    compatible = false;
+                    break;
+                }
+            }
+            if (compatible)
+                candidates[i].push_back(j);
+        }
+        if (candidates[i].empty())
+            return false;
+    }
+
+    stable_sort(order.begin(), order.end(), [&](size_t lhs, size_t rhs)
+    {
+        return candidates[lhs].size() < candidates[rhs].size();
+    });
+
+    vector<bool> used(right.size(), false);
+    auto match = [&](auto&& recurse, size_t depth,
+                     const map<string, string>& bindings,
+                     const map<string, string>& reverse_bindings) -> bool
+    {
+        if (depth == order.size())
+        {
+            reference_bindings = bindings;
+            return true;
+        }
+
+        const auto& lhs = left[order[depth]];
+        for (size_t candidate : candidates[order[depth]])
+        {
+            if (used[candidate])
+                continue;
+
+            const auto& rhs = right[candidate];
+            auto next_bindings = bindings;
+            auto next_reverse = reverse_bindings;
+            bool compatible = true;
+            for (size_t k = 0; k < lhs.arguments.size(); k++)
+            {
+                if (!lhs.predicate_template.are_params_schematic.at(k))
+                    continue;
+
+                auto forward = next_bindings.emplace(lhs.arguments[k], rhs.arguments[k]);
+                auto reverse = next_reverse.emplace(rhs.arguments[k], lhs.arguments[k]);
+                if ((!forward.second && forward.first->second != rhs.arguments[k])
+                    || (!reverse.second && reverse.first->second != lhs.arguments[k]))
+                {
+                    compatible = false;
+                    break;
+                }
+            }
+            if (!compatible)
+                continue;
+
+            used[candidate] = true;
+            if (recurse(recurse, depth + 1, next_bindings, next_reverse))
+                return true;
+            used[candidate] = false;
+        }
+        return false;
+    };
+
+    return match(match, 0, map<string, string>(), map<string, string>());
 }
 
 Expression::Expression() {
