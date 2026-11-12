@@ -128,6 +128,13 @@ void InferenceHandler::add_inference_rule(const InferenceRule &rule)
     inference_rules_by_name.emplace(rule.name, rule);
     auto condition_connections = identify_condition_connections(rule.condition_as_expression);
     inference_rule_predicate_connections.emplace(rule.name, condition_connections);
+    for (const auto& condition : rule.condition_template)
+    {
+        if (condition.is_bound_predicates_matcher)
+            wildcard_dependents.insert(rule.name);
+        else
+            predicate_dependents[condition.predicate_template.predicate].insert(rule.name);
+    }
 }
 
 namespace
@@ -138,19 +145,58 @@ class InferenceContext
 
 public:
     Expression knowledge_expression;
-    set<Predicate> known_predicates;
 
     explicit InferenceContext(const KnowledgeBase& knowledge_base)
         : knowledge_base(knowledge_base),
-          knowledge_expression(knowledge_base.get_combined_facts()),
-          known_predicates(knowledge_expression.predicates.begin(), knowledge_expression.predicates.end())
+          knowledge_expression(knowledge_base.get_combined_facts())
     {}
 
-    bool can_expand_predicate(int predicate_index, const string& rule_name) const
+    int get_expansion_source(int predicate_index, const string& rule_name) const
     {
-        int fact_index = knowledge_base.get_fact_index(predicate_index);
-        const auto& source = knowledge_base.get_facts().at(fact_index).get_source();
-        return source.type != KnowledgeSourceType::INFERRED || source.rule_name != rule_name;
+        for (int fact_index : knowledge_base.get_fact_indices(predicate_index))
+        {
+            const auto& source = knowledge_base.get_facts().at(fact_index).get_source();
+            if (source.type != KnowledgeSourceType::INFERRED || source.rule_name != rule_name)
+                return fact_index;
+        }
+        return -1;
+    }
+
+    KnowledgeSource make_source(
+        const string& rule_name,
+        const vector<int>& matched_predicates,
+        const vector<int>& connected_predicates) const
+    {
+        set<int> source_indices;
+        for (int predicate_index : matched_predicates)
+            source_indices.insert(knowledge_base.get_fact_index(predicate_index));
+        for (int predicate_index : connected_predicates)
+        {
+            int source_index = get_expansion_source(predicate_index, rule_name);
+            if (source_index == -1)
+                throw logic_error("wildcard capture has no eligible source in inference rule '" + rule_name + "'");
+            source_indices.insert(source_index);
+        }
+        return KnowledgeSource{
+            KnowledgeSourceType::INFERRED,
+            vector<int>(source_indices.begin(), source_indices.end()),
+            rule_name,
+            {}};
+    }
+
+    bool has_derivation(const Expression& expression, const KnowledgeSource& source) const
+    {
+        return knowledge_base.has_derivation(expression, source);
+    }
+
+    pair<int, bool> register_conclusion(const Expression& expression)
+    {
+        int conclusion_index;
+        map<string, string> bindings;
+        if (knowledge_base.try_get_conclusion(expression, conclusion_index, bindings))
+            return {conclusion_index, false};
+
+        return {static_cast<int>(knowledge_base.get_conclusions().size()), true};
     }
 };
 
@@ -217,8 +263,8 @@ class InferenceMatcher
 
             for (const auto& occurrence : context.knowledge_expression.get_occurrences_of_param(variable))
             {
-                // Previous outputs of this rule are traversal barriers, not just omitted output.
-                if (!context.can_expand_predicate(occurrence.predicate_index, rule.name))
+                // A previous output needs independent support before this rule can expand it.
+                if (context.get_expansion_source(occurrence.predicate_index, rule.name) == -1)
                     continue;
 
                 auto& predicate = context.knowledge_expression.predicates[occurrence.predicate_index];
@@ -242,20 +288,15 @@ class InferenceMatcher
         const vector<int>& matched_predicates,
         const map<string, string>& bindings,
         Expression& conclusion,
-        vector<int>& source_predicate_indices)
+        KnowledgeSource& provenance)
     {
         vector<Predicate> predicates;
         set<Predicate> included;
-        bool has_new_information = false;
         // lambda function
         auto include_predicate = [&](const Predicate& predicate)
         {
             if (included.insert(predicate).second)
-            {
                 predicates.push_back(predicate);
-                if (context.known_predicates.count(predicate) == 0)
-                    has_new_information = true;
-            }
         };
 
         vector<int> connected_predicates;
@@ -303,26 +344,33 @@ class InferenceMatcher
             include_predicate(predicate);
         }
 
-        if (!has_new_information)
-            return false;
-
         set<int> used_predicates(matched_predicates.begin(), matched_predicates.end());
         used_predicates.insert(connected_predicates.begin(), connected_predicates.end());
-        source_predicate_indices.assign(used_predicates.begin(), used_predicates.end());
-        conclusion = Expression(predicates);
 
-        printf("inference rule '%s' produced:\n%s",
-            rule.name.c_str(),
-            predicate_handler->stringify_expression(conclusion, 1).c_str());
-        
-        return true;
+        // Merely restating the selected premises is not independent evidence.
+        set<Predicate> premises;
+        for (int predicate_index : used_predicates)
+            premises.insert(context.knowledge_expression.predicates[predicate_index]);
+        bool restates_premises = true;
+        for (const auto& predicate : predicates)
+        {
+            if (premises.count(predicate) == 0)
+                restates_premises = false;
+        }
+        if (restates_premises)
+            return false;
+
+        conclusion = Expression(predicates);
+        provenance = context.make_source(rule.name, matched_predicates, connected_predicates);
+        provenance.predicate_indices.assign(used_predicates.begin(), used_predicates.end());
+        return !context.has_derivation(conclusion, provenance);
     }
 
     bool broaden(
         vector<int>& matched_predicates,
         const map<string, string>& bindings,
         Expression& conclusion,
-        vector<int>& source_predicate_indices)
+        KnowledgeSource& provenance)
     {
         int next_condition = -1;
         bool next_is_connected = false;
@@ -348,7 +396,7 @@ class InferenceMatcher
         }
 
         if (next_condition == -1)
-            return make_conclusion(matched_predicates, bindings, conclusion, source_predicate_indices);
+            return make_conclusion(matched_predicates, bindings, conclusion, provenance);
 
         for (int predicate_index : candidates[next_condition])
         {
@@ -357,7 +405,7 @@ class InferenceMatcher
                 continue;
 
             matched_predicates[next_condition] = predicate_index;
-            if (broaden(matched_predicates, next_bindings, conclusion, source_predicate_indices))
+            if (broaden(matched_predicates, next_bindings, conclusion, provenance))
                 return true;
             matched_predicates[next_condition] = -1;
         }
@@ -401,7 +449,7 @@ public:
         }
     }
 
-    bool try_infer(Expression& conclusion, vector<int>& source_predicate_indices)
+    bool try_infer(Expression& conclusion, KnowledgeSource& provenance)
     {
         for (const auto& predicate_candidates : candidates)
         {
@@ -410,44 +458,93 @@ public:
         }
 
         vector<int> matched_predicates(candidates.size(), -1);
-        return broaden(matched_predicates, map<string, string>(), conclusion, source_predicate_indices);
+        return broaden(matched_predicates, map<string, string>(), conclusion, provenance);
     }
 };
 }
 
-vector<Knowledge> InferenceHandler::apply_inference_rules(const KnowledgeBase& knowledge_base)
+void InferenceHandler::schedule_rule(KnowledgeBase& knowledge_base, const string& name) const
 {
-    vector<Knowledge> results;
-    InferenceContext context(knowledge_base);
-    
+    if (knowledge_base.scheduled_rules.insert(name).second)
+        knowledge_base.inference_agenda.push_back(name);
+}
+
+void InferenceHandler::enqueue_inference_rules(KnowledgeBase& knowledge_base) const
+{
     for (const auto& [name, inference_rule] : inference_rules_by_name)
     {
         if (inference_rule_predicate_connections.count(name) == 0)
             throw runtime_error("inference rule '" + name + "' has no identified predicate connections");
+        schedule_rule(knowledge_base, name);
+    }
+}
 
-        InferenceMatcher matcher(
-            inference_rule,
-            inference_rule_predicate_connections.at(name),
-            context,
-            predicate_handler);
-        Expression conclusion;
-        vector<int> source_predicate_indices;
-        if (matcher.try_infer(conclusion, source_predicate_indices))
+bool InferenceHandler::advance_inference(KnowledgeBase& knowledge_base) const
+{
+    if (knowledge_base.inference_agenda.empty())
+        return false;
+
+    string name = knowledge_base.inference_agenda.front();
+    knowledge_base.inference_agenda.pop_front();
+    knowledge_base.scheduled_rules.erase(name);
+    const auto& inference_rule = inference_rules_by_name.at(name);
+    InferenceContext context(knowledge_base);
+    InferenceMatcher matcher(
+        inference_rule,
+        inference_rule_predicate_connections.at(name),
+        context,
+        predicate_handler);
+    Expression conclusion;
+    KnowledgeSource source;
+    if (!matcher.try_infer(conclusion, source))
+        return false;
+
+    auto [conclusion_index, is_new] = context.register_conclusion(conclusion);
+    if (is_new)
+        printf("inference rule '%s' produced conclusion #%d:\n%s",
+            name.c_str(),
+            conclusion_index,
+            predicate_handler->stringify_expression(conclusion, 1).c_str());
+    else
+    {
+        printf("inference rule '%s' produced additional evidence for conclusion #%d from",
+            name.c_str(), conclusion_index);
+        for (int source_index : source.source_indices)
+            printf(" #%d", source_index);
+        printf("\n");
+    }
+    auto changed_types = knowledge_base.add_knowledge(Knowledge(std::move(conclusion), std::move(source)));
+
+    // Exhaust remaining matches without letting one rule monopolize the agenda.
+    schedule_rule(knowledge_base, name);
+    for (const auto& type : changed_types)
+    {
+        auto dependents = predicate_dependents.find(type);
+        if (dependents != predicate_dependents.end())
         {
-            if (DEBUGGING)
-                printf("inference rule '%s' produced:\n%s",
-                    name.c_str(),
-                    predicate_handler->stringify_expression(conclusion, 1).c_str());
-
-            set<int> source_indices;
-            for (int predicate_index : source_predicate_indices)
-                source_indices.insert(knowledge_base.get_fact_index(predicate_index));
-            context.known_predicates.insert(conclusion.predicates.begin(), conclusion.predicates.end());
-            results.emplace_back(std::move(conclusion), KnowledgeSource{
-                KnowledgeSourceType::INFERRED,
-                vector<int>(source_indices.begin(), source_indices.end()),
-                name});
+            for (const auto& dependent : dependents->second)
+                schedule_rule(knowledge_base, dependent);
         }
+    }
+    if (!changed_types.empty())
+    {
+        for (const auto& dependent : wildcard_dependents)
+            schedule_rule(knowledge_base, dependent);
+    }
+    return true;
+}
+
+vector<Knowledge> InferenceHandler::apply_inference_rules(const KnowledgeBase& knowledge_base)
+{
+    KnowledgeBase working_knowledge = knowledge_base;
+    working_knowledge.inference_agenda.clear();
+    working_knowledge.scheduled_rules.clear();
+    enqueue_inference_rules(working_knowledge);
+    vector<Knowledge> results;
+    while (working_knowledge.has_pending_inferences())
+    {
+        if (advance_inference(working_knowledge))
+            results.push_back(working_knowledge.get_facts().back());
     }
     return results;
 }

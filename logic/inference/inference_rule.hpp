@@ -74,6 +74,8 @@ public:
 class InferenceHandler
 {
 private:
+    friend class KnowledgeBase;
+
     PredicateHandler* predicate_handler;
 
     InferencePredicateConnections existing_predicate_connections;
@@ -81,10 +83,15 @@ private:
     // rule name ->
     //   source predicate type -> target predicate type -> (source arg_name, target arg_name)
     map<string, InferencePredicateConnections> inference_rule_predicate_connections;
+    map<string, set<string>> predicate_dependents;
+    set<string> wildcard_dependents;
 
     // map<string, map<int, int>> identified_conclusion_distance_layers;
 
     InferencePredicateConnections identify_condition_connections(Expression condition_expression);
+    void schedule_rule(KnowledgeBase& knowledge_base, const string& name) const;
+    void enqueue_inference_rules(KnowledgeBase& knowledge_base) const;
+    bool advance_inference(KnowledgeBase& knowledge_base) const;
 public:
     map<string, InferenceRule> inference_rules_by_name;
 
@@ -93,6 +100,7 @@ public:
 
     void add_inference_rule(const InferenceRule& rule);
 
+    // Drain the inference agenda on a copy; returned sources index the input followed by these results.
     vector<Knowledge> apply_inference_rules(const KnowledgeBase& knowledge_base);
 
     // Expression-only callers cannot retain provenance between inference calls.
