@@ -10,6 +10,7 @@
 #include "../grammar/parser.hpp"
 #include "../logic/expression.hpp"
 #include "../logic/mind.hpp"
+#include "knowledge_graph.hpp"
 
 using namespace std;
 using namespace cv;
@@ -53,7 +54,12 @@ private:
     Mat image;
     Point start_text_corner; // top-left position
     Point start_grid_corner;
-    Point start_predicate_corner;
+    Rect knowledge_graph_bounds;
+    KnowledgeGraphLayout knowledge_graph_layout;
+    Point2d knowledge_graph_camera;
+    double knowledge_graph_zoom = 1.0;
+    Point graph_drag_position;
+    bool graph_dragging = false;
     Point start_individual_frame_corner;
 
     Point IMAGE_SIZE;
@@ -100,10 +106,12 @@ private:
 
     void staple_text_on(Point *pos, string text, Scalar color, float font_scale);
 
-    void display_predicate(Point *pos, bool is_given, Predicate predicate);
+    void display_knowledge_graph();
+    void pan_knowledge_graph(Point delta);
+    void zoom_knowledge_graph(Point position, double steps);
+
 public:
     string screen_name;
-    int scroll;
 
     string response_string;
 
@@ -120,6 +128,10 @@ public:
         ConceptualSchema *conceptual_schema_ptr);
 
     void display();
+    void refresh_knowledge_graph();
+
+    bool handle_knowledge_graph_mouse(int event, int x, int y, int flags);
+    bool handle_knowledge_graph_key(int key);
 
     void display_drilldown_tree(
         Parser* parser,

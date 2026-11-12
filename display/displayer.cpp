@@ -1,4 +1,10 @@
 #include "displayer.hpp"
+#include "knowledge_graph.hpp"
+#include <algorithm>
+#include <cerrno>
+#include <cmath>
+#include <cstdlib>
+#include <system_error>
 
 Size measure_text(string text, float font_scale = 1.0)
 {
@@ -217,12 +223,12 @@ void Displayer::display_text(Point pos, string text, Scalar color, float font_sc
 Displayer::Displayer(string screen_name)
     : screen_name(screen_name)
     {
-        IMAGE_SIZE = Point(1800, 800);
+        IMAGE_SIZE = Point(1920, 1080);
 
         image = Mat(IMAGE_SIZE, CV_8UC3, cv::Scalar(0));
         start_text_corner = Point(10, image.rows * 3 / 4);
         start_grid_corner = start_text_corner + Point(0, -60);
-        start_predicate_corner = Point(image.cols *7/10, image.rows * 4/5);
+        knowledge_graph_bounds = Rect(780, 20, image.cols - 800, image.rows - 80);
         start_individual_frame_corner = Point(image.cols *1/30, image.rows * 1/15);
 
         // HIGHLIGHT = CV_RGB(50, 25, 0);
@@ -269,11 +275,10 @@ Displayer::Displayer(string screen_name)
 
         IS_INITIATED = false;
 
-        scroll = 0;
-
         highlighted_cell_position = make_pair(-1, -1);
         previous_highlighted_cell_position = make_pair(-1, -1);
         highlight_frame_index = 0;
+        is_highlighted = false;
     };
 
 void Displayer::init(
@@ -283,7 +288,21 @@ void Displayer::init(
     ConceptualSchema* conceptual_schema_ptr) {
     // set the callback function for any mouse event
 
-    resizeWindow(screen_name, IMAGE_SIZE);
+#if defined(__linux__)
+    // Native Wayland cannot honor moveWindow(); use XWayland unless a backend was explicitly selected.
+    const char* wayland = std::getenv("WAYLAND_DISPLAY");
+    const char* x11 = std::getenv("DISPLAY");
+    const char* backend = std::getenv("GDK_BACKEND");
+    if (wayland && *wayland && x11 && *x11 && (!backend || !*backend))
+    {
+        if (setenv("GDK_BACKEND", "x11", 1) != 0)
+            throw std::system_error(errno, std::generic_category(), "selecting X11 for window positioning");
+    }
+#endif
+
+    namedWindow(screen_name, WINDOW_NORMAL | WINDOW_KEEPRATIO);
+    resizeWindow(screen_name, IMAGE_SIZE.x, IMAGE_SIZE.y);
+    moveWindow(screen_name, 0, 0);
 
     parser = parser_ptr;
     mind = mind_ptr;
@@ -292,42 +311,6 @@ void Displayer::init(
 
     // schema_displayer = SchemaDisplayer(conceptual_schema_ptr);
     IS_INITIATED = true;
-}
-
-void Displayer::display_predicate(Point *pos, bool is_given, Predicate predicate)
-{
-    auto pred_color = is_given ? PREDICATE_TYPE_GIVEN : PREDICATE_TYPE_INFERRED;
-
-    string predicate_name = predicate.predicate_template.predicate;
-    // first display the predicate name
-    staple_text_on(pos, predicate_name + " ", pred_color, PREDICATE_FONT_SCALE);
-
-    vector<string> param_names = predicate.predicate_template.parameter_names;
-    vector<string> pred_args = predicate.arguments;
-    for (int i = 0; i < param_names.size(); i++)
-    {
-        bool parameter_is_optional = predicate.predicate_template.are_params_optional[i];
-        if (i >= pred_args.size())
-        {
-            continue;
-        }
-        if (parameter_is_optional && equals(pred_args[i], "unknown"))
-        {
-            continue;
-        }
-        string param_name = param_names[i];
-        string pred_arg = pred_args[i];
-
-        staple_text_on(pos, param_name, PREDICATE_PARAMETER, PREDICATE_FONT_SCALE);
-        staple_text_on(pos, ":", PREDICATE_COLON, PREDICATE_FONT_SCALE);
-        if (equals(pred_arg, "unknown"))
-        {
-            staple_text_on(pos, pred_arg + " ", PREDICATE_SPECIAL_ARGUMENT, PREDICATE_FONT_SCALE);
-        } else {
-            staple_text_on(pos, pred_arg + " ", PREDICATE_ARGUMENT, PREDICATE_FONT_SCALE);
-        }
-
-    }
 }
 
 void Displayer::display()
@@ -610,48 +593,6 @@ void Displayer::display()
 
     cv::line(image, cursor_top, cursor_bottom, WORD_TEXT_MATCHED, 2, cv::LINE_4, 0);
 
-    // display expressions
-    Point expression_ticker_corner = start_predicate_corner + Point(0, scroll);
-    int NEW_LINE_NUM = 25;
-    Point new_line = Point(0,NEW_LINE_NUM);
-
-    int total_height = 0;
-    for (auto expression : mind->expressions)
-    {
-        for (auto predicate : expression.second.predicates)
-        {
-            total_height += NEW_LINE_NUM;
-        }
-        total_height += NEW_LINE_NUM;
-    }
-    expression_ticker_corner += Point(0, -total_height);
-
-    if (mind->expressions.size() > 0) {
-        for (auto expression_of_type : mind->expressions) {
-            auto expression = expression_of_type.second;
-            auto expr_type = expression_of_type.first;
-            // if (expr_type == KnowledgeType::GIVEN) {
-            vector<string> result_predicates = split_character(predicate_handler->stringify_expression(expression), "\n");
-
-            for (Predicate predicate : expression.predicates)
-            {
-                auto predicate_ticker_corner = expression_ticker_corner;
-
-                if (expr_type == KnowledgeType::GIVEN)
-                    display_predicate(&predicate_ticker_corner, true, predicate);
-
-                // display_text(expression_ticker_corner, result_predicate, PREDICATE_TYPE, 0.6f);
-                expression_ticker_corner += new_line;
-            }
-
-            // } else {
-            //     display_text(image, expression_ticker_corner, expression.stringify(), CV_RGB(255, 140, 0), 0.6f);
-
-            // }
-            expression_ticker_corner += new_line;
-        }
-    }
-
     // display the response string
     // Point response_corner = Point(image.cols * 8 / 10, image.rows / 8);
     Point response_corner = Point(30, image.rows - 30);
@@ -672,34 +613,108 @@ void Displayer::display()
 
     // display_multi_line_text(conschem_corner + Point(400, 0), stringified_nouns, CONCEPTUAL_SCHEMA, 0.5f);
 
-    // display the events
-    Point timeline_corner = Point(700, 50);
-    for (auto event : mind->timeline.actions)
+    if (!is_highlighted)
     {
-        string stringified_result = event.stringify();
-        // if (DEBUGGING)
-        // {
-        //     printf("%s\n", stringified_result.c_str());
-        // }
-        timeline_corner = display_multi_line_text(timeline_corner, stringified_result, CONCEPTUAL_SCHEMA, 0.5f);
+        Point timeline_corner(30, 50);
+        for (auto event : mind->timeline.actions)
+            timeline_corner = display_multi_line_text(timeline_corner, event.stringify(), CONCEPTUAL_SCHEMA, 0.5f);
+
+        Point concrete_noun_corner(390, 50);
+        for (auto noun : mind->concrete_nouns)
+            concrete_noun_corner = display_multi_line_text(concrete_noun_corner, noun.stringify(), CONCEPTUAL_SCHEMA, 0.5f);
     }
 
-    // for (string conceptual_noun : conceptual_nouns)
-    // {
-    //     noun_to_pos.emplace(conceptual_noun, conschem_ticker);
-    //     staple_text_on(&conschem_ticker, conceptual_noun, CHERRY_RED, 0.5f);
-    //     conschem_ticker += Point(10, 0);
-    // }
-
-    // display the concrete nouns
-    Point concrete_noun_corner = Point(900, 50);
-    for (auto noun : mind->concrete_nouns)
-    {
-        string stringified_result = noun.stringify();
-        concrete_noun_corner = display_multi_line_text(concrete_noun_corner, stringified_result, CONCEPTUAL_SCHEMA, 0.5f);
-    }
+    display_knowledge_graph();
 
     cv::imshow(screen_name, image);
+}
+
+void Displayer::display_knowledge_graph()
+{
+    const auto& knowledge = mind->get_knowledge_base();
+    if (knowledge_graph_layout.evidence_count != knowledge.get_facts().size())
+        knowledge_graph_layout = make_knowledge_graph(knowledge, *predicate_handler);
+    auto graph = render_knowledge_graph(
+        knowledge_graph_layout, knowledge_graph_bounds.size(), knowledge_graph_camera, knowledge_graph_zoom);
+    graph.copyTo(image(knowledge_graph_bounds));
+}
+
+void Displayer::pan_knowledge_graph(Point delta)
+{
+    knowledge_graph_camera += Point2d(delta);
+    refresh_knowledge_graph();
+}
+
+void Displayer::zoom_knowledge_graph(Point position, double steps)
+{
+    double zoom = std::clamp(knowledge_graph_zoom * std::pow(1.15, steps), 0.1, 4.0);
+    Rect viewport = knowledge_graph_viewport(knowledge_graph_bounds.size());
+    Point2d anchor(position - knowledge_graph_bounds.tl() - viewport.tl());
+    anchor.x = std::clamp(anchor.x, 0.0, static_cast<double>(viewport.width));
+    anchor.y = std::clamp(anchor.y, 0.0, static_cast<double>(viewport.height));
+    knowledge_graph_camera = (knowledge_graph_camera + anchor) * (zoom / knowledge_graph_zoom) - anchor;
+    knowledge_graph_zoom = zoom;
+    refresh_knowledge_graph();
+}
+
+void Displayer::refresh_knowledge_graph()
+{
+    display_knowledge_graph();
+    cv::imshow(screen_name, image);
+}
+
+bool Displayer::handle_knowledge_graph_mouse(int event, int x, int y, int flags)
+{
+    Point position(x, y);
+    if (graph_dragging)
+    {
+        if (event == EVENT_LBUTTONUP || event == EVENT_MBUTTONUP
+            || (event == EVENT_MOUSEMOVE && !(flags & (EVENT_FLAG_LBUTTON | EVENT_FLAG_MBUTTON))))
+        {
+            graph_dragging = false;
+            return true;
+        }
+        if (event == EVENT_MOUSEMOVE)
+        {
+            pan_knowledge_graph(graph_drag_position - position);
+            graph_drag_position = position;
+            return true;
+        }
+    }
+    if (!knowledge_graph_bounds.contains(Point(x, y)))
+        return false;
+
+    if (event == EVENT_LBUTTONDOWN || event == EVENT_MBUTTONDOWN)
+    {
+        graph_dragging = true;
+        graph_drag_position = position;
+    }
+    else if (event == EVENT_MOUSEWHEEL || event == EVENT_MOUSEHWHEEL)
+    {
+        int delta = getMouseWheelDelta(flags);
+        if (delta != 0)
+        {
+            // GTK reports discrete wheel steps as +/-1; other backends commonly use +/-120.
+            double steps = std::copysign(std::max(1.0, std::abs(delta) / 120.0), delta);
+            zoom_knowledge_graph(position, steps);
+        }
+    }
+    return true;
+}
+
+bool Displayer::handle_knowledge_graph_key(int key)
+{
+    Point delta;
+    switch (key)
+    {
+        case 81: case 0xff51: case 0x250000: case 0x1000012: delta.x = -60; break;
+        case 82: case 0xff52: case 0x260000: case 0x1000013: delta.y = -60; break;
+        case 83: case 0xff53: case 0x270000: case 0x1000014: delta.x = 60; break;
+        case 84: case 0xff54: case 0x280000: case 0x1000015: delta.y = 60; break;
+        default: return false;
+    }
+    pan_knowledge_graph(delta);
+    return true;
 }
 
 void Displayer::display_drilldown_tree(

@@ -42,9 +42,6 @@ InferenceHandler inference_handler = InferenceHandler(vector<InferenceRule>(), &
 
 Mind mind = Mind(&predicate_handler, &conceptual_schema, &inference_handler);
 
-bool is_shift_pressed = false;
-
-
 vector<string> known_facts = {
 	"dogs are mammals",
 	"people are mammals",
@@ -97,6 +94,9 @@ void parse_known_facts()
 
 void mouse_callback_function(int event, int x, int y, int flags, void *userdata)
 {
+	if (displayer.handle_knowledge_graph_mouse(event, x, y, flags))
+		return;
+
 	if (event == EVENT_LBUTTONDOWN)
 	{
 		bool highlight_found = false;
@@ -132,29 +132,6 @@ bool check_keypress(char cr)
 	string current_utterance = parser.current_utterance;
 	displayer.is_highlighted = false;
 
-	if (cr == -31) // shift
-	{
-		is_shift_pressed = true;
-	}
-
-	if (!is_shift_pressed){
-		if (cr == 81) // left
-		{
-		}
-		if (cr == 82 ) // up
-		{
-			displayer.scroll -= 10;
-		}
-		if (cr == 83) // right
-		{
-		}
-		if (cr == 84)
-		{
-			displayer.scroll += 10;
-		}
-	}
-	
-
 	if (cr == 27)
 	{
 		return true; // break
@@ -162,7 +139,6 @@ bool check_keypress(char cr)
 	else
 	{
 		displayer.response_string = "";
-		is_shift_pressed = false;
 		if (cr >= 97 && cr <= 122 || cr == 32)
 		{
 			string new_utterance = current_utterance += cr;
@@ -274,17 +250,16 @@ int main(int argc, char **argv)
 	// displayer.display();
 	parse_known_facts();
 
+	displayer.display();
 	while (1)
 	{
-		displayer.display();
-		// displayer.drift();
-		if (check_keypress((char)waitKey(0)))
+		int key = waitKeyEx(0);
+		if (key != -1 && !displayer.handle_knowledge_graph_key(key))
 		{
-			break;
+			if (check_keypress(static_cast<char>(key)))
+				break;
+			displayer.display();
 		}
-
-		// match word frames against the text
-		displayer.display();
 	}
 	destroyAllWindows();
 
