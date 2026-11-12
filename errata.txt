@@ -1526,3 +1526,60 @@ an event does not need to be a separate structure. Unless we evntually go the gr
 It can just as well be the predicate structure as defined in the .langdef
 
 the #semantic_components be accounted for
+
+====
+Deferred: declarative identity versus universal instantiation
+
+Unify-All still copies the same relationship between different references to a
+universal category. For example, c, m, b1, w1, and f2 can all denote mammals:
+    CONTAINS container:c containee:i
+    CONTAINS container:m containee:i
+    CONTAINS container:b1 containee:i
+These express the same "dogs are mammals" relationship under different names.
+
+The current option 1 prevents wildcard expansion through facts produced by the
+same rule. It deliberately still permits original premises to be reused for new
+targets. It limits recursive expansion, but does not establish reference identity.
+
+A possible declarative alternative is for a rule to conclude equality instead
+of copying a universal description. Illustrative syntax, not implemented:
+
+    Unify-Universal-References
+        IF
+            IS object:a object_count:"inf" noun_class:category
+            IS object:b object_count:"inf" noun_class:category
+        THEN
+            EQUAL left:a right:b
+
+The rule would declare when two references denote the same thing. EQUAL would
+need generic equality semantics in the engine, not merely be an inert predicate
+or a hardcoded special case for the Unify-All rule name.
+
+KnowledgeBase could maintain reference equivalence classes, for example with
+union-find. Matching, connection lookup, and fact deduplication would operate on
+canonical references. After c = m = b1, the three relationships above become one
+fact in that view; introducing another category reference need not reproduce the
+whole description.
+
+Only reference arguments marked -> should be canonicalized. Literal values such
+as noun classes and action names must not be rewritten. Original assertions and
+the justifications for equality must remain available for provenance, even when
+their canonical representations coincide.
+
+Important boundaries:
+    - Identity is not instantiation. Applying a universal statement to an
+      individual must not merge that individual with its category.
+    - Two individual dogs remain distinct even if their noun_class values match.
+    - The example assumes unqualified references to the same universal category.
+      Qualifiers and scope need to be accounted for: "red dogs" and "dogs" must
+      not automatically become the same category just because noun_class matches.
+    - Premises remain reusable. Suppressing repeated source use without recording
+      equivalence can remove necessary connections and make reasoning depend on
+      statement order.
+
+Possible separation:
+    universal-to-universal reference unification -> equality
+    universal-to-particular fact propagation -> instantiation
+
+This design is pinned for later consideration. Do not treat the illustrative
+equality rule or canonical-reference representation as already implemented.
