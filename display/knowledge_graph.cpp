@@ -148,6 +148,13 @@ std::string phase_label(const std::set<int>& phases)
     return result + "]";
 }
 
+void validate_viewport(cv::Size size, double zoom)
+{
+    if (size.width < 160 || size.height < 180)
+        throw std::invalid_argument("knowledge graph viewport is too small");
+    if (!std::isfinite(zoom) || zoom <= 0)
+        throw std::invalid_argument("knowledge graph zoom must be finite and positive");
+}
 }
 
 KnowledgeGraphLayout make_knowledge_graph(const KnowledgeBase& knowledge_base, PredicateHandler& predicate_handler)
@@ -293,14 +300,25 @@ cv::Rect knowledge_graph_viewport(cv::Size size)
     return cv::Rect(0, 115, size.width - 14, size.height - 155);
 }
 
+std::optional<size_t> hit_test_knowledge_graph(
+    const KnowledgeGraphLayout& graph, cv::Size size, cv::Point2d camera, double zoom, cv::Point position)
+{
+    validate_viewport(size, zoom);
+    auto viewport = knowledge_graph_viewport(size);
+    if (!viewport.contains(position))
+        return std::nullopt;
+    cv::Point2d point = (cv::Point2d(position - viewport.tl()) + camera) / zoom;
+    for (auto node = graph.nodes.rbegin(); node != graph.nodes.rend(); ++node)
+        if (cv::Rect2d(node->bounds).contains(point))
+            return node->conclusion_index;
+    return std::nullopt;
+}
+
 cv::Mat render_knowledge_graph(
     const KnowledgeGraphLayout& graph, cv::Size size, cv::Point2d& camera, double zoom,
-    const KnowledgeGraphColors& colors)
+    const KnowledgeGraphColors& colors, std::optional<size_t> selected_conclusion)
 {
-    if (size.width < 160 || size.height < 180)
-        throw std::invalid_argument("knowledge graph viewport is too small");
-    if (!std::isfinite(zoom) || zoom <= 0)
-        throw std::invalid_argument("knowledge graph zoom must be finite and positive");
+    validate_viewport(size, zoom);
 
     cv::Mat image(size, CV_8UC3, colors.background);
     auto text = [&](const std::string& value, cv::Point point, double scale, cv::Scalar color)
@@ -314,7 +332,8 @@ cv::Mat render_knowledge_graph(
         cv::Point(18, 79), 0.45, colors.text);
     text("Facts", cv::Point(18, 103), 0.48, colors.given);
     text("Inferred facts (columns: minimum proof depth)", cv::Point(100, 103), 0.48, colors.inferred);
-    text("Drag / arrows: pan    Wheel: zoom    " + std::to_string(cvRound(zoom * 100)) + "%",
+    text("Click fact: highlight    Blank: clear    Drag / arrows: pan    Wheel: zoom    "
+        + std::to_string(cvRound(zoom * 100)) + "%",
         cv::Point(18, size.height - 10), 0.45, colors.text);
 
     cv::Rect viewport = knowledge_graph_viewport(size);
@@ -338,6 +357,14 @@ cv::Mat render_knowledge_graph(
         return cv::Rect(project(box.tl()), project(box.br()));
     };
     int thickness = std::max(1, cvRound(zoom));
+    auto is_selected = [&](const KnowledgeGraphNode& node)
+    {
+        return selected_conclusion && node.conclusion_index == *selected_conclusion;
+    };
+    auto is_selected_edge = [&](const KnowledgeGraphEdge& edge)
+    {
+        return is_selected(graph.nodes.at(edge.from)) || is_selected(graph.nodes.at(edge.to));
+    };
     std::set<int> labeled_depths;
     for (const auto& node : graph.nodes)
     {
@@ -348,35 +375,49 @@ cv::Mat render_knowledge_graph(
                 0.5 * zoom, node.depth == 0 ? colors.given : colors.inferred, thickness, cv::LINE_AA);
         }
     }
-    for (const auto& edge : graph.edges)
+    for (bool highlighted : {false, true})
     {
-        cv::Point start = project(edge.start);
-        cv::Point end = project(edge.end);
-        cv::line(body, start, end, colors.text, 1, cv::LINE_AA);
-        cv::Point2d direction(edge.end - edge.start);
-        direction *= 1.0 / cv::norm(direction);
-        cv::Point2d perpendicular(-direction.y, direction.x);
-        cv::line(body, end, cv::Point(cv::Point2d(end) - direction * (9 * zoom) + perpendicular * (4 * zoom)), colors.text, 1, cv::LINE_AA);
-        cv::line(body, end, cv::Point(cv::Point2d(end) - direction * (9 * zoom) - perpendicular * (4 * zoom)), colors.text, 1, cv::LINE_AA);
-    }
-    for (const auto& edge : graph.edges)
-    {
-        cv::Rect box = project_box(edge.label_bounds);
-        if ((box & cv::Rect(cv::Point(), body.size())).empty())
-            continue;
-        cv::rectangle(body, box, colors.background, cv::FILLED);
-        for (size_t i = 0; i < edge.label.size(); i++)
-            cv::putText(body, edge.label[i], project(edge.label_bounds.tl() + cv::Point(5, 16 + i * LINE_HEIGHT)),
-                cv::FONT_HERSHEY_SIMPLEX, LABEL_SCALE * zoom, colors.text, thickness, cv::LINE_AA);
+        const auto& color = highlighted ? colors.selection : colors.text;
+        int edge_thickness = highlighted ? std::max(2, thickness) : 1;
+        for (const auto& edge : graph.edges)
+        {
+            if (is_selected_edge(edge) != highlighted)
+                continue;
+            cv::Point start = project(edge.start);
+            cv::Point end = project(edge.end);
+            cv::line(body, start, end, color, edge_thickness, cv::LINE_AA);
+            cv::Point2d direction(edge.end - edge.start);
+            direction *= 1.0 / cv::norm(direction);
+            cv::Point2d perpendicular(-direction.y, direction.x);
+            cv::line(body, end, cv::Point(cv::Point2d(end) - direction * (9 * zoom) + perpendicular * (4 * zoom)),
+                color, edge_thickness, cv::LINE_AA);
+            cv::line(body, end, cv::Point(cv::Point2d(end) - direction * (9 * zoom) - perpendicular * (4 * zoom)),
+                color, edge_thickness, cv::LINE_AA);
+        }
+        for (const auto& edge : graph.edges)
+        {
+            if (is_selected_edge(edge) != highlighted)
+                continue;
+            cv::Rect box = project_box(edge.label_bounds);
+            if ((box & cv::Rect(cv::Point(), body.size())).empty())
+                continue;
+            cv::rectangle(body, box, highlighted ? colors.highlight : colors.background, cv::FILLED);
+            for (size_t i = 0; i < edge.label.size(); i++)
+                cv::putText(body, edge.label[i], project(edge.label_bounds.tl() + cv::Point(5, 16 + i * LINE_HEIGHT)),
+                    cv::FONT_HERSHEY_SIMPLEX, LABEL_SCALE * zoom, color, thickness, cv::LINE_AA);
+        }
     }
     for (const auto& node : graph.nodes)
     {
         cv::Rect box = project_box(node.bounds);
         if ((box & cv::Rect(cv::Point(), body.size())).empty())
             continue;
+        bool selected = is_selected(node);
         cv::Scalar color = node.depth == 0 ? colors.given : colors.inferred;
-        cv::rectangle(body, box, colors.background, cv::FILLED);
-        cv::rectangle(body, box, color, 1, cv::LINE_AA);
+        if (selected)
+            color = colors.selection;
+        cv::rectangle(body, box, selected ? colors.highlight : colors.background, cv::FILLED);
+        cv::rectangle(body, box, color, selected ? std::max(2, thickness) : 1, cv::LINE_AA);
         for (size_t i = 0; i < node.lines.size(); i++)
             cv::putText(body, node.lines[i], project(node.bounds.tl() + cv::Point(PADDING, PADDING + 14 + i * LINE_HEIGHT)),
                 cv::FONT_HERSHEY_SIMPLEX, FONT_SCALE * zoom, i == 0 ? color : colors.text, thickness, cv::LINE_AA);

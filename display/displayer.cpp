@@ -635,9 +635,11 @@ void Displayer::display_knowledge_graph()
     if (knowledge_graph_layout.evidence_count != knowledge.get_facts().size())
         knowledge_graph_layout = make_knowledge_graph(knowledge, *predicate_handler);
     KnowledgeGraphColors colors{
-        Scalar(0), PREDICATE_ARGUMENT, PREDICATE_TYPE_GIVEN, PREDICATE_TYPE_INFERRED, HIGHLIGHT};
+        Scalar(0), PREDICATE_ARGUMENT, PREDICATE_TYPE_GIVEN, PREDICATE_TYPE_INFERRED,
+        HIGHLIGHT, HIGHLIGHTED_FRAME};
     auto graph = render_knowledge_graph(
-        knowledge_graph_layout, knowledge_graph_bounds.size(), knowledge_graph_camera, knowledge_graph_zoom, colors);
+        knowledge_graph_layout, knowledge_graph_bounds.size(), knowledge_graph_camera, knowledge_graph_zoom,
+        colors, selected_knowledge_conclusion);
     graph.copyTo(image(knowledge_graph_bounds));
 }
 
@@ -667,6 +669,7 @@ void Displayer::refresh_knowledge_graph()
 
 bool Displayer::handle_knowledge_graph_mouse(int event, int x, int y, int flags)
 {
+    const double click_distance = 4.0;
     Point position(x, y);
     if (graph_dragging)
     {
@@ -674,10 +677,23 @@ bool Displayer::handle_knowledge_graph_mouse(int event, int x, int y, int flags)
             || (event == EVENT_MOUSEMOVE && !(flags & (EVENT_FLAG_LBUTTON | EVENT_FLAG_MBUTTON))))
         {
             graph_dragging = false;
+            bool select = event == EVENT_LBUTTONUP && graph_click_pending
+                && cv::norm(position - graph_drag_position) <= click_distance;
+            graph_click_pending = false;
+            auto selection = graph_pressed_conclusion;
+            graph_pressed_conclusion.reset();
+            if (select && selection != selected_knowledge_conclusion)
+            {
+                selected_knowledge_conclusion = selection;
+                refresh_knowledge_graph();
+            }
             return true;
         }
         if (event == EVENT_MOUSEMOVE)
         {
+            if (graph_click_pending && cv::norm(position - graph_drag_position) <= click_distance)
+                return true;
+            graph_click_pending = false;
             pan_knowledge_graph(graph_drag_position - position);
             graph_drag_position = position;
             return true;
@@ -689,7 +705,16 @@ bool Displayer::handle_knowledge_graph_mouse(int event, int x, int y, int flags)
     if (event == EVENT_LBUTTONDOWN || event == EVENT_MBUTTONDOWN)
     {
         graph_dragging = true;
+        graph_click_pending = event == EVENT_LBUTTONDOWN;
         graph_drag_position = position;
+        graph_pressed_conclusion.reset();
+        if (graph_click_pending)
+        {
+            // Inference may move nodes between press and release.
+            graph_pressed_conclusion = hit_test_knowledge_graph(
+                knowledge_graph_layout, knowledge_graph_bounds.size(), knowledge_graph_camera,
+                knowledge_graph_zoom, position - knowledge_graph_bounds.tl());
+        }
     }
     else if (event == EVENT_MOUSEWHEEL || event == EVENT_MOUSEHWHEEL)
     {

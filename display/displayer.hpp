@@ -58,8 +58,11 @@ private:
     KnowledgeGraphLayout knowledge_graph_layout;
     Point2d knowledge_graph_camera;
     double knowledge_graph_zoom = 1.0;
+    std::optional<size_t> selected_knowledge_conclusion;
+    std::optional<size_t> graph_pressed_conclusion;
     Point graph_drag_position;
     bool graph_dragging = false;
+    bool graph_click_pending = false;
     Point start_individual_frame_corner;
 
     Point IMAGE_SIZE;

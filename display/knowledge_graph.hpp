@@ -2,6 +2,7 @@
 #define KNOWLEDGE_GRAPH_HPP
 
 #include <opencv2/core.hpp>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -43,6 +44,7 @@ struct KnowledgeGraphColors
     cv::Scalar given;
     cv::Scalar inferred;
     cv::Scalar highlight;
+    cv::Scalar selection;
 };
 
 KnowledgeGraphLayout make_knowledge_graph(
@@ -51,11 +53,19 @@ KnowledgeGraphLayout make_knowledge_graph(
 
 cv::Rect knowledge_graph_viewport(cv::Size size);
 
+std::optional<size_t> hit_test_knowledge_graph(
+    const KnowledgeGraphLayout& graph,
+    cv::Size size,
+    cv::Point2d camera,
+    double zoom,
+    cv::Point position);
+
 cv::Mat render_knowledge_graph(
     const KnowledgeGraphLayout& graph,
     cv::Size size,
     cv::Point2d& camera,
     double zoom,
-    const KnowledgeGraphColors& colors);
+    const KnowledgeGraphColors& colors,
+    std::optional<size_t> selected_conclusion = std::nullopt);
 
 #endif
