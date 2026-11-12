@@ -11,6 +11,12 @@
 #include "../string_operators.hpp"
 #include "../global.hpp"
 
+enum class TopologyMatch
+{
+    EXACT,
+    SUBGRAPH,
+};
+
 class Expression
 {
 private:
@@ -61,7 +67,12 @@ public:
 
     vector<PredicateArgumentAddress> get_occurrences_of_param(string argument_value);
 
-    bool try_match_topology(const Expression& other, map<string, string>& reference_bindings) const;
+    bool try_match_topology(
+        const Expression& other,
+        map<string, string>& reference_bindings,
+        TopologyMatch mode = TopologyMatch::EXACT,
+        const map<string, string>& fixed_bindings = {},
+        bool* ambiguous = nullptr) const;
 
     static Expression combine_expressions(Expression expression1, Expression expression2);
 

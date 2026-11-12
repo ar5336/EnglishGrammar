@@ -59,12 +59,20 @@ bool operator<(const Expression& lhs, const Expression& rhs)
     return tie(lhs.predicates) < tie(rhs.predicates);
 }
 
-bool Expression::try_match_topology(const Expression& other, map<string, string>& reference_bindings) const
+bool Expression::try_match_topology(
+    const Expression& other,
+    map<string, string>& reference_bindings,
+    TopologyMatch mode,
+    const map<string, string>& fixed_bindings,
+    bool* ambiguous) const
 {
     reference_bindings.clear();
+    if (ambiguous != nullptr)
+        *ambiguous = false;
     set<Predicate> left_set(predicates.begin(), predicates.end());
     set<Predicate> right_set(other.predicates.begin(), other.predicates.end());
-    if (left_set.size() != right_set.size())
+    if (left_set.size() > right_set.size()
+        || (mode == TopologyMatch::EXACT && left_set.size() != right_set.size()))
         return false;
 
     vector<Predicate> left(left_set.begin(), left_set.end());
@@ -107,14 +115,24 @@ bool Expression::try_match_topology(const Expression& other, map<string, string>
     });
 
     vector<bool> used(right.size(), false);
+    bool found = false;
     auto match = [&](auto&& recurse, size_t depth,
                      const map<string, string>& bindings,
                      const map<string, string>& reverse_bindings) -> bool
     {
         if (depth == order.size())
         {
-            reference_bindings = bindings;
-            return true;
+            if (!found)
+            {
+                reference_bindings = bindings;
+                found = true;
+            }
+            else if (ambiguous != nullptr && reference_bindings != bindings)
+            {
+                *ambiguous = true;
+                return true;
+            }
+            return ambiguous == nullptr;
         }
 
         const auto& lhs = left[order[depth]];
@@ -152,7 +170,14 @@ bool Expression::try_match_topology(const Expression& other, map<string, string>
         return false;
     };
 
-    return match(match, 0, map<string, string>(), map<string, string>());
+    map<string, string> reverse_bindings;
+    for (const auto& [reference, value] : fixed_bindings)
+    {
+        if (!reverse_bindings.emplace(value, reference).second)
+            return false;
+    }
+    match(match, 0, fixed_bindings, reverse_bindings);
+    return found;
 }
 
 Expression::Expression() {
