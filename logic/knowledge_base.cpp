@@ -406,7 +406,13 @@ const vector<int>& KnowledgeBase::get_fact_indices(int combined_predicate_index)
     return predicate_sources.at(combined_facts.predicates.at(combined_predicate_index));
 }
 
-vector<string> KnowledgeBase::query(Expression query_expression)
+bool KnowledgeBase::query(
+    const Expression& query_expression, const map<string, string>& fixed_bindings) const
 {
-    return vector<string>();
+    auto canonical_bindings = fixed_bindings;
+    for (auto& [reference, target] : canonical_bindings)
+        target = canonical_reference(target);
+    map<string, string> bindings;
+    return query_expression.try_match_topology(
+        combined_facts, bindings, TopologyMatch::PATTERN, canonical_bindings);
 }

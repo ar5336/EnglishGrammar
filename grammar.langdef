@@ -459,6 +459,21 @@ InferenceRules:
         # horses are animals
         #? can horses run
         #> yes
+    Inherit-Type
+        IF
+            IS object:hypernym_object object_count:"inf" noun_class:hypernym_class
+            CONTAINS container:hypernym_object containee:intermediate_object
+            IS object:intermediate_object object_count:"inf" noun_class:intermediate_class
+            CONTAINS container:intermediate_object containee:hyponym_object
+            IS object:hyponym_object object_count:"inf" noun_class:hyponym_class
+        THEN
+            IS object:hypernym_object object_count:"inf" noun_class:hypernym_class
+            CONTAINS container:hypernym_object containee:hyponym_object
+            IS object:hyponym_object object_count:"inf" noun_class:hyponym_class
+        # dogs are mammals
+        # mammals are animals
+        #? are dogs animals
+        #> yes
 
 Frames:
     NounPhrase "NP"

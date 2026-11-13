@@ -15,6 +15,8 @@ enum class TopologyMatch
 {
     EXACT,
     SUBGRAPH,
+    // Query variables and predicates may reuse the same target.
+    PATTERN,
 };
 
 class Expression

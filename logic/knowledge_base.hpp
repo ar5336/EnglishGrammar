@@ -122,7 +122,10 @@ public:
     int get_fact_index(int combined_predicate_index) const;
     const vector<int>& get_fact_indices(int combined_predicate_index) const;
     vector<int> get_support_sources(int combined_predicate_index, int fact_index) const;
-    vector<string> query(Expression query_expression);
+    // Read-only conjunction matching; fixed bindings anchor known references.
+    bool query(
+        const Expression& query_expression,
+        const map<string, string>& fixed_bindings = {}) const;
 };
 
 #endif

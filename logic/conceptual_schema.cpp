@@ -92,98 +92,30 @@ void ConceptualSchema::update_conceptual_maps(Expression new_expression)
     apply_ability_rule(new_expression);
 }
 
-// returns bool is_resolved and a string message
-pair<bool, string> ConceptualSchema::try_resolve_inquisitive_expression(Expression expression)
+pair<bool, string> ConceptualSchema::format_inquisitive_response(Expression expression, bool matched)
 {
-    // for now, only simple inheritance questions - "are dogs mammals", "are dogs animals"
-
-    // first, check if the nouns_classes mentioned are defined in the schema
-    auto expression_noun_set = expression.noun_set;
-    for (auto expression_noun : expression_noun_set)
+    auto inheritances = extract_inheritances(expression);
+    if (!inheritances.empty())
     {
-        if (noun_class_set.size() == 0)
-        {
-            if (DEBUGGING)
-                printf("no defined nouns\n");
-            return make_pair(false, "no known nouns");
-        }
-
-        if (!has_noun(expression_noun))
-        {   
-            return make_pair(false, "noun '"+expression_noun+"' is not a known noun");
-        }
+        if (inheritances.size() > 1)
+            return {true, matched ? "yes" : "no"};
+        const auto& [child, parent] = inheritances.front();
+        return {true, matched
+            ? "yes, " + child + " inherits from " + parent + "."
+            : "no, " + child + " does not inherit from " + parent + "."};
     }
 
-    if (DEBUGGING)
-        printf("mentioned variables are known\n");
-
-    // then, find what inheritance this expression indicates
-    vector<pair<string, string>> inheritances = extract_inheritances(expression);
-
-    bool constructed_bool = true;
-    string constructed_response = "";
-
-    if (DEBUGGING)
+    auto abilities = extract_abilities(expression);
+    if (!abilities.empty())
     {
-        print_maps();
+        if (abilities.size() > 1)
+            return {true, matched ? "yes" : "no"};
+        const auto& [noun, ability] = abilities.front();
+        return {true, matched
+            ? "yes, " + noun + " can " + ability + "."
+            : "no, " + noun + " cannot " + ability + "."};
     }
-
-    // build the response string as you consider each of the indicated inheritances
-    if (DEBUGGING)
-        printf("number of inheritances found: %ld\n", inheritances.size());
-
-    if (inheritances.size() > 0)
-    {
-        for (auto inheritance : inheritances)
-        {
-            string child = inheritance.first;
-            string parent = inheritance.second;
-
-            if (child_to_parents_map.count(child) == 0)
-            {
-                constructed_bool &= false;
-                constructed_response += ("no, "+child+" does not inherit from "+parent+".");
-                continue;
-            }
-            set<string> potential_parent_matches = child_to_parents_map.at(child);
-
-            if (potential_parent_matches.find(parent) != potential_parent_matches.end())
-            {
-                constructed_response += ("yes, "+child+" inherits from "+parent+".");
-            } else {
-
-                constructed_response += ("no, "+child+" does not inherit from "+parent+".");
-            }
-        }
-        return make_pair(true, constructed_response);
-    }
-    
-
-    vector<pair<string, string>> abilities = extract_abilities(expression);
-
-    if (abilities.size() > 0)
-    {
-        for (auto ability_pair : abilities)
-        {
-            string noun = ability_pair.first;
-            string ability = ability_pair.second;
-
-            if (DEBUGGING)
-                printf("checking if %s can do  ability:'%s'", noun.c_str(), ability.c_str());
-
-            if (can_do(noun, ability))
-            {
-                return make_pair(true, "yes, "  + noun + " can " + ability + ".");
-            }
-            else
-            {
-                return make_pair(true, "no, " + noun + " can not " + ability + ".");
-            }
-        }
-    }
- 
-
-    return make_pair(false, "");
+    return {false, ""};
 }
 
 ConceptualSchema::ConceptualSchema()

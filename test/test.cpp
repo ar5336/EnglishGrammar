@@ -89,6 +89,7 @@ void ParserTester::setup_parse()
 
 	test_predicate_handler.init_stringification();
 
+    test_inference_handler = InferenceHandler(test_grammar.inference_rules, &test_predicate_handler);
     test_mind = Mind(&test_predicate_handler, &test_conceptual_schema, &test_inference_handler);
 
     tell_mind("horses are mammals");
@@ -153,8 +154,6 @@ bool test_parse__inheritance() {
     TEST_ASSERT(equals(tester.ask_mind("can ravens fly"), "yes, raven can fly."));
     TEST_ASSERT(equals(tester.ask_mind("can eagles fly"), "yes, eagle can fly."));
 
-    // these last asserts are failing, and show the limitations of the schema system.
-    // we need to move to a inference rule system that will not require hardcoding inheritance updating
     tester.tell_mind("pigs are mammals");
     TEST_ASSERT(equals(tester.ask_mind("can pigs run"), "yes, pig can run."));
     TEST_ASSERT(equals(tester.ask_mind("can pigs fly"), "no, pig cannot fly."));
@@ -170,8 +169,11 @@ bool test_parse__event() {
     TEST_ASSERT(equals(tester.test_mind.concrete_nouns.at(0).entity_type->noun, "dog"));
     TEST_ASSERT(equals(tester.test_mind.concrete_nouns.at(1).entity_type->noun, "man"));
 
+    // Event answers must come from the KB, not the legacy timeline.
+    tester.test_mind.timeline.actions.clear();
     TEST_ASSERT(equals(tester.ask_mind("did a dog bite a man"), "yes, it did happen"));
     TEST_ASSERT(equals(tester.ask_mind("did a dog bite a fish"), "no, it did not happen"));
+    TEST_ASSERT(equals(tester.ask_mind("did a man bite a dog"), "no, it did not happen"));
 
     return true;
 }
@@ -239,8 +241,11 @@ bool test_parse__event_rephrasings() {
     tester.tell_mind("the man that the dog bit is ugly");
     tester.tell_mind("the man the dog bit is tall");
 
+    // Keep anaphora resolution available, but remove the legacy property cache.
+    tester.test_mind.concrete_nouns.at(1).properties.clear();
     TEST_ASSERT(equals(tester.ask_mind("is the man the dog bit ugly"), "yes, it does have that property"));
     TEST_ASSERT(equals(tester.ask_mind("is the man the dog bit tall"), "yes, it does have that property"));
+    TEST_ASSERT(equals(tester.ask_mind("is the dog that bit a man ugly"), "no, it does not have the property 'ugly'"));
     return true;
 }
 

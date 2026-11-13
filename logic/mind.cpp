@@ -17,7 +17,15 @@ void Mind::tell(Expression expression)
     conceptual_schema->consider_expression(expression);
 
     // resolve anaphoric references (eventually move this to a WorldModel object along with event extraction)
-    auto resolved_expression = resolve_anaphoras(expression);
+    bool anaphoras_resolved;
+    auto resolved_expression = resolve_anaphoras(expression, anaphoras_resolved);
+    map<string, string> reference_bindings;
+    // Keep unresolved descriptions as given; only Mind assigns concrete referents.
+    auto knowledge_expression = anaphoras_resolved
+        ? dereference_objects(resolved_expression, reference_bindings)
+        : expression;
+    if (!anaphoras_resolved && (DEBUGGING || WARNING))
+        printf("warning: storing an unresolved anaphoric description\n");
 
     if (DEBUGGING)
         printf("done resolving anaphora for statemnt\n");
@@ -39,7 +47,7 @@ void Mind::tell(Expression expression)
         timeline.actions.push_back(event);
     }
 
-    knowledge_base.enqueue_fact(std::move(expression));
+    knowledge_base.enqueue_fact(std::move(knowledge_expression));
     refresh_knowledge_projection();
 }
 
@@ -78,8 +86,9 @@ enum ActionParamType
     SUBJECT_2,
 };
 
-Expression Mind::resolve_anaphoras(Expression expression)
+Expression Mind::resolve_anaphoras(Expression expression, bool& resolved)
 {
+    resolved = true;
     if (DEBUGGING)
     {
         printf("resolving anaphoras\n");
@@ -183,73 +192,97 @@ Expression Mind::resolve_anaphoras(Expression expression)
                 )
             );
         }
+        else
+        {
+            resolved = false;
+        }
     }
 
     return Expression(restored_expression_preds);
 }
 
+Expression Mind::dereference_objects(Expression expression, map<string, string>& reference_bindings)
+{
+    map<string, string> replacements;
+    for (auto object : Expression::extract_predicate_types(expression, {"OBJECT"}))
+    {
+        const auto& reference = dereference_noun_id(stoi(object.get_argument("id")), true).knowledge_reference;
+        replacements.emplace(object.get_argument("object"), reference);
+        reference_bindings.emplace(reference, reference);
+    }
+
+    for (auto& predicate : expression.predicates)
+        for (size_t i = 0; i < predicate.arguments.size(); i++)
+        {
+            if (!predicate.predicate_template.are_params_schematic.at(i))
+                continue;
+            auto replacement = replacements.find(predicate.arguments[i]);
+            if (replacement != replacements.end())
+                predicate = predicate.with_modified_argument(
+                    predicate.predicate_template.parameter_names.at(i), replacement->second);
+        }
+    return Expression(std::move(expression.predicates));
+}
+
 string Mind::ask(Expression expression)
 {
-    // simple yes/no as of now
-    // auto asStatement = Predicate(queryPredicate.type_id, queryPredicate.arguments);
+    while (knowledge_base.has_pending_inferences())
+        advance_inference();
 
-    // first check if the statement resolves into existing entity inheritance/ability information from Conceptual Schema
-    auto resolution_pair = conceptual_schema->try_resolve_inquisitive_expression(expression);
-
-    bool is_resolved = resolution_pair.first;
-    string resolution_message = resolution_pair.second;
-
-    if (is_resolved)
+    set<string> anaphoric_objects;
+    bool has_actions = false;
+    for (auto predicate : expression.predicates)
     {
-        return resolution_message;
+        const auto& type = predicate.predicate_template.predicate;
+        if (type == "ANAPHORIC")
+            anaphoric_objects.insert(predicate.get_argument("anaphoric_object"));
+        else if (type == "ACTION")
+            has_actions = true;
     }
 
-    expression = resolve_anaphoras(expression);
-
-    auto properties_map = extract_concrete_properties(expression);
-
-    if (DEBUGGING)
-        printf("extracted %ld properties\n", properties_map.size());
-
-    bool props_match = false;
-    for (auto id_to_props : properties_map)
+    bool anaphoras_resolved;
+    auto resolved_expression = resolve_anaphoras(expression, anaphoras_resolved);
+    map<string, string> reference_bindings;
+    resolved_expression = dereference_objects(resolved_expression, reference_bindings);
+    set<pair<string, string>> abilities;
+    for (auto predicate : resolved_expression.predicates)
+        if (predicate.predicate_template.predicate == "CAN_DO")
+            abilities.emplace(predicate.get_argument("actor"), predicate.get_argument("action_type"));
+    vector<Predicate> query_predicates;
+    for (auto predicate : resolved_expression.predicates)
     {
-        int ob_id = id_to_props.first;
-        vector<string> props = id_to_props.second;
-        for (auto prop : props)
+        // Ability questions also emit an ACTION scaffold, not an asserted event.
+        if (predicate.predicate_template.predicate == "ACTION"
+            && predicate.arguments.size() == 3
+            && abilities.count({predicate.get_argument("actor"), predicate.get_argument("action_type")}))
         {
-            if (concrete_nouns.at(ob_id).properties.count(prop) == 0)
-                return "no, it does not have the property '" + prop + "'";
-            else
-                props_match = true;
+            if (resolved_expression.get_occurrences_of_param(predicate.get_argument("action")).size() == 1)
+                continue;
         }
+        query_predicates.push_back(std::move(predicate));
     }
 
-    if (props_match)
-        return "yes, it does have that property";
-    
-    // next, resolve against events
-    auto events = extract_events(expression, false);
-    for (auto event : events)
-    {
-        Event pass_event = Event();
-        if (DEBUGGING)
-            printf("checking if event: \n%s\n occurred", event.stringify().c_str());
-    
-        if (did_it_occur(event, pass_event))
+    bool matched = anaphoras_resolved
+        && knowledge_base.query(Expression(std::move(query_predicates)), reference_bindings);
+    auto response = ConceptualSchema::format_inquisitive_response(expression, matched);
+    if (response.first)
+        return response.second;
+
+    string property;
+    for (auto predicate : expression.predicates)
+        if (predicate.predicate_template.predicate == "HAS_PROPERTY"
+            && (!has_actions || anaphoric_objects.count(predicate.get_argument("object"))))
         {
-            return "yes, it did happen";
+            property = predicate.get_argument("property");
         }
-    }
 
-    expression = resolve_properties(expression);
-    
-    if (events.size() != 0)
-    {
-        return "no, it did not happen";
-    }
+    if (!property.empty())
+        return matched ? "yes, it does have that property"
+                       : "no, it does not have the property '" + property + "'";
 
-    // can't do a simple hash comparison now. need to check connection equivalence between expression
+    if (has_actions)
+        return matched ? "yes, it did happen" : "no, it did not happen";
+
     return "unknown";
 }
 
@@ -592,6 +625,7 @@ int Mind::create_object_representation(Predicate is_predicate, bool real)
     Noun noun = Noun(
         "unknown",
         &conceptual_schema->entities_by_noun.at(noun_class) ,
+        is_predicate.get_argument("object"),
         size,
         real
     );
@@ -782,8 +816,8 @@ bool Mind::did_it_occur(Event abstract_event, Event &og_event)
     return false;
 }
 
-Noun::Noun(string name, ConceptualEntity *entity_type, int id, bool real)
-    : name(name), entity_type(entity_type), id(id), real(real)
+Noun::Noun(string name, ConceptualEntity *entity_type, string knowledge_reference, int id, bool real)
+    : name(name), entity_type(entity_type), knowledge_reference(std::move(knowledge_reference)), id(id), real(real)
 {
 }
 

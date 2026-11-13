@@ -27,10 +27,10 @@ class ConceptualSchema
 private:
 
     // returns child to parent pairings indicated by expression
-    vector<pair<string, string>> extract_inheritances(Expression expression);
+    static vector<pair<string, string>> extract_inheritances(Expression expression);
 
     // returns noun to action pairings indicated by expression
-    vector<pair<string, string>> extract_abilities(Expression expression);
+    static vector<pair<string, string>> extract_abilities(Expression expression);
 
     void apply_inheritance_rule(Expression expression);
     void apply_ability_rule(Expression expression);
@@ -70,7 +70,7 @@ public:
 
     void update_conceptual_maps(Expression new_expression);
 
-    pair<bool, string> try_resolve_inquisitive_expression(Expression expression);
+    static pair<bool, string> format_inquisitive_response(Expression expression, bool matched);
 
     // void make_inferences(Expression expression);
 };

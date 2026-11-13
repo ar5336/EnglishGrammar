@@ -69,10 +69,11 @@ bool Expression::try_match_topology(
     reference_bindings.clear();
     if (ambiguous != nullptr)
         *ambiguous = false;
+    bool pattern = mode == TopologyMatch::PATTERN;
     set<Predicate> left_set(predicates.begin(), predicates.end());
     set<Predicate> right_set(other.predicates.begin(), other.predicates.end());
-    if (left_set.size() > right_set.size()
-        || (mode == TopologyMatch::EXACT && left_set.size() != right_set.size()))
+    if (!pattern && (left_set.size() > right_set.size()
+        || (mode == TopologyMatch::EXACT && left_set.size() != right_set.size())))
         return false;
 
     vector<Predicate> left(left_set.begin(), left_set.end());
@@ -87,7 +88,8 @@ bool Expression::try_match_topology(
             const auto& lhs = left[i];
             const auto& rhs = right[j];
             if (lhs.predicate_template.predicate != rhs.predicate_template.predicate
-                || lhs.arguments.size() != rhs.arguments.size())
+                || lhs.arguments.size() > rhs.arguments.size()
+                || (!pattern && lhs.arguments.size() != rhs.arguments.size()))
                 continue;
 
             bool compatible = true;
@@ -138,7 +140,7 @@ bool Expression::try_match_topology(
         const auto& lhs = left[order[depth]];
         for (size_t candidate : candidates[order[depth]])
         {
-            if (used[candidate])
+            if (!pattern && used[candidate])
                 continue;
 
             const auto& rhs = right[candidate];
@@ -153,7 +155,7 @@ bool Expression::try_match_topology(
                 auto forward = next_bindings.emplace(lhs.arguments[k], rhs.arguments[k]);
                 auto reverse = next_reverse.emplace(rhs.arguments[k], lhs.arguments[k]);
                 if ((!forward.second && forward.first->second != rhs.arguments[k])
-                    || (!reverse.second && reverse.first->second != lhs.arguments[k]))
+                    || (!pattern && !reverse.second && reverse.first->second != lhs.arguments[k]))
                 {
                     compatible = false;
                     break;
@@ -173,7 +175,7 @@ bool Expression::try_match_topology(
     map<string, string> reverse_bindings;
     for (const auto& [reference, value] : fixed_bindings)
     {
-        if (!reverse_bindings.emplace(value, reference).second)
+        if (!reverse_bindings.emplace(value, reference).second && !pattern)
             return false;
     }
     match(match, 0, fixed_bindings, reverse_bindings);

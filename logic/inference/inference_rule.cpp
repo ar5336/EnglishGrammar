@@ -497,24 +497,27 @@ bool InferenceHandler::advance_inference(KnowledgeBase& knowledge_base) const
         return false;
 
     auto changed_types = knowledge_base.add_knowledge(Knowledge(std::move(conclusion), std::move(source)));
-    int fact_index = knowledge_base.get_facts().size() - 1;
-    int conclusion_index = knowledge_base.get_conclusion_index(fact_index);
-    const auto& family = knowledge_base.get_conclusions().at(conclusion_index);
-    if (family.phases.back().fact_index == fact_index)
+    if (DEBUGGING)
     {
-        printf("inference rule '%s' %s fact C%d, phase %zu [K%d]:\n",
-            name.c_str(), family.phases.size() == 1 ? "constructed" : "expanded",
-            conclusion_index, family.phases.size(), fact_index);
-        for (const auto& predicate : knowledge_base.canonicalize(family.phases.back().additions).predicates)
-            printf("\t[%zu] %s\n", family.phases.size(), predicate_handler->stringify_predicate(predicate).c_str());
-    }
-    else
-    {
-        printf("inference rule '%s' added evidence to fact C%d [K%d] from",
-            name.c_str(), conclusion_index, fact_index);
-        for (int source_index : knowledge_base.get_facts().back().get_source().source_indices)
-            printf(" #%d", source_index);
-        printf("\n");
+        int fact_index = knowledge_base.get_facts().size() - 1;
+        int conclusion_index = knowledge_base.get_conclusion_index(fact_index);
+        const auto& family = knowledge_base.get_conclusions().at(conclusion_index);
+        if (family.phases.back().fact_index == fact_index)
+        {
+            printf("inference rule '%s' %s fact C%d, phase %zu [K%d]:\n",
+                name.c_str(), family.phases.size() == 1 ? "constructed" : "expanded",
+                conclusion_index, family.phases.size(), fact_index);
+            for (const auto& predicate : knowledge_base.canonicalize(family.phases.back().additions).predicates)
+                printf("\t[%zu] %s\n", family.phases.size(), predicate_handler->stringify_predicate(predicate).c_str());
+        }
+        else
+        {
+            printf("inference rule '%s' added evidence to fact C%d [K%d] from",
+                name.c_str(), conclusion_index, fact_index);
+            for (int source_index : knowledge_base.get_facts().back().get_source().source_indices)
+                printf(" #%d", source_index);
+            printf("\n");
+        }
     }
 
     // Exhaust remaining matches without letting one rule monopolize the agenda.

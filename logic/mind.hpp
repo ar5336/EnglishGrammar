@@ -45,6 +45,7 @@ public:
 
     int id;
     string name;
+    string knowledge_reference;
 
     // set<string> properties_from_class;
     set<string> properties;
@@ -55,7 +56,7 @@ public:
     // Point2i location;
     // Point2f size;
 
-    Noun(string name, ConceptualEntity* entity_type, int id, bool real);
+    Noun(string name, ConceptualEntity* entity_type, string knowledge_reference, int id, bool real);
 
     string stringify();
     bool real;
@@ -183,7 +184,9 @@ private:
 
     Expression resolve_properties(Expression expression);
 
-    Expression resolve_anaphoras(Expression expression);
+    Expression resolve_anaphoras(Expression expression, bool& resolved);
+
+    Expression dereference_objects(Expression expression, map<string, string>& reference_bindings);
 
     Noun& dereference_noun_id(int noun_id, bool real);
 
