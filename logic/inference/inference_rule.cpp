@@ -159,6 +159,9 @@ public:
             if (source.type != KnowledgeSourceType::INFERRED || source.rule_name != rule_name)
                 return fact_index;
         }
+        // A suppressed alternative proof can enable traversal; cite the retained proof of the fact.
+        if (knowledge_base.has_independent_producer(predicate_index, rule_name))
+            return knowledge_base.get_fact_index(predicate_index);
         return -1;
     }
 
@@ -192,6 +195,11 @@ public:
     bool has_derivation(const Expression& expression, const KnowledgeSource& source) const
     {
         return knowledge_base.has_derivation(expression, source);
+    }
+
+    bool should_skip_proof(const Expression& expression, const string& rule_name) const
+    {
+        return knowledge_base.should_skip_proof(expression, rule_name);
     }
 
 };
@@ -357,6 +365,8 @@ class InferenceMatcher
             return false;
 
         conclusion = Expression(predicates);
+        if (context.should_skip_proof(conclusion, rule.name))
+            return false;
         provenance = context.make_source(rule.name, matched_predicates, connected_predicates);
         for (int predicate_index : used_predicates)
             provenance.premise_predicates.push_back(context.knowledge_expression.predicates[predicate_index]);
@@ -496,8 +506,10 @@ bool InferenceHandler::advance_inference(KnowledgeBase& knowledge_base) const
     if (!matcher.try_infer(conclusion, source))
         return false;
 
+    size_t previous_fact_count = knowledge_base.get_facts().size();
     auto changed_types = knowledge_base.add_knowledge(Knowledge(std::move(conclusion), std::move(source)));
-    if (DEBUGGING)
+    bool added_evidence = knowledge_base.get_facts().size() != previous_fact_count;
+    if (DEBUGGING && added_evidence)
     {
         int fact_index = knowledge_base.get_facts().size() - 1;
         int conclusion_index = knowledge_base.get_conclusion_index(fact_index);
@@ -536,7 +548,7 @@ bool InferenceHandler::advance_inference(KnowledgeBase& knowledge_base) const
         for (const auto& dependent : wildcard_dependents)
             schedule_rule(knowledge_base, dependent);
     }
-    return true;
+    return added_evidence;
 }
 
 vector<Knowledge> InferenceHandler::apply_inference_rules(const KnowledgeBase& knowledge_base)

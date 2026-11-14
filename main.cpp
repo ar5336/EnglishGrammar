@@ -192,29 +192,39 @@ bool check_keypress(char cr)
 
 int main(int argc, char **argv)
 {
+	EvidenceMode evidence_mode = EvidenceMode::FIRST_PROOF;
+	vector<string> arguments;
+	for (int i = 0; i < argc; i++)
+	{
+		if (i > 0 && string(argv[i]) == "--all-evidence")
+			evidence_mode = EvidenceMode::ALL_EVIDENCE;
+		else
+			arguments.emplace_back(argv[i]);
+	}
+
 	int arg_index = 1;
 	set<string> debug_alternatives = set<string> {"--debug", "-d"};
-	if (argc > 1 && (debug_alternatives.count((string)argv[arg_index]) != 0))
+	if (arguments.size() > 1 && (debug_alternatives.count(arguments[arg_index]) != 0))
 	{
 		DEBUGGING = true;
 		arg_index++;
 	}
 
 	set<string> test_alternatives = set<string> {"--test", "-t"};
-	if (argc > arg_index && (test_alternatives.count((string)argv[arg_index]) != 0))
+	if (arguments.size() > arg_index && (test_alternatives.count(arguments[arg_index]) != 0))
 	{
-		test_all();
+		test_all(evidence_mode);
 		return 1;
 	}
 
 	set<string> sequential_alternatives = set<string> {"--sequential", "-s"};
-	if (argc > arg_index && (sequential_alternatives.count((string)argv[arg_index]) != 0))
+	if (arguments.size() > arg_index && (sequential_alternatives.count(arguments[arg_index]) != 0))
 	{		
 		SEQUENTIAL = true;
 	}
 
 	set<string> warning_alternatives = set<string> {"--warning", "-w"};
-	if (argc > arg_index && (warning_alternatives.count((string)argv[arg_index]) != 0))
+	if (arguments.size() > arg_index && (warning_alternatives.count(arguments[arg_index]) != 0))
 	{		
 		WARNING = true;
 	}
@@ -234,6 +244,7 @@ int main(int argc, char **argv)
 
 	parser = Parser(grammar, &variable_namer);
 	inference_handler = InferenceHandler(grammar.inference_rules, &predicate_handler);
+	mind = Mind(&predicate_handler, &conceptual_schema, &inference_handler, evidence_mode);
 
 	predicate_handler.predicate_template_handler = &predicate_template_handler;
 

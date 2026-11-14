@@ -449,7 +449,7 @@ InferenceRules:
     Inherit-Abilities
         IF
             IS object:hypernym_object object_count:"inf" noun_class:hypernym_class
-            IS object:hyponym_object object_count:_ noun_class:hyponym_class
+            IS object:hyponym_object object_count:"inf" noun_class:hyponym_class
             CONTAINS container:hypernym_object containee:hyponym_object
             CAN_DO action_type:hypernym_action actor:hypernym_object
         THEN

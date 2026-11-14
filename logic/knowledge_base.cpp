@@ -30,26 +30,33 @@ set<Predicate> predicate_set(const Expression& expression)
 }
 }
 
-KnowledgeBase::KnowledgeBase(InferenceHandler *inference_handler)
-    : inference_handler(inference_handler)
+KnowledgeBase::KnowledgeBase(InferenceHandler *inference_handler, EvidenceMode evidence_mode)
+    : inference_handler(inference_handler), evidence_mode(evidence_mode)
 {
 }
 
 set<string> KnowledgeBase::add_knowledge(Knowledge knowledge)
 {
-    map<Predicate, set<pair<KnowledgeSourceType, string>>> old_producers;
-    for (const auto& [predicate, sources] : predicate_sources)
-        for (int source_index : sources)
-        {
-            const auto& source = facts.at(source_index).get_source();
-            old_producers[predicate].emplace(source.type, source.rule_name);
-        }
-
     int fact_index = facts.size();
-    int conclusion_index;
+    int conclusion_index = -1;
     map<string, string> bindings;
     auto expression = canonicalize(knowledge.get_expression());
-    bool matched = find_conclusion(expression, knowledge.get_source(), conclusion_index, bindings);
+    const auto& source = knowledge.get_source();
+    bool first_proof = evidence_mode == EvidenceMode::FIRST_PROOF
+        && source.type == KnowledgeSourceType::INFERRED;
+    bool recorded = first_proof && recorded_expressions.count(predicate_set(expression));
+    bool matched = !recorded && find_conclusion(expression, source, conclusion_index, bindings);
+    if (first_proof && (recorded || (matched && !changes_conclusion(expression, conclusion_index, bindings))))
+    {
+        set<string> changed_types;
+        for (const auto& predicate : expression.predicates)
+            if (predicate_producers[predicate].emplace(source.type, source.rule_name).second)
+                changed_types.insert(predicate.predicate_template.predicate);
+        recorded_expressions.insert(predicate_set(expression));
+        return changed_types;
+    }
+
+    auto old_producers = predicate_producers;
     for (const auto& reference : references(knowledge.get_expression()))
         reference_order.emplace(reference, reference_order.size());
     facts.push_back(std::move(knowledge));
@@ -116,18 +123,17 @@ set<string> KnowledgeBase::add_knowledge(Knowledge knowledge)
 
     refresh_predicates();
     set<string> changed_predicate_types;
-    for (const auto& [predicate, sources] : predicate_sources)
+    for (const auto& [predicate, producers] : predicate_producers)
     {
         if (reference_links.size() != previous_links)
         {
             changed_predicate_types.insert(predicate.predicate_template.predicate);
             continue;
         }
-        for (int source_index : sources)
+        for (const auto& producer : producers)
         {
-            const auto& source = facts[source_index].get_source();
             auto old = old_producers.find(predicate);
-            if (old == old_producers.end() || !old->second.count({source.type, source.rule_name}))
+            if (old == old_producers.end() || !old->second.count(producer))
                 changed_predicate_types.insert(predicate.predicate_template.predicate);
         }
     }
@@ -202,6 +208,20 @@ bool KnowledgeBase::find_conclusion(
     return true;
 }
 
+bool KnowledgeBase::changes_conclusion(
+    const Expression& expression, int conclusion_index,
+    const map<string, string>& bindings) const
+{
+    for (const auto& [left, right] : bindings)
+        if (canonical_reference(left) != canonical_reference(right))
+            return true;
+    auto known = predicate_set(conclusions.at(conclusion_index).expression);
+    for (const auto& predicate : expression.predicates)
+        if (!known.count(predicate))
+            return true;
+    return false;
+}
+
 string KnowledgeBase::canonical_reference(string reference) const
 {
     auto link = reference_links.find(reference);
@@ -269,16 +289,31 @@ void KnowledgeBase::refresh_conclusions()
 
 void KnowledgeBase::refresh_predicates()
 {
+    map<Predicate, set<Producer>> normalized_producers;
+    for (const auto& [predicate, producers] : predicate_producers)
+    {
+        auto& normalized = normalized_producers[canonicalize(predicate)];
+        normalized.insert(producers.begin(), producers.end());
+    }
     predicate_sources.clear();
+    recorded_expressions.clear();
     vector<Predicate> predicates;
     for (size_t i = 0; i < facts.size(); i++)
-        for (const auto& predicate : canonicalize(facts[i].get_expression()).predicates)
+    {
+        auto normalized = canonicalize(facts[i].get_expression());
+        if (evidence_mode == EvidenceMode::FIRST_PROOF)
+            recorded_expressions.insert(predicate_set(normalized));
+        for (const auto& predicate : normalized.predicates)
         {
             auto& sources = predicate_sources[predicate];
             if (sources.empty())
                 predicates.push_back(predicate);
             sources.push_back(i);
+            const auto& source = facts[i].get_source();
+            normalized_producers[predicate].emplace(source.type, source.rule_name);
         }
+    }
+    predicate_producers = std::move(normalized_producers);
     combined_facts = Expression(std::move(predicates));
 }
 
@@ -349,9 +384,39 @@ bool KnowledgeBase::try_get_conclusion(
     return false;
 }
 
+bool KnowledgeBase::should_skip_proof(const Expression& expression, const string& rule_name) const
+{
+    if (evidence_mode != EvidenceMode::FIRST_PROOF)
+        return false;
+    set<Predicate> predicates;
+    for (const auto& predicate : expression.predicates)
+        predicates.insert(canonicalize(predicate));
+    if (!recorded_expressions.count(predicates))
+        return false;
+    for (const auto& predicate : predicates)
+        if (!predicate_producers.at(predicate).count({KnowledgeSourceType::INFERRED, rule_name}))
+            return false;
+    return true;
+}
+
 bool KnowledgeBase::has_derivation(const Expression& expression, const KnowledgeSource& source) const
 {
-    auto predicates = predicate_set(canonicalize(expression));
+    auto normalized = canonicalize(expression);
+    auto predicates = predicate_set(normalized);
+    if (evidence_mode == EvidenceMode::FIRST_PROOF && source.type == KnowledgeSourceType::INFERRED)
+    {
+        int conclusion_index;
+        map<string, string> bindings;
+        if (recorded_expressions.count(predicates)
+            || (find_conclusion(normalized, source, conclusion_index, bindings)
+                && !changes_conclusion(normalized, conclusion_index, bindings)))
+        {
+            for (const auto& predicate : normalized.predicates)
+                if (!predicate_producers.at(predicate).count({source.type, source.rule_name}))
+                    return false;
+            return true;
+        }
+    }
     auto premises = predicate_set(canonicalize(Expression(source.premise_predicates)));
     for (const auto& fact : facts)
     {
@@ -404,6 +469,15 @@ vector<int> KnowledgeBase::get_support_sources(int combined_predicate_index, int
 const vector<int>& KnowledgeBase::get_fact_indices(int combined_predicate_index) const
 {
     return predicate_sources.at(combined_facts.predicates.at(combined_predicate_index));
+}
+
+bool KnowledgeBase::has_independent_producer(int combined_predicate_index, const string& rule_name) const
+{
+    const auto& producers = predicate_producers.at(combined_facts.predicates.at(combined_predicate_index));
+    return any_of(producers.begin(), producers.end(), [&](const Producer& producer)
+    {
+        return producer.first != KnowledgeSourceType::INFERRED || producer.second != rule_name;
+    });
 }
 
 bool KnowledgeBase::query(

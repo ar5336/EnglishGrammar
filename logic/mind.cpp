@@ -1,7 +1,10 @@
 #include "mind.hpp"
 
-Mind::Mind(PredicateHandler *predicate_handler, ConceptualSchema *conceptual_schema, InferenceHandler* inference_handler)
-    : predicate_handler(predicate_handler), conceptual_schema(conceptual_schema), knowledge_base(inference_handler)
+Mind::Mind(
+    PredicateHandler *predicate_handler, ConceptualSchema *conceptual_schema,
+    InferenceHandler* inference_handler, EvidenceMode evidence_mode)
+    : predicate_handler(predicate_handler), conceptual_schema(conceptual_schema),
+      knowledge_base(inference_handler, evidence_mode)
 {
     timeline = Timeline();
     abstract_timeline = Timeline(false);

@@ -31,6 +31,7 @@ private:
     InferenceHandler test_inference_handler;
 
 public:
+    EvidenceMode evidence_mode = EvidenceMode::FIRST_PROOF;
     PredicateHandler test_predicate_handler;
 
     Parser test_parser;
@@ -48,6 +49,6 @@ public:
     void reset();
 };
 
-int test_all();
+int test_all(EvidenceMode evidence_mode = EvidenceMode::FIRST_PROOF);
 
 #endif

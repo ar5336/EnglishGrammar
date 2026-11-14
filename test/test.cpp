@@ -42,7 +42,7 @@ ParserTester::ParserTester()
     test_predicate_handler = PredicateHandler(&test_predicate_template_handler);
     test_conceptual_schema = ConceptualSchema();
     test_inference_handler = InferenceHandler(vector<InferenceRule>(), &test_predicate_handler);
-    test_mind = Mind(&test_predicate_handler, &test_conceptual_schema, &test_inference_handler);
+    test_mind = Mind(&test_predicate_handler, &test_conceptual_schema, &test_inference_handler, evidence_mode);
 }
 
 // ParserTesster::reset()
@@ -90,7 +90,7 @@ void ParserTester::setup_parse()
 	test_predicate_handler.init_stringification();
 
     test_inference_handler = InferenceHandler(test_grammar.inference_rules, &test_predicate_handler);
-    test_mind = Mind(&test_predicate_handler, &test_conceptual_schema, &test_inference_handler);
+    test_mind = Mind(&test_predicate_handler, &test_conceptual_schema, &test_inference_handler, evidence_mode);
 
     tell_mind("horses are mammals");
     tell_mind("horses are mammals");
@@ -428,7 +428,8 @@ bool run_integration_test()
 }
 
 
-int test_all() {
+int test_all(EvidenceMode evidence_mode) {
+    tester.evidence_mode = evidence_mode;
     printf("running unit tests\n");
 
     RUN_TEST(test_parse__inheritance);

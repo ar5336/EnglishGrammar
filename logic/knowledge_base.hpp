@@ -14,6 +14,12 @@ using namespace std;
 
 class InferenceHandler;
 
+enum class EvidenceMode
+{
+    FIRST_PROOF,
+    ALL_EVIDENCE,
+};
+
 enum class KnowledgeSourceType
 {
     GIVEN = 0,
@@ -75,10 +81,15 @@ private:
     friend class InferenceHandler;
 
     InferenceHandler* inference_handler;
+    EvidenceMode evidence_mode;
 
     vector<Knowledge> facts;
     vector<KnowledgeConclusion> conclusions;
     map<Predicate, vector<int>> predicate_sources;
+    using Producer = pair<KnowledgeSourceType, string>;
+    // Producer eligibility can change without retaining another proof record.
+    map<Predicate, set<Producer>> predicate_producers;
+    set<set<Predicate>> recorded_expressions;
     vector<int> fact_conclusions;
 
     struct ReferenceLink
@@ -97,12 +108,17 @@ private:
     bool find_conclusion(
         const Expression& expression, const KnowledgeSource& source,
         int& conclusion_index, map<string, string>& bindings) const;
+    bool changes_conclusion(
+        const Expression& expression, int conclusion_index,
+        const map<string, string>& bindings) const;
     void refresh_conclusions();
     void refresh_predicates();
     void unify_references(const map<string, string>& bindings, const vector<int>& sources);
 public:
     // A null handler stores facts for an explicit inference call instead.
-    explicit KnowledgeBase(InferenceHandler* inference_handler);
+    explicit KnowledgeBase(
+        InferenceHandler* inference_handler,
+        EvidenceMode evidence_mode = EvidenceMode::FIRST_PROOF);
 
     void tell_fact(Expression fact);
     // Store input immediately and leave inference for advance_inference().
@@ -117,10 +133,12 @@ public:
     Predicate canonicalize(Predicate predicate) const;
     Expression canonicalize(const Expression& expression) const;
     bool try_get_conclusion(const Expression& expression, int& conclusion_index, map<string, string>& reference_bindings) const;
+    bool should_skip_proof(const Expression& expression, const string& rule_name) const;
     bool has_derivation(const Expression& expression, const KnowledgeSource& source) const;
     const Expression& get_combined_facts() const;
     int get_fact_index(int combined_predicate_index) const;
     const vector<int>& get_fact_indices(int combined_predicate_index) const;
+    bool has_independent_producer(int combined_predicate_index, const string& rule_name) const;
     vector<int> get_support_sources(int combined_predicate_index, int fact_index) const;
     // Read-only conjunction matching; fixed bindings anchor known references.
     bool query(

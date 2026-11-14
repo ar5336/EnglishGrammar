@@ -195,7 +195,9 @@ private:
     int id_counter = 0;
     
 public:
-    Mind(PredicateHandler *predicate_handler, ConceptualSchema *conceptual_schema, InferenceHandler* inference_handler);
+    Mind(
+        PredicateHandler *predicate_handler, ConceptualSchema *conceptual_schema,
+        InferenceHandler* inference_handler, EvidenceMode evidence_mode = EvidenceMode::FIRST_PROOF);
 
     // void init(PredicateHandler *predicate_handler, ConceptualSchema *conceptual_schema);
 
