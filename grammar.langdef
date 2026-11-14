@@ -474,6 +474,20 @@ InferenceRules:
         # mammals are animals
         #? are dogs animals
         #> yes
+    Inherit-Instance-Type
+        IF
+            IS object:parent object_count:"inf" noun_class:parent_type
+            CONTAINS container:parent containee:child
+            IS object:child object_count:"inf" noun_class:child_type
+            IS object:individual object_count:"1" noun_class:child_type
+        THEN
+            IS object:individual object_count:"1" noun_class:parent_type
+        # dogs are mammals
+        # a dog bit a horse
+        #? did a mammal bite a horse
+        #> yes
+        #? did a dog bite a horse
+        #> yes
 
 Frames:
     NounPhrase "NP"

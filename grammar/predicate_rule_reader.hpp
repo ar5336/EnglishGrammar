@@ -66,6 +66,7 @@ class PredicateCreator
 public:
     PredicateTemplate predicate;
     vector<ParameterCreationType> parameter_creation_types;
+    vector<bool> are_params_optional;
 
     vector<string> word_frame_accessors;
     vector<string> param_strings;
@@ -84,6 +85,7 @@ class PredicateMatcher
 public:
     PredicateTemplate predicate_template;
     vector<ParameterCreationType> parameter_matching_types;
+    vector<bool> are_params_optional;
     vector<string> param_names;
     vector<string> param_values;
     bool is_bound_predicates_matcher;

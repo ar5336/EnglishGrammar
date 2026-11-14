@@ -27,6 +27,17 @@ ParameterCreationType determine_type(string argument)
 
 namespace
 {
+bool read_optional_parameter(string& token)
+{
+    bool opening = !token.empty() && token.front() == '(';
+    bool closing = !token.empty() && token.back() == ')';
+    if (opening != closing)
+        throw runtime_error("unbalanced parentheses in predicate parameter '" + token + "'");
+    if (opening)
+        token = trim_front_and_back(token);
+    return opening;
+}
+
 string read_connected_variable(const vector<string>& tokens)
 {
     if (tokens.size() != 2)
@@ -94,6 +105,7 @@ PredicateCreator::PredicateCreator(PredicateHandler *handler, vector<string> cre
     for (int i = 0; i < parameter_tokens.size(); i++)
     {
         string parameter_token = parameter_tokens[i];
+        bool is_optional = read_optional_parameter(parameter_token);
 
         auto parameter_split_colon = split_character(parameter_token, ":");
         if (parameter_split_colon.size() != 2)
@@ -112,9 +124,13 @@ PredicateCreator::PredicateCreator(PredicateHandler *handler, vector<string> cre
         if (parameter_name != predicate_template.parameter_names[i])
             throw runtime_error("parameter name in predicate creation rule is named wrong");
 
+        if (is_optional && !predicate_template.are_params_optional.at(i))
+            throw runtime_error("parameter '" + parameter_name + "' is not optional in predicate template '" + predicate_name + "'");
+
         auto param_creation_type = determine_type(argument);
         
         parameter_creation_types.push_back(param_creation_type);
+        are_params_optional.push_back(is_optional);
 
         bool matched = false;
         // store parameter contents
@@ -282,8 +298,9 @@ PredicateMatcher::PredicateMatcher(PredicateHandler *handler_ptr, vector<string>
     // the first token is the predicate name, the rest are parameter tokens
     auto parameter_tokens = vector<string>(creation_tokens.begin() + 1, creation_tokens.end());
 
-    for (const string &token : parameter_tokens)
+    for (string token : parameter_tokens)
     {
+        bool is_optional = read_optional_parameter(token);
         // Determine the type of each token and populate the corresponding member variables
         auto arg_name_and_value = split_character(token, ":");
         if (arg_name_and_value.size() != 2)
@@ -292,11 +309,17 @@ PredicateMatcher::PredicateMatcher(PredicateHandler *handler_ptr, vector<string>
         string arg_name = arg_name_and_value[0];
         string arg_value = arg_name_and_value[1];
 
+        auto parameter = predicate_template.parameter_index_map.find(arg_name);
+        if (is_optional && (parameter == predicate_template.parameter_index_map.end()
+            || !predicate_template.are_params_optional.at(parameter->second)))
+            throw runtime_error("parameter '" + arg_name + "' is not optional in predicate template '" + predicate_template.predicate + "'");
+
         ParameterCreationType type = determine_type(arg_value);
         if (type == ParameterCreationType::WILDCARD)
             throw runtime_error("wildcards not allowed in condition matching predicates");
 
         parameter_matching_types.push_back(type);
+        are_params_optional.push_back(is_optional);
         
         // check for quotes for string param
         if (type == ParameterCreationType::STRING)
@@ -312,7 +335,8 @@ string PredicateMatcher::stringify()
     auto param_strings = vector<string>();
     for (int i = 0; i < parameter_matching_types.size(); i++)
     {
-        param_strings.push_back(param_names[i] + ":" + param_values[i]);
+        string parameter = param_names[i] + ":" + param_values[i];
+        param_strings.push_back(are_params_optional[i] ? "(" + parameter + ")" : parameter);
     }
     return predicate_name + " " + stringify_vector(param_strings, " ");
 }

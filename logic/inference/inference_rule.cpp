@@ -226,7 +226,11 @@ class InferenceMatcher
 
             string value;
             if (!predicate.try_get_argument(matcher.param_names[i], value))
+            {
+                if (matcher.are_params_optional[i])
+                    continue;
                 return false;
+            }
 
             switch (matcher.parameter_matching_types[i])
             {
@@ -307,7 +311,10 @@ class InferenceMatcher
         string source;
         if (connected_matcher != nullptr)
         {
-            source = bindings.at(connected_matcher->param_values.at(0));
+            auto binding = bindings.find(connected_matcher->param_values.at(0));
+            if (binding == bindings.end())
+                return false;
+            source = binding->second;
             connected_predicates = capture_connected_predicates(source, matched_predicates);
         }
 
@@ -316,7 +323,10 @@ class InferenceMatcher
             // case that covers the * (all_connected) case
             if (creator.is_bound_predicate_creator)
             {
-                const auto& target = bindings.at(creator.param_strings.at(0));
+                auto binding = bindings.find(creator.param_strings.at(0));
+                if (binding == bindings.end())
+                    return false;
+                const auto& target = binding->second;
                 for (int predicate_index : connected_predicates)
                 {
                     auto predicate = context.knowledge_expression.predicates[predicate_index];
@@ -334,14 +344,30 @@ class InferenceMatcher
             vector<string> arguments;
             int variable_index = 0;
             int string_index = 0;
-            for (auto creation_type : creator.parameter_creation_types)
+            for (int i = 0; i < creator.parameter_creation_types.size(); i++)
             {
+                auto creation_type = creator.parameter_creation_types[i];
+                string argument;
                 if (creation_type == WORD_FRAME)
-                    arguments.push_back(bindings.at(creator.word_frame_accessors.at(variable_index++)));
+                {
+                    auto binding = bindings.find(creator.word_frame_accessors.at(variable_index++));
+                    if (binding == bindings.end())
+                    {
+                        if (creator.are_params_optional[i])
+                            continue;
+                        return false;
+                    }
+                    argument = binding->second;
+                }
                 else if (creation_type == STRING)
-                    arguments.push_back(creator.param_strings.at(string_index++));
+                    argument = creator.param_strings.at(string_index++);
                 else
                     throw runtime_error("unsupported conclusion parameter type in inference rule '" + rule.name + "'");
+
+                // Omitted positional arguments cannot shift later values into the wrong slots.
+                if (arguments.size() != i)
+                    return false;
+                arguments.push_back(argument);
             }
 
             auto predicate = predicate_handler->construct_predicate(creator.predicate.predicate, arguments);

@@ -133,6 +133,118 @@ string ParserTester::ask_mind(string utterance)
     return "dunno";
 }
 
+bool test_inference__optional_properties() {
+    PredicateTemplateHandler templates;
+    templates.add_entry(PredicateTemplate("ACTION",
+        {"action", "actor", "action_type", "object", "indirect_object"},
+        {true, true, false, true, true},
+        {false, false, false, true, true}));
+    PredicateHandler predicate_handler(&templates);
+
+    auto make_rule = [&](const vector<string>& conditions, const vector<string>& conclusions)
+    {
+        vector<PredicateMatcher> matchers;
+        vector<PredicateCreator> creators;
+        for (const auto& condition : conditions)
+            matchers.emplace_back(&predicate_handler, split_spaces(condition));
+        for (const auto& conclusion : conclusions)
+            creators.emplace_back(&predicate_handler, split_spaces(conclusion));
+        return InferenceRule(&predicate_handler, "Optional-Properties", matchers, creators);
+    };
+    auto infer = [&](const InferenceRule& rule, const vector<string>& arguments)
+    {
+        InferenceHandler inference({rule}, &predicate_handler);
+        KnowledgeBase knowledge(nullptr, tester.evidence_mode);
+        knowledge.tell_fact(Expression({predicate_handler.construct_predicate("ACTION", arguments)}));
+        return inference.apply_inference_rules(knowledge);
+    };
+
+    const string optional_match = "ACTION action:event actor:actor action_type:\"source\" (object:object) (indirect_object:recipient)";
+    const string optional_result = "ACTION action:event actor:actor action_type:\"target\" (object:object) (indirect_object:recipient)";
+    const string required_match = "ACTION action:event actor:actor action_type:\"source\" object:object";
+    const string required_result = "ACTION action:event actor:actor action_type:\"target\" object:object";
+    const string short_result = "ACTION action:event actor:actor action_type:\"target\"";
+    const vector<string> no_object{"event", "actor", "source"};
+    const vector<string> direct_object{"event", "actor", "source", "object"};
+    const vector<string> both_objects{"event", "actor", "source", "object", "recipient"};
+    auto copy = make_rule({optional_match}, {optional_result});
+
+    for (const auto& arguments : {no_object, direct_object, both_objects})
+    {
+        auto inferred = infer(copy, arguments);
+        TEST_ASSERT(inferred.size() == 1);
+        const auto& predicates = inferred.front().get_expression().predicates;
+        TEST_ASSERT(predicates.size() == 1);
+        auto expected = arguments;
+        expected[2] = "target";
+        TEST_ASSERT(predicates.front().arguments == expected);
+    }
+
+    auto required_condition = make_rule({required_match}, {required_result});
+    TEST_ASSERT(infer(required_condition, no_object).empty());
+    TEST_ASSERT(infer(required_condition, direct_object).size() == 1);
+    auto required_conclusion = make_rule({optional_match}, {required_result});
+    TEST_ASSERT(infer(required_conclusion, no_object).empty());
+    TEST_ASSERT(infer(required_conclusion, direct_object).size() == 1);
+
+    auto shared_variable = make_rule(
+        {"ACTION action:event actor:actor action_type:\"source\" (object:actor)"}, {short_result});
+    TEST_ASSERT(infer(shared_variable, no_object).size() == 1);
+    TEST_ASSERT(infer(shared_variable, direct_object).empty());
+    TEST_ASSERT(infer(shared_variable, {"event", "actor", "source", "actor"}).size() == 1);
+
+    auto literal = make_rule(
+        {"ACTION action:event actor:actor action_type:\"source\" (object:\"object\")"}, {short_result});
+    TEST_ASSERT(infer(literal, no_object).size() == 1);
+    TEST_ASSERT(infer(literal, direct_object).size() == 1);
+    TEST_ASSERT(infer(literal, {"event", "actor", "source", "other"}).empty());
+
+    auto gap = make_rule({optional_match},
+        {"ACTION action:event actor:actor action_type:\"target\" (object:object) (indirect_object:\"recipient\")"});
+    TEST_ASSERT(infer(gap, no_object).empty());
+    auto inferred = infer(gap, direct_object);
+    TEST_ASSERT(inferred.size() == 1);
+    auto expected = both_objects;
+    expected[2] = "target";
+    TEST_ASSERT(inferred.front().get_expression().predicates.front().arguments == expected);
+
+    for (const auto& roots : vector<pair<string, string>>{{"object", "actor"}, {"actor", "object"}})
+    {
+        auto connected = make_rule(
+            {optional_match, "* all_connected:" + roots.first},
+            {optional_result, "* all_connected:" + roots.second});
+        TEST_ASSERT(infer(connected, no_object).empty());
+        TEST_ASSERT(infer(connected, direct_object).size() == 1);
+    }
+
+    for (const string& invalid : {
+        "ACTION action:event actor:actor action_type:\"source\" (object:object",
+        "ACTION action:event (actor:actor) action_type:\"source\""})
+    {
+        bool matcher_rejected = false;
+        bool creator_rejected = false;
+        try
+        {
+            PredicateMatcher matcher(&predicate_handler, split_spaces(invalid));
+        }
+        catch (const runtime_error&)
+        {
+            matcher_rejected = true;
+        }
+        try
+        {
+            PredicateCreator creator(&predicate_handler, split_spaces(invalid));
+        }
+        catch (const runtime_error&)
+        {
+            creator_rejected = true;
+        }
+        TEST_ASSERT(matcher_rejected && creator_rejected);
+    }
+
+    return true;
+}
+
 bool test_parse__inheritance() {
     tester.setup_parse();
 
@@ -432,6 +544,7 @@ int test_all(EvidenceMode evidence_mode) {
     tester.evidence_mode = evidence_mode;
     printf("running unit tests\n");
 
+    RUN_TEST(test_inference__optional_properties);
     RUN_TEST(test_parse__inheritance);
     RUN_TEST(test_parse__event);
     RUN_TEST(test_parse__anaphora_event);
